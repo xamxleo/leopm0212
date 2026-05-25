@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据字典 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-active: #096dd9;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-success-bg: #f6ffed;
+    --color-success-border: #b7eb8f;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --color-danger-bg: #fff1f0;
+    --color-danger-border: #ffa39e;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: var(--font-family); background: var(--color-bg-page); color: var(--color-text-primary); font-size: 14px; line-height: 1.6; }
+
+  /* 顶部导航 */
+  .top-nav { height: 48px; background: var(--color-primary); display: flex; align-items: center; padding: 0 24px; color: #fff; font-size: 14px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+  .top-nav .logo { font-size: 16px; font-weight: 600; margin-right: 40px; letter-spacing: 1px; }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item { padding: 0 16px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .top-nav .nav-item:hover, .top-nav .nav-item.active { color: #fff; border-bottom-color: #fff; background: rgba(255,255,255,0.1); }
+
+  /* 左侧菜单 */
+  .side-menu { position: fixed; top: 48px; left: 0; width: 200px; bottom: 0; background: var(--color-bg-surface); border-right: 1px solid var(--color-border); padding: 8px 0; overflow-y: auto; z-index: 90; }
+  .side-menu .menu-group-title { padding: 12px 16px 4px; font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
+  .side-menu .menu-item { padding: 10px 16px 10px 24px; cursor: pointer; color: var(--color-text-primary); font-size: 14px; transition: all 0.15s; border-right: 3px solid transparent; }
+  .side-menu .menu-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+  .side-menu .menu-item.active { background: var(--color-primary-bg); color: var(--color-primary); border-right-color: var(--color-primary); font-weight: 500; }
+
+  /* 主内容区 */
+  .main-content { margin-top: 48px; margin-left: 200px; padding: 20px; }
+
+  /* 搜索栏 */
+  .search-bar { background: var(--color-bg-surface); padding: 16px 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .search-left { display: flex; gap: 12px; align-items: center; }
+  .search-left .form-item-inline { display: flex; align-items: center; gap: 8px; }
+  .search-left label { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+  .search-left input, .search-left select { padding: 6px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; font-family: inherit; }
+  .search-left input { width: 200px; }
+  .search-left input:focus, .search-left select:focus { outline: none; border-color: var(--color-primary); }
+
+  .btn { padding: 6px 14px; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .btn-primary { background: var(--color-primary); color: #fff; }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default { background: #fff; color: var(--color-text-primary); border: 1px solid var(--color-border); }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-success { background: var(--color-success); color: #fff; }
+  .btn-success:hover { background: #73d13d; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-text { background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  .btn-text:hover { text-decoration: underline; }
+  .btn-text-danger { background: none; border: none; color: var(--color-danger); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  .btn-text-danger:hover { text-decoration: underline; }
+  .btn-text-warning { background: none; border: none; color: var(--color-warning); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  .btn-text-warning:hover { text-decoration: underline; }
+
+  /* 卡片 */
+  .card { background: var(--color-bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 0; overflow: hidden; }
+  .card-header { padding: 12px 20px; border-bottom: 1px solid var(--color-border); }
+
+  /* 表格 */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { text-align: left; padding: 12px 16px; background: #fafafa; font-weight: 500; font-size: 13px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .data-table tr:hover td { background: #fafafa; }
+  .data-table tr:nth-child(even) td { background: #fafafa; }
+  .data-table tr:nth-child(even):hover td { background: #f0f0f0; }
+
+  /* 状态标签 */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 12px; }
+  .tag-green { background: var(--color-success-bg); color: var(--color-success); border: 1px solid var(--color-success-border); }
+  .tag-gray { background: #fafafa; color: var(--color-text-secondary); border: 1px solid #d9d9d9; }
+
+  /* 操作列 */
+  .actions-col { display: flex; gap: 12px; align-items: center; }
+
+  /* 分页 */
+  .pagination-bar { padding: 12px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 13px; color: var(--color-text-secondary); }
+  .pagination-bar select { padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; }
+  .page-btn { padding: 4px 10px; border: 1px solid var(--color-border); background: #fff; border-radius: var(--radius-md); cursor: pointer; font-size: 13px; }
+  .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .page-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .page-jump { display: flex; align-items: center; gap: 6px; }
+  .page-jump input { width: 40px; padding: 4px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md); text-align: center; font-size: 13px; }
+
+  /* ===== 右侧抽屉 ===== */
+  .drawer-mask { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.3); z-index: 1000; display: none; opacity: 0; transition: opacity 0.3s; }
+  .drawer-mask.active { display: block; opacity: 1; }
+  .drawer { position: fixed; top: 0; right: -700px; width: 700px; bottom: 0; background: #fff; z-index: 1001; box-shadow: -4px 0 16px rgba(0,0,0,0.1); transition: right 0.3s ease; display: flex; flex-direction: column; }
+  .drawer.active { right: 0; }
+  .drawer-header { padding: 16px 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+  .drawer-header h3 { font-size: 16px; font-weight: 600; }
+  .drawer-close { cursor: pointer; font-size: 20px; color: var(--color-text-secondary); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); }
+  .drawer-close:hover { background: #f5f5f5; color: var(--color-text-primary); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .drawer-footer { padding: 12px 20px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* 抽屉内工具栏 */
+  .drawer-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; }
+  .drawer-toolbar .search-box { display: flex; gap: 8px; align-items: center; }
+  .drawer-toolbar .search-box input, .drawer-toolbar .search-box select { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; font-family: inherit; }
+  .drawer-toolbar .search-box input { width: 160px; }
+
+  /* 树状表格 */
+  .tree-table { width: 100%; border-collapse: collapse; }
+  .tree-table th { text-align: left; padding: 10px 12px; background: #fafafa; font-weight: 500; font-size: 13px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  .tree-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  .tree-row:hover { background: #fafafa; }
+
+  .tree-node { display: flex; align-items: center; gap: 6px; }
+  .tree-arrow { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--color-text-secondary); transition: transform 0.2s; user-select: none; }
+  .tree-arrow.expanded { transform: rotate(90deg); }
+  .tree-arrow.placeholder { visibility: hidden; cursor: default; }
+  .tree-checkbox { width: 14px; height: 14px; cursor: pointer; }
+  .tree-label { font-size: 13px; }
+
+  .tree-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* 弹窗 */
+  .modal-mask { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.45); z-index: 1100; display: none; justify-content: center; align-items: center; }
+  .modal-mask.active { display: flex; }
+  .modal { background: #fff; border-radius: var(--radius-lg); width: 480px; max-height: 80vh; overflow-y: auto; box-shadow: 0 12px 48px rgba(0,0,0,0.15); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close { cursor: pointer; font-size: 18px; color: var(--color-text-secondary); }
+  .modal-close:hover { color: var(--color-text-primary); }
+  .modal-body { padding: 20px; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .form-item { margin-bottom: 16px; }
+  .form-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--color-text-primary); font-weight: 500; }
+  .form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
+  .form-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+  .form-select { width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; font-family: inherit; background: #fff; }
+  .form-row { display: flex; gap: 16px; }
+  .form-row .form-item { flex: 1; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--color-text-secondary); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理系统</div>
+  <div class="nav-items">
+    <div class="nav-item" onclick="location.href='dashboard.html'">数据看板</div>
+    <div class="nav-item" onclick="location.href='asset-list.html'">资产管理</div>
+    <div class="nav-item active">系统设置</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item active">数据字典</div>
+  <div class="menu-item" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <!-- 搜索栏 -->
+  <div class="search-bar">
+    <div class="search-left">
+      <div class="form-item-inline">
+        <label>关键字</label>
+        <input type="text" id="typeKeyword" placeholder="字典名称/编码" />
+      </div>
+      <div class="form-item-inline">
+        <label>状态</label>
+        <select id="typeStatus">
+          <option value="">全部</option>
+          <option value="active">启用</option>
+          <option value="inactive">禁用</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="renderTypes()">搜索</button>
+      <button class="btn btn-default" onclick="resetTypeSearch()">重置</button>
+    </div>
+    <button class="btn btn-primary" onclick="openTypeModal()">+ 新增</button>
+    <button class="btn btn-default" style="color:var(--color-danger);border-color:var(--color-danger);" onclick="resetToDefault()">重置为默认</button>
+  </div>
+
+  <!-- 字典类型列表 -->
+  <div class="card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:50px;">ID</th>
+          <th>字典名称</th>
+          <th style="width:180px;">字典编码</th>
+          <th>字典描述</th>
+          <th style="width:80px;">状态</th>
+          <th style="width:240px;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="typeTableBody"></tbody>
+    </table>
+    <!-- 分页 -->
+    <div class="pagination-bar" id="paginationBar">
+      <span>共 <strong id="totalCount">0</strong> 条</span>
+      <select id="pageSize" onchange="renderTypes()">
+        <option value="10">10条/页</option>
+        <option value="20">20条/页</option>
+        <option value="50">50条/页</option>
+      </select>
+      <button class="page-btn" onclick="prevPage()">&lt;</button>
+      <span id="pageNumbers"></span>
+      <button class="page-btn" onclick="nextPage()">&gt;</button>
+      <div class="page-jump">
+        <span>前往</span>
+        <input type="number" id="jumpPage" min="1" value="1" />
+        <span>页</span>
+        <button class="btn btn-default btn-sm" onclick="jumpToPage()">确定</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== 右侧抽屉：字典数据 ===== -->
+<div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
+<div class="drawer" id="dataDrawer">
+  <div class="drawer-header">
+    <h3 id="drawerTitle">【字典名称】字典数据</h3>
+    <span class="drawer-close" onclick="closeDrawer()">&times;</span>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-toolbar">
+      <div class="search-box">
+        <input type="text" id="dataKeyword" placeholder="字典标签/字典值" />
+        <select id="dataStatusFilter">
+          <option value="">全部</option>
+          <option value="active">启用</option>
+          <option value="inactive">禁用</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="searchDrawerData()">搜索</button>
+        <button class="btn btn-default btn-sm" onclick="resetDrawerSearch()">重置</button>
+      </div>
+      <div>
+        <button class="btn btn-success btn-sm" id="btnAddDrawerData" onclick="openDataModal()">+ 新增</button>
+        <button class="btn btn-default btn-sm" style="color:var(--color-danger);border-color:var(--color-danger);" onclick="batchDeleteDrawerData()">删除 (<span id="drawerBatchCount">0</span>)</button>
+      </div>
+    </div>
+    <div id="drawerTreeContainer">
+      <div class="empty-state">
+        <div class="icon">🌳</div>
+        <div>暂无数据，点击「新增」添加</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：新增/编辑字典类型 -->
+<div class="modal-mask" id="typeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="typeModalTitle">新增字典类型</h3>
+      <span class="modal-close" onclick="closeTypeModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="typeEditId" />
+      <div class="form-item">
+        <label class="form-label">字典名称 <span style="color:var(--color-danger);">*</span></label>
+        <input class="form-input" id="typeName" placeholder="如：资产分类" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">字典编码 <span style="color:var(--color-danger);">*</span></label>
+        <input class="form-input" id="typeCode" placeholder="如：asset_category（英文，用于程序识别）" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">字典描述</label>
+        <input class="form-input" id="typeDesc" placeholder="简要说明该字典的用途" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeTypeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveType()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：新增/编辑字典数据 -->
+<div class="modal-mask" id="dataModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="dataModalTitle">新增字典项</h3>
+      <span class="modal-close" onclick="closeDataModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dataEditId" />
+      <input type="hidden" id="dataParentId" />
+      <div class="form-item" id="parentField" style="display:none;">
+        <label class="form-label">上级节点</label>
+        <input class="form-input" id="parentName" readonly />
+      </div>
+      <div class="form-item">
+        <label class="form-label">标签名称 <span style="color:var(--color-danger);">*</span></label>
+        <input class="form-input" id="dataName" placeholder="显示名称" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">字典值</label>
+        <input class="form-input" id="dataValue" placeholder="程序使用的值（留空则同标签名）" />
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <label class="form-label">排序号</label>
+          <input class="form-input" id="dataSort" type="number" value="0" placeholder="数字越小越靠前" />
+        </div>
+        <div class="form-item">
+          <label class="form-label">状态</label>
+          <select class="form-select" id="dataStatusEdit">
+            <option value="active">启用</option>
+            <option value="inactive">禁用</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeDataModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveData()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 存储键 =====
+const DICT_TYPES_KEY = 'kmcc_dict_types';
+const DICT_DATA_KEY = 'kmcc_dict_data';
+
+function loadTypes() {
+  try { return JSON.parse(localStorage.getItem(DICT_TYPES_KEY)) || []; } catch(e) { return []; }
+}
+function saveTypes(data) { localStorage.setItem(DICT_TYPES_KEY, JSON.stringify(data)); }
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(DICT_DATA_KEY)) || {}; } catch(e) { return {}; }
+}
+function saveDataStore(data) { localStorage.setItem(DICT_DATA_KEY, JSON.stringify(data)); }
+
+// ===== 默认数据（无二级分类）=====
+const DEFAULT_TYPES = [
+  { id: 'dt_1', name: '资产分类', code: 'asset_category', desc: '管理资产的分类体系', status: 'active' },
+  { id: 'dt_2', name: '维保状态', code: 'warranty_status', desc: '资产维保状态选项', status: 'active' },
+  { id: 'dt_3', name: '维修状态', code: 'repair_status', desc: '维修记录状态流转', status: 'active' },
+  { id: 'dt_4', name: '流转类型', code: 'transfer_type', desc: '资产流转操作类型', status: 'active' },
+  { id: 'dt_5', name: '预计归还', code: 'expected_return', desc: '领用资产预计归还时间', status: 'active' },
+  { id: 'dt_6', name: '设备状态', code: 'device_status', desc: '归还/报废时设备状态', status: 'active' },
+  { id: 'dt_7', name: '报废原因', code: 'scrap_reason', desc: '资产报废原因选项', status: 'active' },
+  { id: 'dt_8', name: '供应商状态', code: 'supplier_status', desc: '供应商合作状态', status: 'active' },
+  { id: 'dt_9', name: '供应类别', code: 'supplier_category', desc: '管理供应商的供应类别', status: 'active' }
+];
+
+const DEFAULT_DATA = {
+  asset_category: [
+    // 台式电脑：无下拉二级分类
+    { id: 'ac_1', name: '台式电脑', value: 'desktop', sort: 0, status: 'active', children: [] },
+    // 笔记本电脑：无下拉二级分类
+    { id: 'ac_2', name: '笔记本电脑', value: 'laptop', sort: 1, status: 'active', children: [] },
+    // 打印机：含「打印机类型」「网络功能」两个下拉字段
+    { id: 'ac_3', name: '打印机', value: 'printer', sort: 2, status: 'active', children: [
+      { id: 'ac_3_1', name: '打印机类型', value: 'printer_type', sort: 0, status: 'active', children: [
+        { id: 'ac_3_1_1', name: '激光黑白', value: 'laser_bw', sort: 0, status: 'active', children: [] },
+        { id: 'ac_3_1_2', name: '激光彩色', value: 'laser_color', sort: 1, status: 'active', children: [] },
+        { id: 'ac_3_1_3', name: '喷墨黑白', value: 'inkjet_bw', sort: 2, status: 'active', children: [] },
+        { id: 'ac_3_1_4', name: '喷墨彩色', value: 'inkjet_color', sort: 3, status: 'active', children: [] },
+        { id: 'ac_3_1_5', name: '针式', value: 'dot_matrix', sort: 4, status: 'active', children: [] },
+        { id: 'ac_3_1_6', name: '热敏', value: 'thermal', sort: 5, status: 'active', children: [] }
+      ]},
+      { id: 'ac_3_2', name: '网络功能', value: 'network_func', sort: 1, status: 'active', children: [
+        { id: 'ac_3_2_1', name: '有线网络', value: 'wired', sort: 0, status: 'active', children: [] },
+        { id: 'ac_3_2_2', name: 'Wi-Fi', value: 'wifi', sort: 1, status: 'active', children: [] },
+        { id: 'ac_3_2_3', name: '有线+Wi-Fi', value: 'wired_wifi', sort: 2, status: 'active', children: [] },
+        { id: 'ac_3_2_4', name: 'USB仅', value: 'usb_only', sort: 3, status: 'active', children: [] },
+        { id: 'ac_3_2_5', name: '蓝牙', value: 'bluetooth', sort: 4, status: 'active', children: [] }
+      ]}
+    ]},
+    // 服务器：无下拉二级分类
+    { id: 'ac_4', name: '服务器', value: 'server', sort: 3, status: 'active', children: [] },
+    // 网络设备：含「设备类型」下拉字段
+    { id: 'ac_5', name: '网络设备', value: 'network', sort: 4, status: 'active', children: [
+      { id: 'ac_5_1', name: '设备类型', value: 'device_type', sort: 0, status: 'active', children: [
+        { id: 'ac_5_1_1', name: '接入交换机', value: 'access_switch', sort: 0, status: 'active', children: [] },
+        { id: 'ac_5_1_2', name: '汇聚交换机', value: 'aggregation_switch', sort: 1, status: 'active', children: [] },
+        { id: 'ac_5_1_3', name: '核心交换机', value: 'core_switch', sort: 2, status: 'active', children: [] },
+        { id: 'ac_5_1_4', name: '路由器', value: 'router', sort: 3, status: 'active', children: [] },
+        { id: 'ac_5_1_5', name: '防火墙', value: 'firewall', sort: 4, status: 'active', children: [] },
+        { id: 'ac_5_1_6', name: '无线AP', value: 'wireless_ap', sort: 5, status: 'active', children: [] },
+        { id: 'ac_5_1_7', name: '光模块', value: 'optical_module', sort: 6, status: 'active', children: [] }
+      ]}
+    ]},
+    // 照相机：含「相机类型」下拉字段
+    { id: 'ac_6', name: '照相机', value: 'camera', sort: 5, status: 'active', children: [
+      { id: 'ac_6_1', name: '相机类型', value: 'camera_type', sort: 0, status: 'active', children: [
+        { id: 'ac_6_1_1', name: '单反相机', value: 'dslr', sort: 0, status: 'active', children: [] },
+        { id: 'ac_6_1_2', name: '微单/无反', value: 'mirrorless', sort: 1, status: 'active', children: [] },
+        { id: 'ac_6_1_3', name: '运动相机', value: 'action_cam', sort: 2, status: 'active', children: [] },
+        { id: 'ac_6_1_4', name: '拍立得', value: 'instant', sort: 3, status: 'active', children: [] },
+        { id: 'ac_6_1_5', name: '中画幅', value: 'medium_format', sort: 4, status: 'active', children: [] }
+      ]}
+    ]},
+    // 摄像机：含「摄像机类型」下拉字段
+    { id: 'ac_7', name: '摄像机', value: 'video', sort: 6, status: 'active', children: [
+      { id: 'ac_7_1', name: '摄像机类型', value: 'video_type', sort: 0, status: 'active', children: [
+        { id: 'ac_7_1_1', name: '演播室摄像机', value: 'studio', sort: 0, status: 'active', children: [] },
+        { id: 'ac_7_1_2', name: '肩扛式摄像机', value: 'shoulder', sort: 1, status: 'active', children: [] },
+        { id: 'ac_7_1_3', name: '手持摄像机', value: 'handheld', sort: 2, status: 'active', children: [] },
+        { id: 'ac_7_1_4', name: '运动相机', value: 'action', sort: 3, status: 'active', children: [] },
+        { id: 'ac_7_1_5', name: '无人机航拍', value: 'drone', sort: 4, status: 'active', children: [] },
+        { id: 'ac_7_1_6', name: '360°全景相机', value: '360', sort: 5, status: 'active', children: [] }
+      ]}
+    ]},
+    // 安全设备：含「设备类型」下拉字段
+    { id: 'ac_8', name: '安全设备', value: 'security', sort: 7, status: 'active', children: [
+      { id: 'ac_8_1', name: '设备类型', value: 'security_type', sort: 0, status: 'active', children: [
+        { id: 'ac_8_1_1', name: '网络摄像机（IPC）', value: 'ipc', sort: 0, status: 'active', children: [] },
+        { id: 'ac_8_1_2', name: '模拟摄像机', value: 'analog_cam', sort: 1, status: 'active', children: [] },
+        { id: 'ac_8_1_3', name: 'NVR网络录像机', value: 'nvr', sort: 2, status: 'active', children: [] },
+        { id: 'ac_8_1_4', name: '门禁控制器', value: 'access_control', sort: 3, status: 'active', children: [] },
+        { id: 'ac_8_1_5', name: '考勤机', value: 'attendance', sort: 4, status: 'active', children: [] },
+        { id: 'ac_8_1_6', name: '入侵报警主机', value: 'intrusion_alarm', sort: 5, status: 'active', children: [] }
+      ]}
+    ]},
+    // 存储设备：含「设备类型」「接口类型」两个下拉字段
+    { id: 'ac_9', name: '存储设备', value: 'storage', sort: 8, status: 'active', children: [
+      { id: 'ac_9_1', name: '设备类型', value: 'storage_type', sort: 0, status: 'active', children: [
+        { id: 'ac_9_1_1', name: 'NAS网络存储', value: 'nas', sort: 0, status: 'active', children: [] },
+        { id: 'ac_9_1_2', name: '移动机械硬盘', value: 'mobile_hdd', sort: 1, status: 'active', children: [] },
+        { id: 'ac_9_1_3', name: '移动固态硬盘（PSSD）', value: 'mobile_ssd', sort: 2, status: 'active', children: [] },
+        { id: 'ac_9_1_4', name: '内置固态硬盘（SSD）', value: 'internal_ssd', sort: 3, status: 'active', children: [] },
+        { id: 'ac_9_1_5', name: 'U盘/闪存盘', value: 'usb_flash', sort: 4, status: 'active', children: [] },
+        { id: 'ac_9_1_6', name: '光盘存储', value: 'optical_disc', sort: 5, status: 'active', children: [] },
+        { id: 'ac_9_1_7', name: '磁带机', value: 'tape_drive', sort: 6, status: 'active', children: [] }
+      ]},
+      { id: 'ac_9_2', name: '接口类型', value: 'interface_type', sort: 1, status: 'active', children: [
+        { id: 'ac_9_2_1', name: 'USB 3.0', value: 'usb3', sort: 0, status: 'active', children: [] },
+        { id: 'ac_9_2_2', name: 'USB 3.2 Gen2', value: 'usb3_2', sort: 1, status: 'active', children: [] },
+        { id: 'ac_9_2_3', name: 'USB-C / Type-C', value: 'type_c', sort: 2, status: 'active', children: [] },
+        { id: 'ac_9_2_4', name: 'Thunderbolt 3', value: 'tb3', sort: 3, status: 'active', children: [] },
+        { id: 'ac_9_2_5', name: 'Thunderbolt 4', value: 'tb4', sort: 4, status: 'active', children: [] },
+        { id: 'ac_9_2_6', name: '2.5GbE', value: '2_5gbe', sort: 5, status: 'active', children: [] },
+        { id: 'ac_9_2_7', name: '10GbE', value: '10gbe', sort: 6, status: 'active', children: [] },
+        { id: 'ac_9_2_8', name: 'SATA III', value: 'sata3', sort: 7, status: 'active', children: [] },
+        { id: 'ac_9_2_9', name: 'NVMe M.2', value: 'nvme', sort: 8, status: 'active', children: [] },
+        { id: 'ac_9_2_10', name: '以太网 RJ45', value: 'rj45', sort: 9, status: 'active', children: [] }
+      ]}
+    ]},
+    // 其他设备：无下拉二级分类
+    { id: 'ac_10', name: '其他设备', value: 'other', sort: 9, status: 'active', children: [] }
+  ],
+  warranty_status: [
+    { id: 'ws_1', name: '在保', value: 'active', sort: 0, status: 'active', children: [] },
+    { id: 'ws_2', name: '即将过期', value: 'expiring', sort: 1, status: 'active', children: [] },
+    { id: 'ws_3', name: '已过期', value: 'expired', sort: 2, status: 'active', children: [] }
+  ],
+  repair_status: [
+    { id: 'rs_1', name: '待处理', value: 'pending', sort: 0, status: 'active', children: [] },
+    { id: 'rs_2', name: '维修中', value: 'in_progress', sort: 1, status: 'active', children: [] },
+    { id: 'rs_3', name: '已完成', value: 'completed', sort: 2, status: 'active', children: [] },
+    { id: 'rs_4', name: '已关闭', value: 'closed', sort: 3, status: 'active', children: [] }
+  ],
+  transfer_type: [
+    { id: 'tt_1', name: '领用', value: 'borrow', sort: 0, status: 'active', children: [] },
+    { id: 'tt_2', name: '转移', value: 'transfer', sort: 1, status: 'active', children: [] },
+    { id: 'tt_3', name: '归还', value: 'return', sort: 2, status: 'active', children: [] },
+    { id: 'tt_4', name: '报废', value: 'scrap', sort: 3, status: 'active', children: [] }
+  ],
+  expected_return: [
+    { id: 'er_1', name: '长期领用', value: 'permanent', sort: 0, status: 'active', children: [] },
+    { id: 'er_2', name: '1个月', value: '1m', sort: 1, status: 'active', children: [] },
+    { id: 'er_3', name: '3个月', value: '3m', sort: 2, status: 'active', children: [] },
+    { id: 'er_4', name: '6个月', value: '6m', sort: 3, status: 'active', children: [] },
+    { id: 'er_5', name: '1年', value: '1y', sort: 4, status: 'active', children: [] }
+  ],
+  device_status: [
+    { id: 'ds_1', name: '正常', value: 'normal', sort: 0, status: 'active', children: [] },
+    { id: 'ds_2', name: '故障', value: 'fault', sort: 1, status: 'active', children: [] },
+    { id: 'ds_3', name: '损坏', value: 'damaged', sort: 2, status: 'active', children: [] }
+  ],
+  scrap_reason: [
+    { id: 'sr_1', name: '达到使用年限', value: 'age', sort: 0, status: 'active', children: [] },
+    { id: 'sr_2', name: '设备损坏无法修复', value: 'damage', sort: 1, status: 'active', children: [] },
+    { id: 'sr_3', name: '技术淘汰', value: 'obsolete', sort: 2, status: 'active', children: [] },
+    { id: 'sr_4', name: '其他', value: 'other', sort: 3, status: 'active', children: [] }
+  ],
+  supplier_status: [
+    { id: 'ss_1', name: '合作中', value: 'active', sort: 0, status: 'active', children: [] },
+    { id: 'ss_2', name: '已停用', value: 'inactive', sort: 1, status: 'active', children: [] }
+  ],
+  supplier_category: [
+    { id: 'sc_1', name: '台式电脑', value: 'desktop', sort: 0, status: 'active', children: [] },
+    { id: 'sc_2', name: '笔记本电脑', value: 'laptop', sort: 1, status: 'active', children: [] },
+    { id: 'sc_3', name: '打印机', value: 'printer', sort: 2, status: 'active', children: [] },
+    { id: 'sc_4', name: '服务器', value: 'server', sort: 3, status: 'active', children: [] },
+    { id: 'sc_5', name: '网络设备', value: 'network', sort: 4, status: 'active', children: [] },
+    { id: 'sc_6', name: '照相机', value: 'camera', sort: 5, status: 'active', children: [] },
+    { id: 'sc_7', name: '摄像机', value: 'video', sort: 6, status: 'active', children: [] },
+    { id: 'sc_8', name: '安全设备', value: 'security', sort: 7, status: 'active', children: [] },
+    { id: 'sc_9', name: '存储设备', value: 'storage', sort: 8, status: 'active', children: [] },
+    { id: 'sc_10', name: '其他设备', value: 'other', sort: 9, status: 'active', children: [] }
+  ]
+};
+
+// ===== 分页状态 =====
+let currentPage = 1;
+let pageSize = 10;
+let drawerTypeId = null;
+let drawerTypeCode = null;
+let expandedIds = new Set();
+let selectedDataIds = new Set();
+
+// ===== 重置为默认数据（仅按钮触发）=====
+function resetToDefault() {
+  if (!confirm('确定重置所有字典数据为系统默认？\n当前所有自定义数据将被清除，且不可恢复！')) return;
+  saveTypes(DEFAULT_TYPES);
+  saveDataStore(DEFAULT_DATA);
+  renderTypes();
+  alert('已重置为默认数据！');
+}
+
+// ===== 初始化 =====
+// 只渲染，不自动写入默认数据（避免覆盖用户自定义内容）
+// 默认数据只能通过「重置为默认」按钮写入
+function init() {
+  renderTypes();
+}
+
+// ===== 重置搜索 =====
+function resetTypeSearch() {
+  document.getElementById('typeKeyword').value = '';
+  document.getElementById('typeStatus').value = '';
+  currentPage = 1;
+  renderTypes();
+}
+
+// ===== 渲染字典类型列表（分页）=====
+function renderTypes() {
+  const types = loadTypes();
+  const keyword = document.getElementById('typeKeyword').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('typeStatus').value;
+  pageSize = parseInt(document.getElementById('pageSize').value);
+
+  let filtered = types.filter(t => {
+    const matchKw = !keyword || t.name.toLowerCase().includes(keyword) || t.code.toLowerCase().includes(keyword) || (t.desc && t.desc.toLowerCase().includes(keyword));
+    const matchStatus = !statusFilter || t.status === statusFilter;
+    return matchKw && matchStatus;
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('typeTableBody');
+  tbody.innerHTML = '';
+
+  pageItems.forEach(t => {
+    const statusTag = t.status === 'active'
+      ? '<span class="tag tag-green">启用</span>'
+      : '<span class="tag tag-gray">禁用</span>';
+    const toggleBtn = t.status === 'active'
+      ? `<span class="btn-text-warning" onclick="event.stopPropagation();toggleTypeStatus('${t.id}')">禁用</span>`
+      : `<span class="btn-text" onclick="event.stopPropagation();toggleTypeStatus('${t.id}')">启用</span>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${t.id.replace(/\D/g,'').slice(-2) || t.id.slice(-2)}</td>
+      <td><strong>${t.name}</strong></td>
+      <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">${t.code}</code></td>
+      <td>${t.desc || '-'}</td>
+      <td>${statusTag}</td>
+      <td>
+        <div class="actions-col">
+          <span class="btn-text" onclick="event.stopPropagation();openDrawer('${t.id}')">字典数据</span>
+          <span class="btn-text" onclick="event.stopPropagation();editType('${t.id}')">编辑</span>
+          ${toggleBtn}
+          <span class="btn-text-danger" onclick="event.stopPropagation();deleteType('${t.id}')">删除</span>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('totalCount').textContent = total;
+  renderPageNumbers(totalPages);
+}
+
+function renderPageNumbers(totalPages) {
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === currentPage) {
+      html += `<button class="page-btn active">${i}</button>`;
+    } else {
+      html += `<button class="page-btn" onclick="goPage(${i})">${i}</button>`;
+    }
+  }
+  document.getElementById('pageNumbers').innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderTypes();
+}
+function prevPage() {
+  if (currentPage > 1) { currentPage--; renderTypes(); }
+}
+function nextPage() {
+  const total = loadTypes().length;
+  const totalPages = Math.ceil(total / pageSize);
+  if (currentPage < totalPages) { currentPage++; renderTypes(); }
+}
+function jumpToPage() {
+  const p = parseInt(document.getElementById('jumpPage').value);
+  const total = loadTypes().length;
+  const totalPages = Math.ceil(total / pageSize);
+  if (p >= 1 && p <= totalPages) {
+    currentPage = p;
+    renderTypes();
+  }
+}
+
+// ===== 启用/禁用 =====
+function toggleTypeStatus(id) {
+  const types = loadTypes();
+  const t = types.find(x => x.id === id);
+  if (t) {
+    t.status = t.status === 'active' ? 'inactive' : 'active';
+    saveTypes(types);
+    renderTypes();
+  }
+}
+
+// ===== 删除字典类型 =====
+function deleteType(id) {
+  if (!confirm('确定删除该字典类型？其下的所有字典数据也会被删除。')) return;
+  const types = loadTypes();
+  const type = types.find(t => t.id === id);
+  if (type) {
+    const allData = loadData();
+    delete allData[type.code];
+    saveDataStore(allData);
+  }
+  saveTypes(types.filter(t => t.id !== id));
+  renderTypes();
+}
+
+// ===== 字典类型弹窗 =====
+function openTypeModal() {
+  document.getElementById('typeModalTitle').textContent = '新增字典类型';
+  document.getElementById('typeEditId').value = '';
+  document.getElementById('typeName').value = '';
+  document.getElementById('typeCode').value = '';
+  document.getElementById('typeDesc').value = '';
+  document.getElementById('typeModal').classList.add('active');
+}
+
+function editType(id) {
+  const types = loadTypes();
+  const t = types.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('typeModalTitle').textContent = '编辑字典类型';
+  document.getElementById('typeEditId').value = id;
+  document.getElementById('typeName').value = t.name;
+  document.getElementById('typeCode').value = t.code;
+  document.getElementById('typeDesc').value = t.desc || '';
+  document.getElementById('typeModal').classList.add('active');
+}
+
+function closeTypeModal() {
+  document.getElementById('typeModal').classList.remove('active');
+}
+
+function saveType() {
+  const name = document.getElementById('typeName').value.trim();
+  const code = document.getElementById('typeCode').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const desc = document.getElementById('typeDesc').value.trim();
+  const editId = document.getElementById('typeEditId').value;
+
+  if (!name) { alert('请输入字典名称'); return; }
+  if (!code) { alert('请输入字典编码'); return; }
+
+  const types = loadTypes();
+  if (types.some(t => t.code === code && t.id !== editId)) {
+    alert('字典编码已存在'); return;
+  }
+
+  if (editId) {
+    const t = types.find(x => x.id === editId);
+    if (t) { t.name = name; t.code = code; t.desc = desc; }
+  } else {
+    types.push({ id: 'dt_' + Date.now(), name, code, desc, status: 'active' });
+  }
+
+  saveTypes(types);
+  closeTypeModal();
+  renderTypes();
+}
+
+// ===== 右侧抽屉 =====
+function openDrawer(typeId) {
+  const types = loadTypes();
+  const type = types.find(t => t.id === typeId);
+  if (!type) return;
+
+  drawerTypeId = typeId;
+  drawerTypeCode = type.code;
+  expandedIds.clear();
+  selectedDataIds.clear();
+
+  document.getElementById('drawerTitle').textContent = `【${type.name}】字典数据`;
+  document.getElementById('drawerMask').classList.add('active');
+  document.getElementById('dataDrawer').classList.add('active');
+
+  // 重置搜索
+  document.getElementById('dataKeyword').value = '';
+  document.getElementById('dataStatusFilter').value = '';
+  searchDrawerData();
+}
+
+function closeDrawer() {
+  document.getElementById('drawerMask').classList.remove('active');
+  document.getElementById('dataDrawer').classList.remove('active');
+  drawerTypeId = null;
+  drawerTypeCode = null;
+}
+
+// ===== 抽屉内搜索 =====
+function searchDrawerData() {
+  if (!drawerTypeCode) return;
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  const keyword = document.getElementById('dataKeyword').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('dataStatusFilter').value;
+
+  renderDrawerTree(treeData, keyword, statusFilter);
+}
+
+function resetDrawerSearch() {
+  document.getElementById('dataKeyword').value = '';
+  document.getElementById('dataStatusFilter').value = '';
+  searchDrawerData();
+}
+
+// ===== 渲染抽屉树 =====
+function renderDrawerTree(treeData, keyword, statusFilter) {
+  const container = document.getElementById('drawerTreeContainer');
+
+  // 检查是否有数据
+  if (!treeData || treeData.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🌳</div>
+        <div>暂无数据，点击「新增」添加</div>
+      </div>
+    `;
+    updateDrawerBatchCount();
+    return;
+  }
+
+  let html = '<table class="tree-table"><thead><tr>';
+  html += '<th style="width:40px;"><input type="checkbox" id="drawerSelectAll" onclick="toggleDrawerSelectAll()"></th>';
+  html += '<th>字典标签</th>';
+  html += '<th style="width:120px;">字典值</th>';
+  html += '<th style="width:60px;">排序</th>';
+  html += '<th style="width:70px;">状态</th>';
+  html += '<th style="width:200px;">操作</th>';
+  html += '</tr></thead><tbody>';
+
+  function shouldShow(item) {
+    const matchKw = !keyword || item.name.toLowerCase().includes(keyword) || (item.value && item.value.toLowerCase().includes(keyword));
+    const matchStatus = !statusFilter || item.status === statusFilter;
+    if (matchKw && matchStatus) return true;
+    if (item.children && item.children.length > 0) {
+      return item.children.some(c => shouldShow(c));
+    }
+    return false;
+  }
+
+  function renderNode(item, level) {
+    const show = shouldShow(item);
+    if (!show) return '';
+
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedIds.has(item.id);
+    const indent = level * 24;
+    const checked = selectedDataIds.has(item.id) ? 'checked' : '';
+    const statusTag = item.status === 'active'
+      ? '<span class="tag tag-green">启用</span>'
+      : '<span class="tag tag-gray">禁用</span>';
+
+    let row = `<tr class="tree-row" data-id="${item.id}">`;
+    row += `<td><input type="checkbox" class="tree-checkbox" data-id="${item.id}" ${checked} onclick="toggleDrawerDataSelect('${item.id}')"></td>`;
+    row += `<td>`;
+    row += `<div class="tree-node" style="padding-left:${indent}px;">`;
+    if (hasChildren) {
+      row += `<span class="tree-arrow ${isExpanded ? 'expanded' : ''}" onclick="event.stopPropagation();toggleExpand('${item.id}')">▶</span>`;
+    } else {
+      row += `<span class="tree-arrow placeholder">▶</span>`;
+    }
+    row += `<span class="tree-label">${item.name}</span>`;
+    row += `</div></td>`;
+    row += `<td>${item.value || '-'}</td>`;
+    row += `<td>${item.sort !== undefined ? item.sort : 0}</td>`;
+    row += `<td>${statusTag}</td>`;
+    row += `<td><div class="tree-actions">`;
+    row += `<span class="btn-text" onclick="event.stopPropagation();openDataModal('${item.id}')">+ 新增子项</span>`;
+    row += `<span class="btn-text" onclick="event.stopPropagation();editData('${item.id}')">编辑</span>`;
+    row += `<span class="btn-text-danger" onclick="event.stopPropagation();deleteDrawerData('${item.id}')">删除</span>`;
+    row += `</div></td>`;
+    row += `</tr>`;
+
+    if (hasChildren && isExpanded) {
+      item.children.forEach(child => {
+        row += renderNode(child, level + 1);
+      });
+    }
+
+    return row;
+  }
+
+  treeData.forEach(root => {
+    html += renderNode(root, 0);
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  updateDrawerSelectAllState();
+  updateDrawerBatchCount();
+}
+
+function toggleExpand(id) {
+  if (expandedIds.has(id)) {
+    expandedIds.delete(id);
+  } else {
+    expandedIds.add(id);
+  }
+  searchDrawerData();
+}
+
+// ===== 抽屉选择框 =====
+function toggleDrawerDataSelect(id) {
+  if (selectedDataIds.has(id)) {
+    selectedDataIds.delete(id);
+  } else {
+    selectedDataIds.add(id);
+  }
+  updateDrawerBatchCount();
+  updateDrawerSelectAllState();
+}
+
+function toggleDrawerSelectAll() {
+  const allCheckbox = document.getElementById('drawerSelectAll');
+  const checked = allCheckbox.checked;
+
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  function collectIds(items) {
+    items.forEach(item => {
+      if (checked) selectedDataIds.add(item.id);
+      else selectedDataIds.delete(item.id);
+      if (item.children) collectIds(item.children);
+    });
+  }
+
+  collectIds(treeData);
+  searchDrawerData();
+}
+
+function updateDrawerSelectAllState() {
+  const allCheckbox = document.getElementById('drawerSelectAll');
+  if (!allCheckbox) return;
+
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  function countAll(items) {
+    let c = items.length;
+    items.forEach(i => { if (i.children) c += countAll(i.children); });
+    return c;
+  }
+  function countSelected(items) {
+    let c = 0;
+    items.forEach(i => {
+      if (selectedDataIds.has(i.id)) c++;
+      if (i.children) c += countSelected(i.children);
+    });
+    return c;
+  }
+
+  const total = countAll(treeData);
+  const selected = countSelected(treeData);
+
+  if (selected === 0) {
+    allCheckbox.checked = false;
+    allCheckbox.indeterminate = false;
+  } else if (selected === total) {
+    allCheckbox.checked = true;
+    allCheckbox.indeterminate = false;
+  } else {
+    allCheckbox.checked = false;
+    allCheckbox.indeterminate = true;
+  }
+}
+
+function updateDrawerBatchCount() {
+  document.getElementById('drawerBatchCount').textContent = selectedDataIds.size;
+}
+
+// ===== 字典数据弹窗 =====
+function openDataModal(parentId) {
+  document.getElementById('dataModalTitle').textContent = parentId ? '新增子项' : '新增字典项';
+  document.getElementById('dataEditId').value = '';
+  document.getElementById('dataParentId').value = parentId || '';
+  document.getElementById('dataName').value = '';
+  document.getElementById('dataValue').value = '';
+  document.getElementById('dataSort').value = '0';
+  document.getElementById('dataStatusEdit').value = 'active';
+
+  if (parentId) {
+    const allData = loadData();
+    const treeData = allData[drawerTypeCode] || [];
+    const parent = findNode(treeData, parentId);
+    document.getElementById('parentField').style.display = 'block';
+    document.getElementById('parentName').value = parent ? parent.name : '';
+  } else {
+    document.getElementById('parentField').style.display = 'none';
+    document.getElementById('parentName').value = '';
+  }
+
+  document.getElementById('dataModal').classList.add('active');
+}
+
+function editData(id) {
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+  const node = findNode(treeData, id);
+  if (!node) return;
+
+  document.getElementById('dataModalTitle').textContent = '编辑字典项';
+  document.getElementById('dataEditId').value = id;
+  document.getElementById('dataName').value = node.name;
+  document.getElementById('dataValue').value = node.value || '';
+  document.getElementById('dataSort').value = node.sort !== undefined ? node.sort : 0;
+  document.getElementById('dataStatusEdit').value = node.status || 'active';
+
+  const parent = findParent(treeData, id);
+  if (parent) {
+    document.getElementById('parentField').style.display = 'block';
+    document.getElementById('parentName').value = parent.name;
+    document.getElementById('dataParentId').value = parent.id;
+  } else {
+    document.getElementById('parentField').style.display = 'none';
+    document.getElementById('dataParentId').value = '';
+  }
+
+  document.getElementById('dataModal').classList.add('active');
+}
+
+function closeDataModal() {
+  document.getElementById('dataModal').classList.remove('active');
+}
+
+function saveData() {
+  const name = document.getElementById('dataName').value.trim();
+  const value = document.getElementById('dataValue').value.trim();
+  const sort = parseInt(document.getElementById('dataSort').value) || 0;
+  const status = document.getElementById('dataStatusEdit').value;
+  const editId = document.getElementById('dataEditId').value;
+  const parentId = document.getElementById('dataParentId').value;
+
+  if (!name) { alert('请输入标签名称'); return; }
+
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  if (editId) {
+    const node = findNode(treeData, editId);
+    if (node) {
+      node.name = name;
+      node.value = value || name;
+      node.sort = sort;
+      node.status = status;
+    }
+  } else {
+    const newNode = {
+      id: drawerTypeCode + '_' + Date.now(),
+      name,
+      value: value || name,
+      sort,
+      status,
+      children: []
+    };
+
+    if (parentId) {
+      const parent = findNode(treeData, parentId);
+      if (parent) {
+        if (!parent.children) parent.children = [];
+        parent.children.push(newNode);
+        expandedIds.add(parentId);
+      }
+    } else {
+      treeData.push(newNode);
+    }
+  }
+
+  allData[drawerTypeCode] = treeData;
+  saveDataStore(allData);
+  closeDataModal();
+  searchDrawerData();
+}
+
+// ===== 删除 =====
+function deleteDrawerData(id) {
+  if (!confirm('确定删除该字典项？子项也会一并删除。')) return;
+
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  function removeFrom(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].id === id) {
+        items.splice(i, 1);
+        return true;
+      }
+      if (items[i].children && removeFrom(items[i].children)) return true;
+    }
+    return false;
+  }
+
+  removeFrom(treeData);
+  allData[drawerTypeCode] = treeData;
+  saveDataStore(allData);
+  selectedDataIds.delete(id);
+  searchDrawerData();
+}
+
+function batchDeleteDrawerData() {
+  if (selectedDataIds.size === 0) { alert('请先选择要删除的项'); return; }
+  if (!confirm(`确定删除选中的 ${selectedDataIds.size} 项？子项也会一并删除。`)) return;
+
+  const allData = loadData();
+  const treeData = allData[drawerTypeCode] || [];
+
+  function removeSelected(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (selectedDataIds.has(items[i].id)) {
+        items.splice(i, 1);
+      } else if (items[i].children) {
+        removeSelected(items[i].children);
+      }
+    }
+  }
+
+  removeSelected(treeData);
+  allData[drawerTypeCode] = treeData;
+  saveDataStore(allData);
+  selectedDataIds.clear();
+  searchDrawerData();
+}
+
+// ===== 工具函数 =====
+function findNode(items, id) {
+  for (const item of items) {
+    if (item.id === id) return item;
+    if (item.children) {
+      const found = findNode(item.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function findParent(items, id, parent) {
+  for (const item of items) {
+    if (item.id === id) return parent;
+    if (item.children) {
+      const found = findParent(item.children, id, item);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>
