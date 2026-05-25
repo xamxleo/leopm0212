@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>稿件管理 - AI广播内容生产平台</title>
+<style>
+  * { margin:0; padding:0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 56px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    display: flex; align-items: center; padding: 0 24px; color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0;
+  }
+  .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-right: 40px; white-space: nowrap; }
+  .topbar .logo span { color: #00d4ff; }
+  .top-menu { display: flex; gap: 4px; }
+  .top-menu-item {
+    padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    color: rgba(255,255,255,0.7); transition: all 0.2s; white-space: nowrap;
+    text-decoration: none; display: inline-block;
+  }
+  .top-menu-item:hover { background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; }
+  .top-menu-item.active { background: rgba(0,212,255,0.2); color: #00d4ff; }
+  .topbar .right-area { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .topbar .notification { position: relative; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+  .topbar .notification .badge {
+    position: absolute; top: -6px; right: -8px; background: #ff4d4f; color: #fff;
+    font-size: 10px; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center;
+  }
+  .topbar .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00d4ff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+  .main-body { flex: 1; display: flex; overflow: hidden; }
+
+  /* 左侧菜单（与 audio.html / collect.html 一致） */
+  .sidebar {
+    width: 220px; min-width: 220px; background: #fff; border-right: 1px solid #e8e8e8;
+    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+  }
+  .sidebar-group { margin-bottom: 8px; }
+  .sidebar-group-title {
+    padding: 16px 16px 8px; font-size: 11px; color: #999; font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-item {
+    display: block; padding: 10px 16px 10px 20px; font-size: 13px; color: #666;
+    cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent;
+  }
+  .sidebar-item:hover { background: #f5f5f5; color: #333; text-decoration: none; }
+  .sidebar-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+
+  /* 主内容区 */
+  .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .content-header {
+    padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .content-header h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+  .content-header .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* 状态筛选（展开按钮组，放在页面中间） */
+  .status-tabs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .status-tab {
+    padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+    border: 1px solid #e8e8e8; background: #fff; color: #666; transition: all 0.2s; white-space: nowrap;
+  }
+  .status-tab:hover { border-color: #91d5ff; color: #333; }
+  .status-tab.active { background: #1890ff; color: #fff; border-color: #1890ff; font-weight: 500; }
+  .status-tab .st-count { font-size: 11px; margin-left: 4px; opacity: 0.8; }
+
+  .draft-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+
+  .btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s; }
+  .btn:hover { border-color: #1890ff; color: #1890ff; }
+  .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+  .btn-primary:hover { background: #40a9ff; }
+  .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+  .btn-success:hover { background: #73d13d; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+  .btn-danger:hover { background: #ff7875; }
+
+  /* 任务卡片 */
+  .task-card { background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+  .task-card .tc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .task-card .tc-title { font-size: 14px; font-weight: 500; color: #333; }
+  .task-card .tc-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+  .tc-status.running { background: #e6f7ff; color: #1890ff; }
+  .tc-status.done { background: #f6ffed; color: #52c41a; }
+  .tc-status.failed { background: #fff1f0; color: #ff4d4f; }
+  .tc-status.stopped { background: #f5f5f5; color: #999; }
+  .task-card .tc-progress { height: 4px; background: #f0f0f0; border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
+  .task-card .tc-progress-bar { height: 100%; border-radius: 2px; transition: width 0.5s; }
+  .tc-progress-bar.running { background: linear-gradient(90deg, #1890ff, #00d4ff); }
+  .tc-progress-bar.done { background: #52c41a; }
+  .tc-progress-bar.stopped { background: #d9d9d9; }
+  .task-card .tc-meta { font-size: 12px; color: #999; display: flex; gap: 16px; }
+  .task-card .tc-articles { margin-top: 8px; font-size: 12px; color: #666; }
+  .task-card .tc-actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* 稿件卡片 */
+  .draft-card { background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; cursor: pointer; transition: all 0.2s; }
+  .draft-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #91d5ff; }
+  .draft-card.expanded { border-color: #1890ff; box-shadow: 0 4px 12px rgba(24,144,255,0.15); cursor: default; }
+  .draft-card .dc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .draft-card .dc-title { font-size: 15px; font-weight: 500; color: #1a1a2e; flex: 1; }
+  .draft-card .dc-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 12px; }
+  .dc-status.pending { background: #fff7e6; color: #fa8c16; }
+  .dc-status.confirmed { background: #f6ffed; color: #52c41a; }
+  .draft-card .dc-meta { font-size: 12px; color: #999; display: flex; gap: 16px; flex-wrap: wrap; }
+  .draft-card .dc-tags { display: flex; gap: 4px; margin-left: auto; }
+  .dc-tag { padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+  .dc-tag.src { background: #e6f7ff; color: #1890ff; }
+  .dc-tag.prompt { background: #f9f0ff; color: #722ed1; }
+
+  /* 展开后的校对区 */
+  .proofread-section { display: none; margin-top: 16px; border-top: 1px solid #f0f0f0; padding-top: 16px; }
+  .proofread-section.show { display: block; }
+  .pr-toolbar { display: flex; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+  .pr-toolbar .tool-btn { padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #666; transition: all 0.2s; }
+  .pr-toolbar .tool-btn:hover { border-color: #1890ff; color: #1890ff; }
+  .pr-body { min-height: 200px; padding: 16px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px; line-height: 1.8; outline: none; background: #fafafa; white-space: pre-wrap; }
+  .pr-body:focus { border-color: #1890ff; background: #fff; }
+  .pr-issues { margin-top: 12px; }
+  .pr-issue { padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .pr-issue.warn { background: #fffbe6; border: 1px solid #ffe58f; color: #d48806; }
+  .pr-issue.error { background: #fff1f0; border: 1px solid #ffa39e; color: #cf1322; }
+  .pr-issue.ok { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+  .pr-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* 右侧面板 */
+  .right-panel { width: 300px; min-width: 300px; background: #fff; border-left: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
+  .right-panel .panel-header { padding: 14px 16px; font-size: 14px; font-weight: 600; color: #1a1a2e; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+  .right-panel .panel-header .ai-badge { background: linear-gradient(135deg, #1890ff, #00d4ff); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 8px; }
+  /* 快捷操作区 */
+  .quick-actions { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; }
+  .quick-actions .qa-title { font-size: 11px; color: #999; font-weight: 500; margin-bottom: 2px; }
+  .quick-actions .qa-btn { display: block; width: 100%; padding: 8px 12px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fafafa; font-size: 12px; color: #333; cursor: pointer; transition: all 0.2s; text-align: left; }
+  .quick-actions .qa-btn:hover { border-color: #1890ff; background: #e6f7ff; color: #1890ff; }
+  .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ai-msg { padding: 8px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; max-width: 90%; }
+  .ai-msg.ai { background: #f0f7ff; color: #333; align-self: flex-start; }
+  .ai-msg.ai .msg-label { color: #1890ff; font-weight: 600; margin-bottom: 4px; font-size: 11px; }
+  .ai-msg.notification { background: #fffbe6; border-left: 3px solid #faad14; }
+  .ai-msg.notification .msg-label { color: #fa8c16; }
+
+  /* 弹窗 */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); display: none; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 520px; max-height: 85vh;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-header-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .modal-header h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+  .close-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: #999; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .close-btn:hover { background: #f5f5f5; color: #333; }
+  .modal-body { padding: 20px; font-size: 13px; color: #666; line-height: 1.8; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+  .prompt-options { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .prompt-option { padding: 10px 14px; border: 1px solid #e8e8e8; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .prompt-option:hover { border-color: #91d5ff; background: #f0f7ff; }
+  .prompt-option.selected { border-color: #1890ff; background: #e6f7ff; }
+  .prompt-option .po-name { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; }
+  .prompt-option .po-desc { font-size: 12px; color: #999; line-height: 1.5; }
+  .prompt-option .po-tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; margin-top: 6px; background: #f9f0ff; color: #722ed1; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+  .empty-text { font-size: 15px; margin-bottom: 8px; }
+  .empty-hint { font-size: 12px; }
+
+  /* AI编校高亮 */
+  .pr-highlight-word { border-bottom: 2px wavy #fa8c16; cursor: pointer; transition: background 0.2s; }
+  .pr-highlight-grammar { border-bottom: 2px wavy #1890ff; cursor: pointer; transition: background 0.2s; }
+  .pr-highlight-sensitive { background: rgba(255, 77, 79, 0.12); border-bottom: 2px solid #ff4d4f; cursor: pointer; transition: background 0.2s; }
+  .pr-highlight-word:hover { background: rgba(250, 140, 22, 0.1); }
+  .pr-highlight-grammar:hover { background: rgba(24, 144, 255, 0.1); }
+  .pr-highlight-sensitive:hover { background: rgba(255, 77, 79, 0.2); }
+  .pr-issue-item { transition: border-color 0.3s; }
+
+  /* 弹窗 Tab 栏 */
+  .modal-tabs { display: flex; gap: 0; border-bottom: 1px solid #f0f0f0; padding: 0 24px; }
+  .modal-tab { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #999; border-bottom: 2px solid transparent; transition: all 0.2s; user-select: none; }
+  .modal-tab:hover { color: #333; }
+  .modal-tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
+
+  /* 半自动生成表单 */
+  .semi-form { display: flex; flex-direction: column; gap: 16px; }
+  .semi-field { display: flex; flex-direction: column; gap: 6px; }
+  .semi-field label { font-size: 13px; font-weight: 500; color: #333; }
+  .semi-field label .required { color: #ff4d4f; margin-left: 2px; }
+  .semi-field select,
+  .semi-field input[type="text"],
+  .semi-field textarea { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #333; outline: none; transition: border-color 0.2s; font-family: inherit; }
+  .semi-field select:focus,
+  .semi-field input[type="text"]:focus,
+  .semi-field textarea:focus { border-color: #1890ff; }
+  .semi-field textarea { resize: vertical; min-height: 60px; }
+  .semi-field .hint { font-size: 11px; color: #999; }
+  .semi-preview { background: #f7f9fc; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; margin-top: 4px; }
+  .semi-preview .sp-title { font-size: 12px; font-weight: 500; color: #999; margin-bottom: 8px; }
+  .semi-preview .sp-content { font-size: 13px; color: #333; line-height: 1.7; white-space: pre-wrap; min-height: 80px; max-height: 200px; overflow-y: auto; border: 1px solid #e8e8e8; border-radius: 6px; padding: 10px 12px; background: #fff; outline: none; }
+  .semi-preview .sp-content:focus { border-color: #1890ff; }
+  .semi-preview .sp-label { font-size: 11px; color: #bbb; margin-top: 6px; }
+
+  /* 筛选栏 */
+  .filter-bar { padding: 10px 24px; background: #fff; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .filter-bar .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+  .filter-bar .search-input { flex: 1; min-width: 160px; padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; outline: none; max-width: 240px; }
+  .filter-bar .search-input:focus { border-color: #1890ff; }
+  .filter-bar input[type="date"] { padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer; }
+  .filter-bar input[type="date"]:focus { border-color: #1890ff; }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="logo"><span>AI</span>广播内容生产平台</div>
+  <div class="top-menu">
+    <a class="top-menu-item active" href="collect.html">内容生产</a>
+    <a class="top-menu-item" href="automation.html">自动化</a>
+    <a class="top-menu-item" href="system.html">系统管理</a>
+  </div>
+  <div class="right-area">
+    <div class="notification" onclick="customAlert('暂无新通知')">通知<span class="badge">3</span></div>
+    <div class="user-info"><div class="avatar">王</div><span style="font-size:13px">王总监</span></div>
+  </div>
+</div>
+
+<!-- 主体三栏 -->
+<div class="main-body">
+
+  <!-- 左侧菜单（与 audio.html / collect.html 一致） -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">内容生产</div>
+      <a class="sidebar-item" href="collect.html">数据中心</a>
+      <a class="sidebar-item active" href="draft.html">稿件管理</a>
+      <a class="sidebar-item" href="audio.html">音频管理</a>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;margin-top:auto">
+      <button class="btn" style="width:100%;font-size:12px;color:#999" onclick="clearCache()">清除缓存 / 重置数据</button>
+    </div>
+  </div>
+
+  <!-- 中间：稿件列表 -->
+  <div class="main-content">
+
+    <!-- 内容头部 -->
+    <div class="content-header">
+      <h2>稿件管理</h2>
+      <div class="header-right">
+        <button class="btn" onclick="refreshList()">刷新</button>
+      </div>
+    </div>
+
+    <!-- 筛选栏（日期 + 状态 + 标题搜索） -->
+    <div class="filter-bar">
+      <span class="filter-label">日期</span>
+      <input type="date" id="filter-date" onchange="renderList()">
+      <span class="filter-label">状态</span>
+      <div class="status-tabs" id="status-tabs">
+        <button class="status-tab active" data-status="all" onclick="filterByStatus('all', this)">全部 <span class="st-count" id="count-all">0</span></button>
+        <button class="status-tab" data-status="running" onclick="filterByStatus('running', this)">生成中 <span class="st-count" id="count-running">0</span></button>
+        <button class="status-tab" data-status="pending" onclick="filterByStatus('pending', this)">待校对 <span class="st-count" id="count-pending">0</span></button>
+        <button class="status-tab" data-status="confirmed" onclick="filterByStatus('confirmed', this)">已完成 <span class="st-count" id="count-confirmed">0</span></button>
+        <button class="status-tab" data-status="stopped" onclick="filterByStatus('stopped', this)">已停止 <span class="st-count" id="count-stopped">0</span></button>
+      </div>
+      <span class="filter-label">标题搜索</span>
+      <input type="text" class="search-input" id="filter-title" placeholder="输入稿件标题关键词..." oninput="renderList()">
+    </div>
+
+    <div class="draft-list" id="draft-list"></div>
+  </div>
+
+  <!-- 右侧：融媒AI助手 -->
+  <div class="right-panel">
+    <div class="panel-header">
+      <span>融媒AI助手</span>
+      <span class="ai-badge">AI</span>
+    </div>
+    <div class="quick-actions">
+      <div class="qa-title">快捷操作</div>
+      <button class="qa-btn" onclick="quickAction('view-pending')">查看待校对稿件</button>
+      <button class="qa-btn" onclick="quickAction('batch-proofread')">批量智能编校</button>
+      <button class="qa-btn" onclick="quickAction('gen-hot-drafts')">生成本周热点稿件</button>
+      <button class="qa-btn" onclick="quickAction('view-confirmed')">查看已完成稿件</button>
+    </div>
+    <div class="ai-messages" id="ai-messages">
+      <div class="ai-msg ai">
+        <div class="msg-label">融媒AI</div>
+        您好，我是您的融媒AI助手。稿件管理页面可以查看生成中的任务、待校对稿件和已完成稿件。点击稿件可展开校对区，进行编辑、重新生成、AI智能编校等操作。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 重新生成弹窗（双Tab：自动生成 / 半自动生成） -->
+<div class="modal-overlay" id="regenerate-modal">
+  <div class="modal">
+    <div class="modal-header" style="display:flex;flex-direction:column;align-items:stretch;padding:16px 20px 0 20px">
+      <div class="modal-header-top" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3>重新生成稿件</h3>
+        <button class="close-btn" onclick="closeRegenerateModal()">X</button>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" onclick="switchRegenTab('auto', this)">自动生成</div>
+        <div class="modal-tab" onclick="switchRegenTab('semi', this)">半自动生成</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <!-- Tab1：自动生成 -->
+      <div id="regen-tab-auto">
+        <div class="prompt-option" onclick="selectRegenPrompt(this, 'news-broadcast')">
+          <div class="po-name">新闻播报稿</div>
+          <div class="po-desc">将热点内容整理为3分钟新闻播报稿，适合整点新闻、午间播报等常规新闻节目。语言规范、结构清晰，符合广播电台播报标准。</div>
+          <div class="po-tag">党媒广播电台</div>
+        </div>
+        <div class="prompt-option" onclick="selectRegenPrompt(this, 'hotspot-analysis')">
+          <div class="po-name">热点解读稿</div>
+          <div class="po-desc">深度解读热点事件，分析背景、影响及趋势，适合专题节目、深度报道。内容详实，观点鲜明。</div>
+          <div class="po-tag">党媒广播电台</div>
+        </div>
+        <div class="prompt-option" onclick="selectRegenPrompt(this, 'livelihood-topic')">
+          <div class="po-name">民生话题稿</div>
+          <div class="po-desc">将热点转化为民生相关播报内容，聚焦百姓关心的话题，语言亲切自然，适合民生类、服务类节目。</div>
+          <div class="po-tag">党媒广播电台</div>
+        </div>
+        <div class="prompt-option" onclick="selectRegenPrompt(this, 'short-news')">
+          <div class="po-name">快讯短稿</div>
+          <div class="po-desc">将热点整理为30秒至1分钟的快讯短稿，适合整点快讯、滚动新闻等短时播报场景。</div>
+          <div class="po-tag">党媒广播电台</div>
+        </div>
+      </div>
+      <!-- Tab2：半自动生成 -->
+      <div id="regen-tab-semi" style="display:none;">
+        <div class="semi-form">
+          <div class="semi-field">
+            <label>播出时长 <span class="required">*</span></label>
+            <select id="regen-duration" onchange="onRegenSemiChange()">
+              <option value="">请选择时长</option>
+              <option value="30秒">30秒</option>
+              <option value="1分钟">1分钟</option>
+              <option value="2分钟">2分钟</option>
+              <option value="3分钟">3分钟</option>
+              <option value="5分钟">5分钟</option>
+              <option value="10分钟">10分钟</option>
+              <option value="15分钟">15分钟</option>
+              <option value="30分钟">30分钟</option>
+              <option value="custom">自定义...</option>
+            </select>
+            <input type="text" id="regen-duration-custom" placeholder="输入自定义时长，如：8分钟" style="display:none;margin-top:6px;">
+          </div>
+          <div class="semi-field">
+            <label>播出场景 <span class="required">*</span></label>
+            <select id="regen-scene" onchange="onRegenSemiChange()">
+              <option value="">请选择场景</option>
+              <option value="整点新闻">整点新闻</option>
+              <option value="午间播报">午间播报</option>
+              <option value="晚高峰新闻">晚高峰新闻</option>
+              <option value="早间新闻">早间新闻</option>
+              <option value="民生专题">民生专题</option>
+              <option value="天气播报">天气播报</option>
+              <option value="音乐节目">音乐节目</option>
+              <option value="专题报道">专题报道</option>
+              <option value="快讯滚动">快讯滚动</option>
+              <option value="夜间新闻">夜间新闻</option>
+            </select>
+          </div>
+          <div class="semi-field">
+            <label>生成要求 <span class="required">*</span></label>
+            <textarea id="regen-requirement" placeholder="请描述稿件的生成要求，例如：语言要正式、突出政策亮点、适合广播口播..." oninput="onRegenSemiPromptEdit()"></textarea>
+            <div class="hint">描述越详细，生成效果越好。可指定语言风格、重点内容、篇幅结构等。</div>
+          </div>
+          <div class="semi-preview">
+            <div class="sp-title">提示词预览（可手动修改）</div>
+            <div class="sp-content" id="regen-prompt-preview" contenteditable="true" oninput="onRegenSemiPromptEdit()"></div>
+            <div class="sp-label">以上内容将作为最终提示词发送给AI，可直接编辑调整。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeRegenerateModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmRegenerate()">确认重新生成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 停止任务确认弹窗 -->
+<div class="modal-overlay" id="stop-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <h3>确认停止任务</h3>
+      <button class="close-btn" onclick="closeStopModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#333;line-height:1.8">确定要停止当前生成任务吗？</p>
+      <p style="font-size:12px;color:#999;margin-top:8px">停止后已生成的内容将保留，未生成的部分将不再继续。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeStopModal()">取消</button>
+      <button class="btn btn-danger" onclick="confirmStop()">确认停止</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认通过弹窗 -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <h3>确认通过稿件</h3>
+      <button class="close-btn" onclick="closeApproveModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#333;line-height:1.8">确定要通过这篇稿件吗？</p>
+      <p style="font-size:12px;color:#999;margin-top:8px">通过后稿件状态将变为"已完成"，可进行音频生成。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeApproveModal()">取消</button>
+      <button class="btn btn-success" onclick="confirmApprove()">确认通过</button>
+    </div>
+  </div>
+</div>
+
+<!-- 生成音频弹窗 -->
+<div class="modal-overlay" id="audio-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h3>提交生成音频</h3>
+      <button class="close-btn" onclick="closeAudioModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;color:#666;margin-bottom:6px">选择主播</div>
+        <select id="audio-anchor" style="width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none">
+          <option value="male-anchor">男声主播</option>
+          <option value="female-anchor">女声主播</option>
+          <option value="male-young">男声青年</option>
+          <option value="female-young">女声青年</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;color:#666;margin-bottom:6px">选择音色</div>
+        <select id="audio-voice" style="width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none">
+          <option value="steady">沉稳</option>
+          <option value="lively">活泼</option>
+          <option value="standard" selected>标准</option>
+          <option value="warm">温暖</option>
+          <option value="authoritative">权威</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;color:#666;margin-bottom:6px">语速</div>
+        <select id="audio-speed" style="width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none">
+          <option value="0.8">慢速</option>
+          <option value="1.0" selected>标准</option>
+          <option value="1.2">快速</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAudioModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmAudioSubmit()">确认生成</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI编校结果确认弹窗（左右分栏） -->
+<div class="modal-overlay" id="proofread-result-modal">
+  <div class="modal" style="width:960px;max-height:90vh;padding:0;overflow:hidden">
+    <div class="modal-header" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <h3>AI智能编校</h3>
+        <span style="font-size:12px;color:#999">内容由AI生成，请人工复核后确认</span>
+      </div>
+      <button class="close-btn" onclick="closeProofreadResultModal()">X</button>
+    </div>
+    <div class="modal-body" style="padding:0;display:flex;overflow:hidden;height:calc(90vh - 120px)">
+      <!-- 左侧：文本内容 -->
+      <div style="flex:1.2;padding:20px;overflow-y:auto;border-right:1px solid #f0f0f0;background:#fff;font-size:14px;line-height:2;color:#333;white-space:pre-wrap" id="proofread-text-panel">
+        <!-- 动态填充带高亮标注的文本 -->
+      </div>
+      <!-- 右侧：编校结果列表 -->
+      <div style="flex:1;display:flex;flex-direction:column;background:#f8f9fa;min-width:340px">
+        <!-- 顶部统计 -->
+        <div style="padding:14px 16px;border-bottom:1px solid #e8e8e8;background:#fff">
+          <div style="display:flex;align-items:center;gap:16px">
+            <span style="font-size:14px;font-weight:600;color:#1a1a2e">错误更正</span>
+            <span style="font-size:13px;color:#1890ff;font-weight:600" id="proofread-count">0</span>
+            <span style="font-size:12px;color:#999;margin-left:auto;cursor:pointer" onclick="closeProofreadResultModal()">关闭</span>
+          </div>
+        </div>
+        <!-- 问题列表 -->
+        <div style="flex:1;overflow-y:auto;padding:12px" id="proofread-issue-list">
+          <!-- 动态填充 -->
+        </div>
+        <!-- 底部一键修正 -->
+        <div style="padding:12px 16px;border-top:1px solid #e8e8e8;background:#fff">
+          <button class="btn btn-primary" style="width:100%" id="btn-fix-all" onclick="fixAllProofread()">一键修正</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========= 全局数据 =========
+var draftList = [];
+var taskList = [];
+var currentStatusFilter = 'all';
+var selectedRegenerateId = '';
+var selectedRegenPrompt = '';
+var stopTaskId = '';
+var approveDraftId = '';
+var audioDraftId = '';
+var proofreadResultDraftId = '';
+var regenModalTab = 'auto';
+var regenSemiEditedPrompt = '';
+
+// ========= 通用自定义弹窗（与停止任务弹窗样式统一） =========
+function customConfirm(message, onConfirm, onCancel) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>确认</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn" id="cc-cancel">取消</button>' +
+        '<button class="btn btn-primary" id="cc-confirm">确认</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doCancel() {
+    overlay.remove();
+    if (typeof onCancel === 'function') onCancel();
+  }
+  overlay.querySelector('.close-btn').onclick = doCancel;
+  document.getElementById('cc-cancel').onclick = doCancel;
+  document.getElementById('cc-confirm').onclick = function() {
+    overlay.remove();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) doCancel(); };
+}
+
+function customAlert(message, onOk) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>提示</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn btn-primary" id="ca-ok">确定</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doOk() {
+    overlay.remove();
+    if (typeof onOk === 'function') onOk();
+  }
+  overlay.querySelector('.close-btn').onclick = doOk;
+  document.getElementById('ca-ok').onclick = doOk;
+  overlay.onclick = function(e) { if (e.target === overlay) doOk(); };
+}
+
+// ========= 快捷操作 =========
+function quickAction(action) {
+  switch(action) {
+    case 'view-pending':
+      filterByStatus('pending', document.querySelector('.status-tab[data-status="pending"]'));
+      appendAIMsg('<div class="msg-label">融媒AI</div>已切换到「待校对」状态，共 <strong>' + (document.getElementById('count-pending')?.textContent || '0') + ' 篇</strong>。');
+      break;
+    case 'batch-proofread':
+      appendAIMsg('<div class="msg-label">融媒AI</div>正在对待校对稿件进行批量AI智能编校，预计 1-2 分钟...');
+      setTimeout(function() { appendAIMsg('<div class="msg-label">融媒AI</div>批量编校完成，共处理 <strong>3 篇</strong>稿件，发现 <strong>12 处</strong>建议修改。'); }, 2000);
+      break;
+    case 'gen-hot-drafts':
+      appendAIMsg('<div class="msg-label">融媒AI</div>正在根据本周热点生成稿件，预计 2-3 分钟...');
+      setTimeout(function() { appendAIMsg('<div class="msg-label">融媒AI</div>已生成本周热点稿件 <strong>5 篇</strong>，请在列表中查看。'); }, 2500);
+      break;
+    case 'view-confirmed':
+      filterByStatus('confirmed', document.querySelector('.status-tab[data-status="confirmed"]'));
+      appendAIMsg('<div class="msg-label">融媒AI</div>已切换到「已完成」状态，共 <strong>' + (document.getElementById('count-confirmed')?.textContent || '0') + ' 篇</strong>。');
+      break;
+  }
+}
+
+// ========= 演示数据 =========
+var DEMO_DRAFTS = [
+  {
+    id: 'draft-001',
+    title: 'AI技术突破引发全球关注（新闻播报稿）',
+    status: 'pending',
+    promptName: '新闻播报稿',
+    sourceType: '央级媒体',
+    createdAt: '2026-05-21 10:30',
+    wordCount: 386,
+    content: '【导语】\n听众朋友们大家好，欢迎收听今日热点播报。\n\n【正文】\n今天最引人关注的话题是：AI技术突破引发全球关注，多国加速布局。\n\n根据新华社的最新报道，这一事件在全球范围内引发了广泛讨论。多位业内专家在接受采访时表示，这一技术突破将深刻改变未来产业格局。\n\n截至目前，已有超过30个国家和地区明确表示将加大相关投入。分析人士指出，这一趋势将在未来3到5年内持续深化。\n\n【结尾】\n以上就是本期热点播报的全部内容，感谢您的收听。',
+    issues: [
+      { type: 'warn', text: '【导语】后建议加节目呼号' },
+      { type: 'ok', text: '正文结构完整，事实表述准确' },
+      { type: 'warn', text: '结尾可考虑增加互动引导语' }
+    ]
+  },
+  {
+    id: 'draft-002',
+    title: '新能源汽车销量创新高（热点解读稿）',
+    status: 'pending',
+    promptName: '热点解读稿',
+    sourceType: '央级媒体',
+    createdAt: '2026-05-21 09:15',
+    wordCount: 542,
+    content: '【导语】\n听众朋友们大家好，今天我们来深入解读一个热点话题。\n\n【正文】\n新能源汽车销量创新高，市场渗透率突破50%——这个数字意味着什么？\n\n首先从数据来看，2026年第一季度新能源汽车销量同比增长达到惊人的47.3%，市场渗透率首次突破50%大关。这标志着新能源汽车已经从"政策驱动"全面转向"市场驱动"。\n\n业内分析认为，这一转折点的到来比预期提前了至少18个月...',
+    issues: [
+      { type: 'ok', text: '导语引入自然，适合深度解读节目' },
+      { type: 'ok', text: '数据引用准确，来源可查' }
+    ]
+  },
+  {
+    id: 'draft-003',
+    title: '极端天气预警（民生话题稿）',
+    status: 'pending',
+    promptName: '民生话题稿',
+    sourceType: '省级媒体',
+    createdAt: '2026-05-21 09:45',
+    wordCount: 298,
+    content: '【正文】\n各位听众早上好，今天的民生话题我们来关注天气。\n\n根据气象部门最新预警，南方多地将迎来强降雨天气，部分地区伴有雷暴大风。建议大家出行备好雨具，注意交通安全。\n\n气温方面，北方多地今天迎来今年首次高温天气，局部地区最高气温可达35度以上...',
+    issues: []
+  },
+  {
+    id: 'draft-004',
+    title: '昆明市融媒体中心正式挂牌成立（新闻播报稿）',
+    status: 'confirmed',
+    promptName: '新闻播报稿',
+    sourceType: '央级媒体',
+    createdAt: '2026-05-20 16:30',
+    wordCount: 412,
+    content: '【导语】\n听众朋友们大家好，欢迎收听今日热点播报。\n\n【正文】\n今天上午，昆明市融媒体中心正式挂牌成立，标志着昆明市媒体融合发展进入新阶段。\n\n据悉，新成立的融媒体中心整合了原昆明市广播电视局、昆明市日报社等媒体资源，将实现"一次采集、多种生成、多元传播"的全媒体生产流程。\n\n中心负责人表示，未来将充分发挥融媒体优势，为市民提供更加丰富、及时、准确的新闻信息服务。\n\n【结尾】\n以上就是本期热点播报的全部内容，感谢您的收听。',
+    issues: [
+      { type: 'ok', text: '导语呼号完整，符合播报规范' },
+      { type: 'ok', text: '正文事实准确，数据可查' },
+      { type: 'ok', text: '结尾完整，适合播出' }
+    ]
+  }
+];
+
+var DEMO_TASKS = [
+  {
+    id: 'task-demo-1',
+    status: 'running',
+    progress: 65,
+    promptName: '新闻播报稿',
+    articleCount: 3,
+    createdAt: '2026-05-21 10:40',
+    articles: ['昆明市融媒体中心正式挂牌成立', '全国多地高温预警', '本周音乐榜单出炉']
+  }
+];
+
+// ========= 初始化 =========
+(function() {
+  var page = window.location.pathname.split('/').pop();
+  // 顶部菜单高亮：内容生产包含 collect/draft/audio
+  document.querySelectorAll('.top-menu-item').forEach(function(t) {
+    t.classList.remove('active');
+    var href = t.getAttribute('href');
+    if (href === page) { t.classList.add('active'); }
+    else if (href === 'collect.html' && (page === 'draft.html' || page === 'audio.html' || page === 'manual-collect.html')) { t.classList.add('active'); }
+  });
+  // 左侧子菜单高亮
+  document.querySelectorAll('.sidebar-item').forEach(function(t) {
+    t.classList.remove('active');
+    if (t.getAttribute('href') === page) t.classList.add('active');
+  });
+
+  // 加载任务数据
+  var savedTasks = localStorage.getItem('generation_tasks');
+  if (savedTasks) {
+    try { taskList = JSON.parse(savedTasks); } catch(e) {}
+  }
+  if (taskList.length === 0) taskList = DEMO_TASKS.slice();
+
+  // 加载稿件数据
+  var savedDrafts = localStorage.getItem('draft_list');
+  if (savedDrafts) {
+    try { draftList = JSON.parse(savedDrafts); } catch(e) {}
+  }
+  if (draftList.length === 0) draftList = DEMO_DRAFTS.slice();
+
+  // 如果没有 confirmed 状态的稿件，补充演示数据
+  var hasConfirmed = false;
+  for (var i = 0; i < draftList.length; i++) {
+    if (draftList[i].status === 'confirmed') { hasConfirmed = true; break; }
+  }
+  if (!hasConfirmed) {
+    for (var j = 0; j < DEMO_DRAFTS.length; j++) {
+      if (DEMO_DRAFTS[j].status === 'confirmed') {
+        var exists = false;
+        for (var k = 0; k < draftList.length; k++) {
+          if (draftList[k].id === DEMO_DRAFTS[j].id) { exists = true; break; }
+        }
+        if (!exists) draftList.push(JSON.parse(JSON.stringify(DEMO_DRAFTS[j])));
+      }
+    }
+    saveDrafts();
+  }
+
+  renderList();
+  updateCounts();
+})();
+
+// ========= 数据持久化 =========
+function saveDrafts() {
+  try { localStorage.setItem('draft_list', JSON.stringify(draftList)); } catch(e) {}
+}
+function saveTasks() {
+  try { localStorage.setItem('generation_tasks', JSON.stringify(taskList)); } catch(e) {}
+}
+
+// ========= 渲染列表（整合状态 + 日期 + 标题筛选） =========
+function renderList() {
+  var container = document.getElementById('draft-list');
+  var dateVal = document.getElementById('filter-date')?.value || '';
+  var titleVal = (document.getElementById('filter-title')?.value || '').toLowerCase();
+  var allItems = [];
+  taskList.forEach(function(t) { allItems.push({ type: 'task', data: t }); });
+  draftList.forEach(function(d) { allItems.push({ type: 'draft', data: d }); });
+
+  var filtered = allItems.filter(function(item) {
+    // 状态筛选
+    if (currentStatusFilter !== 'all') {
+      if (item.type === 'task') {
+        if (currentStatusFilter !== 'running' || item.data.status !== 'running') return false;
+      } else {
+        if (item.data.status !== currentStatusFilter) return false;
+      }
+    }
+    // 日期筛选
+    if (dateVal) {
+      var itemDate = (item.data.createdAt || '').split(' ')[0].split('T')[0];
+      if (itemDate !== dateVal) return false;
+    }
+    // 标题筛选
+    if (titleVal) {
+      var title = item.data.title || '';
+      if (title.toLowerCase().indexOf(titleVal) === -1) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-text">暂无符合条件的稿件</div><div class="empty-hint">请在数据采集页面创建稿件生成任务</div></div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(item) {
+    if (item.type === 'task') {
+      html += renderTaskCard(item.data);
+    } else {
+      html += renderDraftCard(item.data);
+    }
+  });
+  container.innerHTML = html;
+}
+
+// ========= 渲染任务卡片 =========
+function renderTaskCard(task) {
+  var statusText = { 'running': '生成中', 'done': '已完成', 'failed': '失败', 'stopped': '已停止' };
+  var barClass = task.status === 'done' ? 'done' : (task.status === 'stopped' ? 'stopped' : 'running');
+  var stopBtn = task.status === 'running'
+    ? '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();showStopModal(\'' + task.id + '\')">停止任务</button>'
+    : '';
+  return '<div class="task-card">' +
+    '<div class="tc-header">' +
+      '<span class="tc-title">' + escapeHtml(task.promptName || '生成任务') + '</span>' +
+      '<span class="tc-status ' + task.status + '">' + (statusText[task.status] || task.status) + '</span>' +
+    '</div>' +
+    '<div class="tc-progress"><div class="tc-progress-bar ' + barClass + '" style="width:' + task.progress + '%"></div></div>' +
+    '<div class="tc-meta"><span>创建时间：' + (task.createdAt || '-') + '</span><span>进度：' + task.progress + '%</span></div>' +
+    (task.articles ? '<div class="tc-articles">基于稿件：' + task.articles.join('、') + '</div>' : '') +
+    '<div class="tc-actions" style="margin-top:10px">' + stopBtn + '</div>' +
+  '</div>';
+}
+
+// ========= 渲染稿件卡片 =========
+function renderDraftCard(draft) {
+  var statusClass = draft.status === 'confirmed' ? 'confirmed' : 'pending';
+  var statusText = draft.status === 'pending' ? '待校对' : '已完成';
+  var canEdit = draft.status === 'pending' || draft.status === 'confirmed';
+  var canRegenerate = true;
+
+  var timeAttr = (draft.createdAt || '').split(' ')[0];
+  return '<div class="draft-card" id="draft-' + draft.id + '" data-time="' + timeAttr + '" onclick="toggleExpand(\'' + draft.id + '\')">' +
+    '<div class="dc-header">' +
+      '<span class="dc-title">' + escapeHtml(draft.title) + '</span>' +
+      '<span class="dc-status ' + statusClass + '">' + statusText + '</span>' +
+    '</div>' +
+    '<div class="dc-meta">' +
+      '<span>创建：' + escapeHtml(draft.createdAt || '-') + '</span>' +
+      '<span>' + (draft.wordCount || 0) + ' 字</span>' +
+      '<div class="dc-tags"><span class="dc-tag prompt">' + escapeHtml(draft.promptName || '') + '</span></div>' +
+    '</div>' +
+    '<div class="proofread-section" id="pr-section-' + draft.id + '">' +
+      '<div class="pr-toolbar" onclick="event.stopPropagation()">' +
+        '<button class="tool-btn" onclick="event.stopPropagation();insertMark(\'' + draft.id + '\',\'【导语】\')">插入导语标记</button>' +
+        '<button class="tool-btn" onclick="event.stopPropagation();insertMark(\'' + draft.id + '\',\'【正文】\')">插入正文标记</button>' +
+        '<button class="tool-btn" onclick="event.stopPropagation();insertMark(\'' + draft.id + '\',\'【结尾】\')">插入结尾标记</button>' +
+      '</div>' +
+      '<div class="pr-body" id="pr-body-' + draft.id + '" onclick="event.stopPropagation()" contenteditable="false" oninput="onDraftEdit(\'' + draft.id + '\')">' + escapeHtml(draft.content) + '</div>' +
+      '<div class="pr-issues" id="pr-issues-' + draft.id + '" onclick="event.stopPropagation()">' + renderIssues(draft.issues) + '</div>' +
+      '<div class="pr-actions" onclick="event.stopPropagation()">' +
+        (canEdit ? '<button class="btn btn-sm" id="edit-btn-' + draft.id + '" onclick="event.stopPropagation();toggleEditMode(\'' + draft.id + '\')">编辑</button>' : '') +
+        (canRegenerate ? '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();regenerateDraft(\'' + draft.id + '\')">重新生成</button>' : '') +
+        (draft.status === 'pending' ? '<button class="btn btn-sm" onclick="event.stopPropagation();aiProofread(\'' + draft.id + '\')">AI智能编校</button>' : '') +
+        (draft.status === 'pending' ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();showApproveModal(\'' + draft.id + '\')">确认通过</button>' : '') +
+        (draft.status === 'confirmed' ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();showAudioModal(\'' + draft.id + '\')">提交生成音频</button>' : '') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ========= 渲染问题列表 =========
+function renderIssues(issues) {
+  if (!issues || issues.length === 0) return '';
+  var iconMap = { 'error': '✕', 'warn': '⚠', 'ok': '✓' };
+  var bgMap = { 'error': '#fff1f0', 'warn': '#fffbe6', 'ok': '#f6ffed' };
+  var bdMap = { 'error': '#ffa39e', 'warn': '#ffe58f', 'ok': '#b7eb8f' };
+  var clrMap = { 'error': '#cf1322', 'warn': '#d48806', 'ok': '#389e0d' };
+  var html = '';
+  issues.forEach(function(issue) {
+    var ic = iconMap[issue.type] || '●';
+    var bg = bgMap[issue.type] || '#f5f5f5';
+    var bd = bdMap[issue.type] || '#d9d9d9';
+    var cl = clrMap[issue.type] || '#666';
+    html += '<div class="pr-issue ' + issue.type + '" style="background:' + bg + ';border-color:' + bd + ';color:' + cl + '">' + ic + ' ' + escapeHtml(issue.text) + '</div>';
+  });
+  return html;
+}
+
+// ========= 工具函数 =========
+function escapeHtml(text) {
+  if (!text) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(text));
+  return div.innerHTML;
+}
+
+function toggleExpand(id) {
+  var card = document.getElementById('draft-' + id);
+  var section = document.getElementById('pr-section-' + id);
+  if (!card || !section) return;
+  if (card.classList.contains('expanded')) {
+    card.classList.remove('expanded');
+    section.classList.remove('show');
+  } else {
+    document.querySelectorAll('.draft-card.expanded').forEach(function(c) { c.classList.remove('expanded'); });
+    document.querySelectorAll('.proofread-section.show').forEach(function(s) { s.classList.remove('show'); });
+    card.classList.add('expanded');
+    section.classList.add('show');
+  }
+}
+
+function onDraftEdit(id) {
+  var body = document.getElementById('pr-body-' + id);
+  var draft = findDraft(id);
+  if (draft && body) {
+    draft.content = body.innerText;
+    draft.wordCount = body.innerText.length;
+    saveDrafts();
+  }
+}
+
+function insertMark(id, mark) {
+  var body = document.getElementById('pr-body-' + id);
+  if (!body) return;
+  body.focus();
+  if (document.execCommand) {
+    document.execCommand('insertText', false, mark + '\n');
+  } else {
+    var sel = window.getSelection();
+    if (sel.rangeCount) {
+      var range = sel.getRangeAt(0);
+      range.insertNode(document.createTextNode(mark + '\n'));
+    }
+  }
+  onDraftEdit(id);
+}
+
+function findDraft(id) {
+  for (var i = 0; i < draftList.length; i++) {
+    if (draftList[i].id === id) return draftList[i];
+  }
+  return null;
+}
+
+function findTask(id) {
+  for (var i = 0; i < taskList.length; i++) {
+    if (taskList[i].id === id) return taskList[i];
+  }
+  return null;
+}
+
+// ========= 编辑模式切换 =========
+function toggleEditMode(id) {
+  var btn = document.getElementById('edit-btn-' + id);
+  var body = document.getElementById('pr-body-' + id);
+  if (!btn || !body) return;
+  if (btn.innerText === '编辑') {
+    btn.innerText = '保存';
+    btn.style.background = '#52c41a';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#52c41a';
+    body.contentEditable = 'true';
+    body.focus();
+    appendAIMsg('<div class="msg-label">融媒AI</div>已进入编辑模式，修改完成后点击"保存"。');
+  } else {
+    var draft = findDraft(id);
+    if (draft && draft.status === 'confirmed') {
+      customConfirm('将重新生成稿件，放入待校对状态，是否继续？', function() {
+        var newId = 'draft-' + Date.now();
+        draftList.push({
+          id: newId,
+          title: draft.title + '（重生成）',
+          status: 'pending',
+          promptName: draft.promptName,
+          sourceType: draft.sourceType,
+          createdAt: new Date().toLocaleString('zh-CN'),
+          wordCount: body.innerText.length,
+          content: body.innerText,
+          issues: []
+        });
+        saveDrafts();
+        renderList();
+        updateCounts();
+        appendAIMsg('<div class="msg-label">融媒AI</div>稿件已重新生成，已放入待校对列表。');
+        btn.innerText = '编辑';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        body.contentEditable = 'false';
+      });
+      return;
+    }
+    onDraftEdit(id);
+    if (draft) {
+      appendAIMsg('<div class="msg-label">融媒AI</div>稿件「' + draft.title.substring(0, 20) + '...」内容已保存。');
+    }
+    btn.innerText = '编辑';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    body.contentEditable = 'false';
+  }
+}
+
+// ========= 重新生成弹窗 Tab 切换 =========
+function switchRegenTab(tab, el) {
+  regenModalTab = tab;
+  document.querySelectorAll('#regenerate-modal .modal-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.getElementById('regen-tab-auto').style.display = tab === 'auto' ? '' : 'none';
+  document.getElementById('regen-tab-semi').style.display = tab === 'semi' ? '' : 'none';
+  if (tab === 'semi') onRegenSemiChange();
+}
+
+function onRegenSemiChange() {
+  var dur = document.getElementById('regen-duration').value;
+  var customInput = document.getElementById('regen-duration-custom');
+  if (customInput) customInput.style.display = dur === 'custom' ? '' : 'none';
+  var duration = dur === 'custom' ? (document.getElementById('regen-duration-custom').value.trim() || '自定义时长') : dur;
+  var scene = document.getElementById('regen-scene').value;
+  var req = document.getElementById('regen-requirement').value.trim();
+  var prompt = '';
+  prompt += '【任务类型】广播稿件生成\n';
+  prompt += '【播出时长】' + (duration || '[未设置]') + '\n';
+  prompt += '【播出场景】' + (scene || '[未设置]') + '\n';
+  if (req) {
+    prompt += '【生成要求】' + req + '\n';
+  }
+  prompt += '【稿件来源】以下为采集到的相关内容，请参考并生成稿件：\n';
+  // 这里实际项目中会填入选中的稿件内容
+  prompt += '\n请根据以上信息生成符合广播电台播出标准的稿件。';
+  var preview = document.getElementById('regen-prompt-preview');
+  if (preview) preview.innerText = prompt;
+}
+
+function onRegenSemiPromptEdit() {
+  var preview = document.getElementById('regen-prompt-preview');
+  if (preview) regenSemiEditedPrompt = preview.innerText.trim();
+}
+
+// ========= 重新生成 =========
+function regenerateDraft(id) {
+  selectedRegenerateId = id;
+  selectedRegenPrompt = '';
+  document.querySelectorAll('#regenerate-modal .prompt-option').forEach(function(el) { el.classList.remove('selected'); });
+  document.getElementById('regenerate-modal').classList.add('show');
+}
+
+function closeRegenerateModal() {
+  document.getElementById('regenerate-modal').classList.remove('show');
+  selectedRegenerateId = '';
+  selectedRegenPrompt = '';
+}
+
+function selectRegenPrompt(el, key) {
+  document.querySelectorAll('#regenerate-modal .prompt-option').forEach(function(e) { e.classList.remove('selected'); });
+  el.classList.add('selected');
+  selectedRegenPrompt = key;
+}
+
+function confirmRegenerate() {
+  if (regenModalTab === 'auto') {
+    if (!selectedRegenerateId || !selectedRegenPrompt) {
+      customAlert('请选择一个提示词模板');
+      return;
+    }
+    var promptNameMap = {
+      'news-broadcast': '新闻播报稿',
+      'hotspot-analysis': '热点解读稿',
+      'livelihood-topic': '民生话题稿',
+      'short-news': '快讯短稿'
+    };
+    var task = {
+      id: 'task-' + Date.now(),
+      mode: 'auto',
+      status: 'running',
+      progress: 0,
+      promptName: promptNameMap[selectedRegenPrompt] || '新闻播报稿',
+      sourceDraftId: selectedRegenerateId,
+      createdAt: new Date().toLocaleString('zh-CN')
+    };
+    task.finalPrompt = selectedRegenPrompt;
+    taskList.push(task);
+    saveTasks();
+    simulateTaskProgress(task.id);
+    var promptName = promptNameMap[selectedRegenPrompt] || selectedRegenPrompt;
+    appendAIMsg('<div class="msg-label">融媒AI</div>已创建自动重新生成任务（1 篇），使用：「' + promptName + '」，任务将在后台运行。');
+    clearSelection();
+  } else {
+    var duration = document.getElementById('regen-duration').value;
+    if (!duration) { customAlert('请选择播出时长'); return; }
+    var scene = document.getElementById('regen-scene').value;
+    if (!scene) { customAlert('请选择播出场景'); return; }
+    var req = document.getElementById('regen-requirement').value.trim();
+    if (!req) { customAlert('请填写生成要求'); return; }
+    var promptText = regenSemiEditedPrompt || document.getElementById('regen-prompt-preview').innerText;
+    var task = {
+      id: 'task-' + Date.now(),
+      mode: 'semi',
+      status: 'running',
+      progress: 0,
+      promptName: '半自动生成',
+      sourceDraftId: selectedRegenerateId,
+      duration: duration === 'custom' ? (document.getElementById('regen-duration-custom').value.trim() || '自定义时长') : duration,
+      scene: scene,
+      requirement: req,
+      promptText: promptText,
+      createdAt: new Date().toLocaleString('zh-CN')
+    };
+    taskList.push(task);
+    saveTasks();
+    simulateTaskProgress(task.id);
+    appendAIMsg('<div class="msg-label">融媒AI</div>已创建半自动重新生成任务（1 篇），任务将在后台运行。');
+    clearSelection();
+  }
+  closeRegenerateModal();
+}
+
+function clearSelection() {
+  selectedRegenerateId = '';
+  selectedRegenPrompt = '';
+  regenSemiEditedPrompt = '';
+}
+
+// ========= 模拟任务进度 =========
+function simulateTaskProgress(taskId) {
+  var interval = setInterval(function() {
+    var task = findTask(taskId);
+    if (!task) { clearInterval(interval); return; }
+    task.progress += Math.floor(Math.random() * 20) + 10;
+    if (task.progress >= 100) {
+      task.progress = 100;
+      task.status = 'done';
+      task.finishedAt = new Date().toISOString();
+      task.resultDraftId = 'draft-' + Date.now();
+      clearInterval(interval);
+    }
+    saveTasks();
+  }, 1500);
+}
+
+// ========= 停止任务 =========
+function showStopModal(taskId) {
+  stopTaskId = taskId;
+  document.getElementById('stop-modal').classList.add('show');
+}
+function closeStopModal() {
+  document.getElementById('stop-modal').classList.remove('show');
+  stopTaskId = '';
+}
+function confirmStop() {
+  if (!stopTaskId) return;
+  var task = findTask(stopTaskId);
+  if (task) {
+    task.status = 'stopped';
+    saveTasks();
+  }
+  closeStopModal();
+  renderList();
+  updateCounts();
+  appendAIMsg('<div class="msg-label">融媒AI</div>生成任务已停止。');
+}
+
+// ========= 确认通过 =========
+function showApproveModal(id) {
+  approveDraftId = id;
+  document.getElementById('approve-modal').classList.add('show');
+}
+function closeApproveModal() {
+  document.getElementById('approve-modal').classList.remove('show');
+  approveDraftId = '';
+}
+function confirmApprove() {
+  if (!approveDraftId) return;
+  var draft = findDraft(approveDraftId);
+  if (!draft) return;
+  draft.status = 'confirmed';
+  saveDrafts();
+  closeApproveModal();
+  renderList();
+  updateCounts();
+  appendAIMsg('<div class="msg-label">融媒AI</div>稿件「' + draft.title.substring(0, 20) + '...」已确认通过，可生成音频。');
+}
+
+// ========= 生成音频 =========
+function showAudioModal(id) {
+  audioDraftId = id;
+  document.getElementById('audio-modal').classList.add('show');
+}
+function closeAudioModal() {
+  document.getElementById('audio-modal').classList.remove('show');
+  audioDraftId = '';
+}
+function confirmAudioSubmit() {
+  if (!audioDraftId) return;
+  var draft = findDraft(audioDraftId);
+  if (!draft) return;
+  var anchor = document.getElementById('audio-anchor').value;
+  var voice = document.getElementById('audio-voice').value;
+  var speed = document.getElementById('audio-speed').value;
+  var anchorMap = {'male-anchor':'男声主播','female-anchor':'女声主播','male-young':'男声青年','female-young':'女声青年'};
+  var voiceMap = {'steady':'沉稳','lively':'活泼','standard':'标准','warm':'温暖','authoritative':'权威'};
+  var speedMap = {'0.8':'慢速','1.0':'标准','1.2':'快速'};
+  var audioTask = {
+    id: 'audio-' + Date.now(),
+    draftId: audioDraftId,
+    draftTitle: draft.title,
+    anchor: anchor,
+    anchorName: anchorMap[anchor] || anchor,
+    voice: voice,
+    voiceName: voiceMap[voice] || voice,
+    speed: speed,
+    speedName: speedMap[speed] || speed,
+    status: 'running',
+    progress: 0,
+    createdAt: new Date().toLocaleString('zh-CN'),
+    resultAudioId: null
+  };
+  var audioTasks = [];
+  try { audioTasks = JSON.parse(localStorage.getItem('audio_tasks') || '[]'); } catch(e) {}
+  audioTasks.push(audioTask);
+  try { localStorage.setItem('audio_tasks', JSON.stringify(audioTasks)); } catch(e) {}
+  closeAudioModal();
+  appendAIMsg('<div class="msg-label">融媒AI</div>已提交音频生成任务：' + anchorMap[anchor] + ' / ' + voiceMap[voice] + '，请在音频管理页面查看进度。');
+  showDraftToast('音频生成任务已创建，即将跳转到音频管理...');
+  setTimeout(function() { window.location.href = 'audio.html'; }, 2500);
+}
+
+function showDraftToast(msg) {
+  var toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s';
+    document.body.appendChild(toast);
+  }
+  toast.innerText = msg;
+  toast.style.opacity = '1';
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.style.display = 'none'; }, 300); }, 4000);
+}
+
+// ========= AI智能编校（左右分栏弹窗） =========
+var currentProofreadIssues = [];
+
+function aiProofread(id) {
+  var draft = findDraft(id);
+  if (!draft) return;
+  var content = draft.content;
+  var issues = [];
+  var now = Date.now();
+
+  // 1. 字词错误："欢迎收听今日热点播报" 缺书名号
+  var idx1 = content.indexOf('欢迎收听今日热点播报');
+  if (idx1 !== -1) {
+    issues.push({
+      id: 'pr-' + now + '-1', type: 'word', category: '字词错误',
+      original: '欢迎收听今日热点播报', suggestion: '欢迎收听《今日热点播报》',
+      position: { start: idx1, end: idx1 + '欢迎收听今日热点播报'.length },
+      description: '节目名称建议用书名号标注',
+      status: 'pending'
+    });
+  }
+
+  // 2. 字词错误："亟需" → "亟须"
+  var idx2 = content.indexOf('亟需');
+  if (idx2 !== -1) {
+    issues.push({
+      id: 'pr-' + now + '-2', type: 'word', category: '字词错误',
+      original: '亟需', suggestion: '亟须',
+      position: { start: idx2, end: idx2 + 2 },
+      description: '规范用词：动词用"亟须"，名词用"亟需"',
+      status: 'pending'
+    });
+  }
+
+  // 3. 敏感词："严峻挑战"
+  var idx3 = content.indexOf('严峻挑战');
+  if (idx3 !== -1) {
+    issues.push({
+      id: 'pr-' + now + '-3', type: 'sensitive', category: '敏感词',
+      original: '严峻挑战', suggestion: '重大考验',
+      position: { start: idx3, end: idx3 + 4 },
+      description: '表述过于负面，建议替换为中性表述',
+      status: 'pending'
+    });
+  }
+
+  if (issues.length === 0) {
+    issues.push({
+      id: 'pr-' + now + '-ok', type: 'ok', category: '通过',
+      original: '', suggestion: '',
+      position: { start: 0, end: 0 },
+      description: 'AI校对完成，未发现明显问题', status: 'pending'
+    });
+  }
+
+  currentProofreadIssues = issues;
+  proofreadResultDraftId = id;
+  showProofreadResultModal(draft);
+}
+
+function showProofreadResultModal(draft) {
+  renderProofreadText(draft, currentProofreadIssues);
+  renderProofreadIssueList(currentProofreadIssues);
+  document.getElementById('proofread-result-modal').classList.add('show');
+}
+
+function renderProofreadText(draft, issues) {
+  var content = draft.content;
+  var html = '';
+  var lastEnd = 0;
+
+  var sorted = issues
+    .filter(function(i) { return i.type !== 'ok' && i.status !== 'ignored' && i.status !== 'fixed'; })
+    .sort(function(a, b) { return a.position.start - b.position.start; });
+
+  sorted.forEach(function(issue) {
+    html += escapeHtml(content.substring(lastEnd, issue.position.start));
+    var cls = issue.type === 'sensitive' ? 'pr-highlight-sensitive' : (issue.type === 'word' ? 'pr-highlight-word' : 'pr-highlight-grammar');
+    html += '<span class="' + cls + '" data-issue-id="' + issue.id + '" onclick="scrollToIssue(\'' + issue.id + '\')">' + escapeHtml(content.substring(issue.position.start, issue.position.end)) + '</span>';
+    lastEnd = issue.position.end;
+  });
+  html += escapeHtml(content.substring(lastEnd));
+  var panel = document.getElementById('proofread-text-panel');
+  if (panel) panel.innerHTML = html;
+}
+
+function renderProofreadIssueList(issues) {
+  var html = '';
+  var pendingCount = 0;
+
+  issues.forEach(function(issue) {
+    if (issue.type === 'ok') {
+      html += '<div style="padding:20px 12px;text-align:center;color:#52c41a;font-size:13px">' + escapeHtml(issue.description) + '</div>';
+      return;
+    }
+    if (issue.status === 'fixed') return;
+
+    pendingCount++;
+    var typeColor = issue.type === 'sensitive' ? '#ff4d4f' : (issue.type === 'word' ? '#fa8c16' : '#1890ff');
+    var typeBg = issue.type === 'sensitive' ? '#fff1f0' : (issue.type === 'word' ? '#fffbe6' : '#e6f7ff');
+
+    html += '<div class="pr-issue-item" id="issue-item-' + issue.id + '" style="padding:12px;border-radius:8px;background:#fff;margin-bottom:8px;border:1px solid #e8e8e8">';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html += '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:' + typeBg + ';color:' + typeColor + '">' + escapeHtml(issue.category) + '</span>';
+    html += '</div>';
+    html += '<div style="font-size:13px;color:#333;margin-bottom:6px">' + escapeHtml(issue.description) + '</div>';
+    if (issue.original && issue.suggestion) {
+      html += '<div style="font-size:12px;color:#666;margin-bottom:10px;background:#f5f5f5;padding:6px 10px;border-radius:4px">';
+      html += '<span style="text-decoration:line-through;color:#999">' + escapeHtml(issue.original) + '</span>';
+      html += ' <span style="color:#333">→</span> ';
+      html += '<span style="color:#52c41a;font-weight:500">' + escapeHtml(issue.suggestion) + '</span>';
+      html += '</div>';
+    }
+    html += '<div style="display:flex;gap:8px;justify-content:flex-end">';
+    html += '<button class="btn btn-sm" style="font-size:12px;color:#999" onclick="ignoreProofreadIssue(\'' + issue.id + '\')">忽略</button>';
+    html += '<button class="btn btn-sm btn-primary" style="font-size:12px" onclick="fixProofreadIssue(\'' + issue.id + '\')">修正</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  var list = document.getElementById('proofread-issue-list');
+  if (list) list.innerHTML = html;
+  var countEl = document.getElementById('proofread-count');
+  if (countEl) countEl.innerText = pendingCount;
+
+  var btn = document.getElementById('btn-fix-all');
+  if (btn) {
+    btn.innerText = pendingCount > 0 ? '一键修正（' + pendingCount + '条）' : '已全部处理';
+    btn.disabled = pendingCount === 0;
+    btn.style.opacity = pendingCount === 0 ? '0.5' : '1';
+  }
+}
+
+function fixProofreadIssue(issueId) {
+  var issue = currentProofreadIssues.find(function(i) { return i.id === issueId; });
+  if (!issue || issue.status === 'fixed') return;
+  var draft = findDraft(proofreadResultDraftId);
+  if (!draft) return;
+
+  var offset = issue.suggestion.length - (issue.position.end - issue.position.start);
+  draft.content = draft.content.substring(0, issue.position.start) + issue.suggestion + draft.content.substring(issue.position.end);
+
+  // 更新后续问题位置
+  currentProofreadIssues.forEach(function(i) {
+    if (i.id !== issueId && i.position.start > issue.position.start) {
+      i.position.start += offset;
+      i.position.end += offset;
+    }
+  });
+
+  issue.status = 'fixed';
+  draft.wordCount = draft.content.length;
+  renderProofreadText(draft, currentProofreadIssues);
+  renderProofreadIssueList(currentProofreadIssues);
+}
+
+function ignoreProofreadIssue(issueId) {
+  var issue = currentProofreadIssues.find(function(i) { return i.id === issueId; });
+  if (!issue) return;
+  issue.status = 'ignored';
+  var draft = findDraft(proofreadResultDraftId);
+  renderProofreadText(draft, currentProofreadIssues);
+  renderProofreadIssueList(currentProofreadIssues);
+}
+
+function fixAllProofread() {
+  var draft = findDraft(proofreadResultDraftId);
+  if (!draft) return;
+
+  var pending = currentProofreadIssues
+    .filter(function(i) { return i.status === 'pending' && i.type !== 'ok'; })
+    .sort(function(a, b) { return b.position.start - a.position.start; });
+
+  pending.forEach(function(issue) {
+    draft.content = draft.content.substring(0, issue.position.start) + issue.suggestion + draft.content.substring(issue.position.end);
+    issue.status = 'fixed';
+  });
+
+  draft.wordCount = draft.content.length;
+  renderProofreadText(draft, currentProofreadIssues);
+  renderProofreadIssueList(currentProofreadIssues);
+  showDraftToast('已一键修正 ' + pending.length + ' 处问题');
+}
+
+function scrollToIssue(issueId) {
+  var el = document.getElementById('issue-item-' + issueId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.borderColor = '#1890ff';
+    setTimeout(function() { el.style.borderColor = '#e8e8e8'; }, 1500);
+  }
+}
+
+function closeProofreadResultModal() {
+  // 先关闭弹窗，避免JS报错导致无法关闭
+  var modal = document.getElementById('proofread-result-modal');
+  if (modal) modal.classList.remove('show');
+
+  // 关闭前保存修正结果
+  if (proofreadResultDraftId) {
+    var draft = findDraft(proofreadResultDraftId);
+    if (draft) {
+      var fixed = currentProofreadIssues.filter(function(i) { return i.status === 'fixed'; });
+      if (fixed.length > 0) {
+        draft.issues = fixed.map(function(i) {
+          return { type: i.type === 'sensitive' ? 'error' : 'warn', text: i.category + '：' + i.description + '（已修正：' + i.original + ' → ' + i.suggestion + '）' };
+        });
+      }
+      saveDrafts();
+      var issuesEl = document.getElementById('pr-issues-' + proofreadResultDraftId);
+      if (issuesEl) issuesEl.innerHTML = renderIssues(draft.issues);
+      renderList();
+      appendAIMsg('<div class="msg-label">融媒AI</div>AI编校完成，已保存稿件「' + draft.title.substring(0, 20) + '...」。');
+    }
+  }
+  proofreadResultDraftId = '';
+  currentProofreadIssues = [];
+}
+
+// ========= 筛选 =========
+function filterByStatus(status, el) {
+  currentStatusFilter = status;
+  document.querySelectorAll('.status-tab').forEach(function(si) { si.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderList();
+}
+
+// ========= 计数更新 =========
+function updateCounts() {
+  var counts = { all: 0, running: 0, pending: 0, confirmed: 0, stopped: 0 };
+  taskList.forEach(function(t) {
+    counts.all++;
+    if (t.status === 'running') counts.running++;
+    if (t.status === 'stopped') counts.stopped++;
+  });
+  draftList.forEach(function(d) {
+    counts.all++;
+    if (d.status === 'pending') counts.pending++;
+    if (d.status === 'confirmed') counts.confirmed++;
+  });
+  var elAll = document.getElementById('count-all');
+  var elRun = document.getElementById('count-running');
+  var elPen = document.getElementById('count-pending');
+  var elCon = document.getElementById('count-confirmed');
+  var elStop = document.getElementById('count-stopped');
+  if (elAll) elAll.innerText = counts.all;
+  if (elRun) elRun.innerText = counts.running;
+  if (elPen) elPen.innerText = counts.pending;
+  if (elCon) elCon.innerText = counts.confirmed;
+  if (elStop) elStop.innerText = counts.stopped;
+}
+
+// ========= 清除缓存 =========
+function clearCache() {
+  customConfirm('确定要清除所有缓存数据并重置为演示数据吗？', function() {
+    localStorage.removeItem('draft_list');
+    localStorage.removeItem('generation_tasks');
+    localStorage.removeItem('audio_tasks');
+    draftList = DEMO_DRAFTS.slice();
+    taskList = DEMO_TASKS.slice();
+    currentStatusFilter = 'all';
+    document.querySelectorAll('.status-tab').forEach(function(t) { t.classList.remove('active'); });
+    var firstTab = document.querySelector('.status-tab');
+    if (firstTab) firstTab.classList.add('active');
+    renderList();
+    updateCounts();
+    appendAIMsg('<div class="msg-label">融媒AI</div>缓存已清除，数据已重置为演示状态。');
+  });
+}
+
+// ========= 刷新 =========
+function refreshList() {
+  renderList();
+  updateCounts();
+  appendAIMsg('<div class="msg-label">融媒AI</div>列表已刷新。');
+}
+
+// ========= 融媒AI快捷操作 =========
+function quickAction(action) {
+  switch(action) {
+    case 'view-pending':
+      filterByStatus('pending', document.querySelector('.status-item[onclick*="pending"]'));
+      appendAIMsg('<div class="msg-label">融媒AI</div>已筛选显示待校对稿件。');
+      break;
+    case 'batch-proofread':
+      appendAIMsg('<div class="msg-label">融媒AI</div>批量智能编校功能开发中，当前可逐个点击"AI智能编校"按钮。');
+      break;
+    case 'generate-hot':
+      appendAIMsg('<div class="msg-label">融媒AI</div>正在根据本周期热点生成稿件，预计 1-2 分钟...');
+      setTimeout(function() { appendAIMsg('<div class="msg-label">融媒AI</div>本周热点稿件生成完成，共 <strong>3 篇</strong>，请在左侧"待校对"查看。'); }, 2000);
+      break;
+    case 'view-completed':
+      filterByStatus('confirmed', document.querySelector('.status-item[onclick*="confirmed"]'));
+      appendAIMsg('<div class="msg-label">融媒AI</div>已筛选显示已完成稿件。');
+      break;
+  }
+}
+
+// ========= 融媒AI助手消息 =========
+function appendAIMsg(html) {
+  var container = document.getElementById('ai-messages');
+  if (!container) return;
+  var div = document.createElement('div');
+  div.className = 'ai-msg ai notification';
+  div.innerHTML = html;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+</script>
+</body>
+</html>
