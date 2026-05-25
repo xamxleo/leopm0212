@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资产列表 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-active: #096dd9;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: var(--font-family); background: var(--color-bg-page); color: var(--color-text-primary); font-size: 14px; line-height: 1.6; }
+
+  /* 顶部导航 */
+  .top-nav { height: 48px; background: var(--color-primary); display: flex; align-items: center; padding: 0 24px; color: #fff; font-size: 14px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+  .top-nav .logo { font-size: 16px; font-weight: 600; margin-right: 40px; letter-spacing: 1px; }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item { padding: 0 16px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active { color: #fff; border-bottom-color: #fff; background: rgba(255,255,255,0.1); }
+
+  /* 左侧菜单 */
+  .side-menu { position: fixed; top: 48px; left: 0; width: 200px; bottom: 0; background: var(--color-bg-surface); border-right: 1px solid var(--color-border); padding: 8px 0; overflow-y: auto; z-index: 90; }
+  .side-menu .menu-group-title { padding: 12px 16px 4px; font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
+  .side-menu .menu-item { padding: 10px 16px 10px 24px; cursor: pointer; color: var(--color-text-primary); font-size: 14px; transition: all 0.15s; border-right: 3px solid transparent; }
+  .side-menu .menu-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+  .side-menu .menu-item.active { background: var(--color-primary-bg); color: var(--color-primary); border-right-color: var(--color-primary); font-weight: 500; }
+
+  /* 主内容区 */
+  .main-content { margin-top: 48px; margin-left: 200px; padding: 24px; min-height: calc(100vh - 48px); }
+
+  /* 面包屑 */
+  .breadcrumb { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* 页面头部 */
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 600; }
+
+  /* 按钮 */
+  .btn { padding: 8px 16px; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 14px; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--color-primary); color: #fff; }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default { background: var(--color-bg-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-sm { padding: 4px 8px; font-size: 12px; }
+  .btn-link { background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 13px; padding: 4px 8px; font-family: inherit; }
+  .btn-link:hover { color: var(--color-primary-hover); }
+
+  /* 卡片 */
+  .card { background: var(--color-bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 20px; }
+
+  /* 搜索筛选栏 */
+  .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-bar .search-input { padding: 8px 12px 8px 32px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; width: 240px; font-family: inherit; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23bfbfbf' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E") no-repeat 10px center; }
+  .filter-bar .search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+  .filter-bar .form-select { padding: 8px 28px 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; font-family: inherit; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238c8c8c'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+
+  /* 表格 */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { text-align: left; padding: 12px 16px; background: #fafafa; font-weight: 500; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  .data-table tbody tr:hover td { background: #fafafa; }
+  .data-table .asset-code { color: var(--color-primary); font-family: "SF Mono", "Monaco", monospace; cursor: pointer; }
+  .data-table .asset-code:hover { text-decoration: underline; }
+
+  /* 状态标签 */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 12px; font-weight: 500; }
+  .tag-idle { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+  .tag-inuse { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+  .tag-maintenance { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+  .tag-scrap { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+  .tag-warranty-active { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+  .tag-warranty-expiring { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+  .tag-warranty-expired { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+
+  /* 分页 */
+  .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; color: var(--color-text-secondary); }
+  .pagination button { padding: 4px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--color-text-primary); transition: all 0.15s; }
+  .pagination button:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .pagination button.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  .pagination .total { margin-right: 16px; }
+
+  /* 弹窗 */
+  .modal-mask { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; justify-content: center; align-items: center; }
+  .modal-mask.active { display: flex; }
+  .modal { background: #fff; border-radius: var(--radius-lg); width: 680px; max-height: 80vh; overflow-y: auto; box-shadow: 0 12px 48px rgba(0,0,0,0.15); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close { cursor: pointer; font-size: 18px; color: var(--color-text-secondary); }
+  .modal-close:hover { color: var(--color-text-primary); }
+  .modal-body { padding: 20px; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 8px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .detail-item { }
+  .detail-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .detail-value { font-size: 14px; color: var(--color-text-primary); }
+  .detail-full { grid-column: 1 / -1; }
+
+  /* 弹窗内的表单样式（编辑模式） */
+  .modal-body .form-input,
+  .modal-body .form-select,
+  .modal-body .form-textarea {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    transition: border-color 0.2s;
+    font-family: var(--font-family);
+  }
+  .modal-body .form-input:focus,
+  .modal-body .form-select:focus,
+  .modal-body .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .modal-body .form-textarea { height: 80px; padding: 8px 12px; resize: vertical; }
+  .modal-body .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  .modal-body .form-input[readonly] { background: #f5f5f5; color: var(--color-text-secondary); cursor: not-allowed; }
+  .modal-body .form-select[disabled] { background: #f5f5f5; color: var(--color-text-secondary); cursor: not-allowed; }
+  .modal-body .section-title { font-size: 14px; font-weight: 600; margin: 16px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+  .modal-body .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .modal-body .config-item { display: flex; flex-direction: column; }
+  .modal-body .config-item label { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理系统</div>
+  <div class="nav-items">
+    <div class="nav-item" onclick="location.href='dashboard.html'">数据看板</div>
+    <div class="nav-item active">资产管理</div>
+    <div class="nav-item">工作台</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item active" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>
+    资产管理 / 资产列表
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">资产列表</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-default" onclick="location.href='add-asset.html'">+ 添加资产</button>
+    </div>
+  </div>
+
+  <!-- 搜索筛选栏 -->
+  <div class="card" style="padding:16px 20px;">
+    <div class="filter-bar">
+      <input class="search-input" id="searchInput" placeholder="搜索资产名称、编码..." oninput="filterTable()" />
+      <select class="form-select" id="filterCategory" onchange="filterTable()">
+        <option value="">全部分类</option>
+        <option value="台式电脑">台式电脑</option>
+        <option value="笔记本电脑">笔记本电脑</option>
+        <option value="打印机">打印机</option>
+        <option value="服务器">服务器</option>
+        <option value="网络设备">网络设备</option>
+        <option value="照相机">照相机</option>
+        <option value="摄像机">摄像机</option>
+        <option value="安全设备">安全设备</option>
+        <option value="存储设备">存储设备</option>
+        <option value="其他设备">其他设备</option>
+      </select>
+      <select class="form-select" id="filterStatus" onchange="filterTable()">
+        <option value="">全部状态</option>
+        <option value="闲置">闲置</option>
+        <option value="领用中">领用中</option>
+        <option value="维修中">维修中</option>
+        <option value="已报废">已报废</option>
+      </select>
+      <select class="form-select" id="filterWarranty" onchange="filterTable()">
+        <option value="">全部维保</option>
+        <option value="在保">✅ 在保</option>
+        <option value="即将过期">⚠️ 即将过期</option>
+        <option value="已过期">❌ 已过期</option>
+      </select>
+      <button class="btn btn-default btn-sm" onclick="resetFilter()">重置筛选</button>
+    </div>
+  </div>
+
+  <!-- 数据表格 -->
+  <div class="card" style="padding:0;">
+    <table class="data-table" id="assetTable">
+      <thead>
+        <tr>
+          <th style="width:50px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" /></th>
+          <th>资产名称</th>
+          <th>资产编码</th>
+          <th>资产分类</th>
+          <th>品牌</th>
+          <th>型号</th>
+          <th>入库时间</th>
+          <th>使用状态</th>
+          <th>维保状态</th>
+          <th style="width:160px;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="assetTableBody">
+        <!-- 动态渲染 -->
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- 查看/编辑弹窗 -->
+<div class="modal-mask" id="detailModal">
+  <div class="modal" style="width:680px;">
+    <div class="modal-header">
+      <h3 id="detailModalTitle">资产详情</h3>
+      <span class="modal-close" onclick="closeDetailModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="detailModalBody">
+      <!-- 动态填充 -->
+    </div>
+    <div class="modal-footer" id="detailModalFooter">
+      <button class="btn btn-default" onclick="closeDetailModal()">关闭</button>
+      <button class="btn btn-primary" id="btnEdit" onclick="switchToEdit()">编辑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 配置信息模板（与 add-asset.html 保持一致）=====
+const CONFIG_TEMPLATES = {
+  desktop: {
+    title: '配置信息',
+    fields: [
+      { label: '序列号（S/N）', placeholder: '设备序列号' },
+      { label: 'CPU型号', placeholder: '如：Intel i7-12700' },
+      { label: '内存容量', placeholder: '如：16GB DDR4-3200' },
+      { label: '硬盘配置', placeholder: '如：512GB NVMe SSD + 1TB HDD' },
+      { label: '显卡型号', placeholder: '如：NVIDIA RTX 3060' },
+      { label: '操作系统', placeholder: '如：Windows 11 专业版' },
+      { label: 'IP地址', placeholder: '如：192.168.1.100' },
+      { label: 'MAC地址', placeholder: '如：00-1A-2B-3C-4D-5E' },
+    ]
+  },
+  laptop: {
+    title: '配置信息',
+    fields: [
+      { label: '序列号（S/N）', placeholder: '设备序列号' },
+      { label: 'CPU型号', placeholder: '如：Intel i7-12700H' },
+      { label: '内存容量', placeholder: '如：16GB LPDDR5' },
+      { label: '硬盘配置', placeholder: '如：512GB SSD' },
+      { label: '显卡型号', placeholder: '如：NVIDIA RTX 4060' },
+      { label: '屏幕尺寸', placeholder: '如：14英寸 2.8K OLED' },
+      { label: '操作系统', placeholder: '如：Windows 11 专业版' },
+    ]
+  },
+  printer: {
+    title: '设备参数',
+    fields: [
+      { label: '序列号（S/N）', placeholder: '设备序列号' },
+      { label: '打印机类型', placeholder: '如：激光黑白 / 喷墨彩色' },
+      { label: '打印速度', placeholder: '如：A4黑白 30页/分钟' },
+      { label: '网络功能', placeholder: '如：有线网络 / Wi-Fi' },
+      { label: '耗材型号', placeholder: '如：HP 508A 黑色碳粉' },
+    ]
+  },
+  default: {
+    title: '设备信息',
+    fields: [
+      { label: '序列号（S/N）', placeholder: '设备序列号（如有）' },
+      { label: '主要参数', placeholder: '相关技术参数' },
+      { label: '用途说明', placeholder: '设备用途说明' },
+    ]
+  }
+};
+
+function getConfigTemplate(category) {
+  const map = { '台式电脑':'desktop', '笔记本电脑':'laptop', '打印机':'printer' };
+  return CONFIG_TEMPLATES[map[category]] || CONFIG_TEMPLATES['default'];
+}
+
+// ===== 模拟数据（扩展：与 add-asset.html 字段保持一致）=====
+const ASSETS = [
+  {
+    code:'AC-2024-0156', name:'台式电脑', category:'台式电脑', brand:'Dell', model:'OptiPlex 7090', storageDate:'2024-03-15', status:'领用中', warranty:'在保', warrantyDate:'2027-03-15',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0301', contractNo:'HT-2024-0156', supplier:'戴尔科技集团', purchaseDate:'2024-03-10', purchasePrice:'8500',
+    remarks:'技术部专用，配置较高',
+    config:{ '序列号（S/N）':'CN-ABC123', 'CPU型号':'Intel i7-12700', '内存容量':'16GB DDR4-3200', '硬盘配置':'512GB NVMe SSD + 1TB HDD', '显卡型号':'NVIDIA RTX 3060', '操作系统':'Windows 11 专业版', 'IP地址':'192.168.1.100', 'MAC地址':'00-1A-2B-3C-4D-5E' }
+  },
+  {
+    code:'AC-2024-0089', name:'笔记本电脑', category:'笔记本电脑', brand:'Lenovo', model:'ThinkPad X1 Carbon', storageDate:'2024-05-20', status:'领用中', warranty:'在保', warrantyDate:'2027-05-20',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0215', contractNo:'HT-2024-0089', supplier:'联想集团有限公司', purchaseDate:'2024-05-15', purchasePrice:'12900',
+    remarks:'采编部外出采访用',
+    config:{ '序列号（S/N）':'PF-XYZ789', 'CPU型号':'Intel i7-12700H', '内存容量':'16GB LPDDR5', '硬盘配置':'512GB SSD', '显卡型号':'Intel Iris Xe', '屏幕尺寸':'14英寸 2.8K OLED', '操作系统':'Windows 11 专业版' }
+  },
+  {
+    code:'AC-2024-0312', name:'打印机', category:'打印机', brand:'HP', model:'LaserJet Pro M407', storageDate:'2024-02-10', status:'闲置', warranty:'即将过期', warrantyDate:'2025-06-01',
+    warrantyRemind:'提前60天提醒',
+    purchaseOrder:'PO-2024-0108', contractNo:'HT-2024-0312', supplier:'惠普贸易（上海）有限公司', purchaseDate:'2024-02-05', purchasePrice:'4200',
+    remarks:'库房备用',
+    config:{ '序列号（S/N）':'CN-DEF456', '打印机类型':'激光黑白', '打印速度':'A4黑白 38页/分钟', '网络功能':'有线网络+Wi-Fi', '耗材型号':'HP 507A 黑色碳粉' }
+  },
+  {
+    code:'AC-2023-0067', name:'会议室投影仪', category:'其他设备', brand:'Epson', model:'CB-W42', storageDate:'2023-08-22', status:'领用中', warranty:'已过期', warrantyDate:'2024-08-22',
+    warrantyRemind:'不提醒',
+    purchaseOrder:'PO-2023-0180', contractNo:'HT-2023-0067', supplier:'爱普生（中国）有限公司', purchaseDate:'2023-08-18', purchasePrice:'6800',
+    remarks:'第一会议室固定安装',
+    config:{ '序列号（S/N）':'EP-789012', '主要参数':'亮度 4200流明，WXGA分辨率', '用途说明':'会议室A固定使用' }
+  },
+  {
+    code:'AC-2024-0223', name:'台式电脑', category:'台式电脑', brand:'组装机', model:'酷睿i7-12700/16GB', storageDate:'2024-06-01', status:'维修中', warranty:'在保', warrantyDate:'2027-06-01',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0250', contractNo:'HT-2024-0223', supplier:'深圳存储器科技有限公司', purchaseDate:'2024-05-28', purchasePrice:'6200',
+    remarks:'自行组装，主板为华硕B660M',
+    config:{ '序列号（S/N）':'—', 'CPU型号':'Intel i7-12700', '内存容量':'16GB DDR4-3200', '硬盘配置':'1TB NVMe SSD', '显卡型号':'集成显卡', '操作系统':'Windows 11 专业版', 'IP地址':'—', 'MAC地址':'—' }
+  },
+  {
+    code:'AC-2024-0045', name:'笔记本电脑', category:'笔记本电脑', brand:'Apple', model:'MacBook Pro 16"', storageDate:'2024-04-18', status:'领用中', warranty:'在保', warrantyDate:'2027-04-18',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0120', contractNo:'HT-2024-0045', supplier:'苹果贸易（上海）有限公司', purchaseDate:'2024-04-15', purchasePrice:'18900',
+    remarks:'技术部高配机型',
+    config:{ '序列号（S/N）':'C02ABC123', 'CPU型号':'Apple M3 Pro', '内存容量':'18GB 统一内存', '硬盘配置':'512GB SSD', '显卡型号':'Integrated', '屏幕尺寸':'16英寸 Liquid Retina XDR', '操作系统':'macOS Sonoma' }
+  },
+  {
+    code:'AC-2023-0112', name:'网络交换机', category:'网络设备', brand:'Huawei', model:'S5735-S24P4X', storageDate:'2023-11-05', status:'领用中', warranty:'在保', warrantyDate:'2026-11-05',
+    warrantyRemind:'提前90天提醒',
+    purchaseOrder:'PO-2023-0280', contractNo:'HT-2023-0112', supplier:'华为技术有限公司', purchaseDate:'2023-11-01', purchasePrice:'15600',
+    remarks:'中心机房核心接入交换机',
+    config:{ '序列号（S/N）':'210235G01Y10E9000187', '主要参数':'24×千兆PoE+电口 + 4×万兆光口', '用途说明':'机房A-机柜03-U15' }
+  },
+  {
+    code:'AC-2024-0189', name:'单反相机', category:'照相机', brand:'Canon', model:'EOS R5', storageDate:'2024-07-12', status:'领用中', warranty:'在保', warrantyDate:'2027-07-12',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0201', contractNo:'HT-2024-0189', supplier:'佳能（中国）有限公司', purchaseDate:'2024-07-08', purchasePrice:'22000',
+    remarks:'采编部外拍专用，配RF 24-70mm f/2.8镜头',
+    config:{ '序列号（S/N）':'1234567890', '主要参数':'4500万像素，8K视频', '用途说明':'新闻采访、专题片拍摄' }
+  },
+  {
+    code:'AC-2022-0034', name:'台式电脑', category:'台式电脑', brand:'Dell', model:'OptiPlex 7070', storageDate:'2022-01-10', status:'已报废', warranty:'已过期', warrantyDate:'2025-01-10',
+    warrantyRemind:'不提醒',
+    purchaseOrder:'PO-2022-0050', contractNo:'HT-2022-0034', supplier:'戴尔科技集团', purchaseDate:'2022-01-05', purchasePrice:'5800',
+    remarks:'已超过使用年限，2025年1月批准报废',
+    config:{ '序列号（S/N）':'CN-OLD001', 'CPU型号':'Intel i5-9500', '内存容量':'8GB DDR4-2666', '硬盘配置':'256GB SSD', '显卡型号':'集成显卡', '操作系统':'Windows 10 专业版', 'IP地址':'—', 'MAC地址':'—' }
+  },
+  {
+    code:'AC-2024-0256', name:'摄像机', category:'摄像机', brand:'Sony', model:'PXW-Z350', storageDate:'2024-09-01', status:'领用中', warranty:'在保', warrantyDate:'2027-09-01',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0220', contractNo:'HT-2024-0256', supplier:'索尼（中国）有限公司', purchaseDate:'2024-08-28', purchasePrice:'38500',
+    remarks:'采编部主摄像机，配2块BP-U60电池',
+    config:{ '序列号（S/N）':'S01ABC1234567890', '主要参数':'3×1/2英寸 CMOS，12倍光学变焦', '用途说明':'新闻采访、综艺录制' }
+  },
+  {
+    code:'AC-2024-0301', name:'NAS网络存储', category:'存储设备', brand:'Synology', model:'DS923+', storageDate:'2024-08-20', status:'闲置', warranty:'在保', warrantyDate:'2027-08-20',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0266', contractNo:'HT-2024-0301', supplier:'群晖科技（深圳）有限公司', purchaseDate:'2024-08-15', purchasePrice:'5200',
+    remarks:'技术部设备间备用，4×4TB HDD',
+    config:{ '序列号（S/N）':'S23B01234567890', '主要参数':'4盘位，AMD Ryzen R1600，4GB DDR4', '用途说明':'技术部文件服务器备份' }
+  },
+  {
+    code:'AC-2024-0123', name:'安全摄像机', category:'安全设备', brand:'Hikvision', model:'DS-2CD3346WDV3-I', storageDate:'2024-04-01', status:'领用中', warranty:'在保', warrantyDate:'2027-04-01',
+    warrantyRemind:'提前30天提醒',
+    purchaseOrder:'PO-2024-0150', contractNo:'HT-2024-0123', supplier:'杭州海康威视数字技术股份有限公司', purchaseDate:'2024-03-28', purchasePrice:'850',
+    remarks:'大楼出入口监控，接入NVR',
+    config:{ '序列号（S/N）':'DS-2CD3346WDV3-I2024ABCD', '主要参数':'4mm镜头，30米红外，IP67', '用途说明':'大楼主出入口，接入NVR（192.168.2.100）' }
+  },
+];
+
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let filteredData = [...ASSETS];
+let currentDetailCode = null; // 当前查看/编辑的资产编码
+
+// ===== 渲染表格 =====
+function renderTable() {
+  const tbody = document.getElementById('assetTableBody');
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filteredData.slice(start, start + PAGE_SIZE);
+  tbody.innerHTML = '';
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--color-text-placeholder);">暂无数据</td></tr>';
+    renderPagination();
+    return;
+  }
+
+  pageData.forEach((a, idx) => {
+    const statusClass = a.status === '闲置' ? 'tag-idle' : a.status === '领用中' ? 'tag-inuse' : a.status === '维修中' ? 'tag-maintenance' : 'tag-scrap';
+    const warrantyClass = a.warranty === '在保' ? 'tag-warranty-active' : a.warranty === '即将过期' ? 'tag-warranty-expiring' : 'tag-warranty-expired';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="row-check" data-code="${a.code}" /></td>
+      <td style="font-weight:500;">${a.name}</td>
+      <td class="asset-code" onclick="viewAsset('${a.code}')">${a.code}</td>
+      <td>${a.category}</td>
+      <td>${a.brand}</td>
+      <td>${a.model}</td>
+      <td>${a.storageDate}</td>
+      <td><span class="tag ${statusClass}">${a.status}</span></td>
+      <td><span class="tag ${warrantyClass}">${a.warranty}</span></td>
+      <td>
+        <button class="btn-link" onclick="viewAsset('${a.code}')">查看</button>
+        <button class="btn-link" onclick="editAsset('${a.code}')">编辑</button>
+        <button class="btn-link" style="color:var(--color-danger);" onclick="deleteAsset('${a.code}')">删除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = filteredData.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const el = document.getElementById('pagination');
+  let html = `<span class="total">共 ${total} 条</span>`;
+  if (currentPage > 1) html += `<button onclick="goPage(${currentPage-1})">‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      html += `<button disabled>…</button>`;
+    }
+  }
+  if (currentPage < totalPages) html += `<button onclick="goPage(${currentPage+1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+}
+
+// ===== 筛选 =====
+function filterTable() {
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat = document.getElementById('filterCategory').value;
+  const status = document.getElementById('filterStatus').value;
+  const warranty = document.getElementById('filterWarranty').value;
+
+  filteredData = ASSETS.filter(a => {
+    const matchKeyword = !keyword || a.name.toLowerCase().includes(keyword) || a.code.toLowerCase().includes(keyword) || a.brand.toLowerCase().includes(keyword) || a.model.toLowerCase().includes(keyword);
+    const matchCat = !cat || a.category === cat;
+    const matchStatus = !status || a.status === status;
+    const matchWarranty = !warranty || a.warranty === warranty;
+    return matchKeyword && matchCat && matchStatus && matchWarranty;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function resetFilter() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterWarranty').value = '';
+  filterTable();
+}
+
+// ===== 全选 =====
+function toggleSelectAll() {
+  const checked = document.getElementById('selectAll').checked;
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+}
+
+// ===== 查看资产（与 add-asset.html 字段保持一致）=====
+function viewAsset(code) {
+  const asset = ASSETS.find(a => a.code === code);
+  if (!asset) return;
+  currentDetailCode = code;
+  document.getElementById('detailModalTitle').textContent = '资产详情 — ' + asset.name;
+  document.getElementById('detailModalFooter').style.display = 'flex';
+  document.getElementById('btnEdit').style.display = 'inline-flex';
+
+  const body = document.getElementById('detailModalBody');
+  const tmpl = getConfigTemplate(asset.category);
+
+  // 配置信息只读展示
+  let configHtml = '';
+  if (tmpl.fields.length > 0) {
+    configHtml += `<div class="section-title">${tmpl.title}</div><div class="config-grid">`;
+    tmpl.fields.forEach(f => {
+      const val = asset.config ? (asset.config[f.label] || '—') : '—';
+      configHtml += `<div class="config-item"><label>${f.label}</label><div class="detail-value">${val}</div></div>`;
+    });
+    configHtml += `</div>`;
+  }
+
+  body.innerHTML = `
+    <!-- 基础信息 -->
+    <div class="section-title">基础信息</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">资产编码</div><div class="detail-value" style="font-family:monospace;color:var(--color-primary);">${asset.code}</div></div>
+      <div class="detail-item"><div class="detail-label">资产名称</div><div class="detail-value">${asset.name}</div></div>
+      <div class="detail-item"><div class="detail-label">资产分类</div><div class="detail-value">${asset.category}</div></div>
+      <div class="detail-item"><div class="detail-label">品牌</div><div class="detail-value">${asset.brand}</div></div>
+      <div class="detail-item"><div class="detail-label">型号</div><div class="detail-value">${asset.model}</div></div>
+      <div class="detail-item"><div class="detail-label">使用状态</div><div class="detail-value"><span class="tag ${asset.status==='闲置'?'tag-idle':asset.status==='领用中'?'tag-inuse':asset.status==='维修中'?'tag-maintenance':'tag-scrap'}">${asset.status}</span></div></div>
+    </div>
+
+    <!-- 配置信息 -->
+    ${configHtml}
+
+    <!-- 维保信息 -->
+    <div class="section-title">维保信息</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">保修截止日期</div><div class="detail-value">${asset.warrantyDate || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">维保状态</div><div class="detail-value"><span class="tag ${asset.warranty==='在保'?'tag-warranty-active':asset.warranty==='即将过期'?'tag-warranty-expiring':'tag-warranty-expired'}">${asset.warranty}</span></div></div>
+      <div class="detail-item"><div class="detail-label">过期提醒</div><div class="detail-value">${asset.warrantyRemind || '—'}</div></div>
+    </div>
+
+    <!-- 采购信息 -->
+    <div class="section-title">采购信息</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">采购订单号</div><div class="detail-value">${asset.purchaseOrder || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">合同号</div><div class="detail-value">${asset.contractNo || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">供应商</div><div class="detail-value">${asset.supplier || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">采购日期</div><div class="detail-value">${asset.purchaseDate || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">采购单价（元）</div><div class="detail-value">${asset.purchasePrice ? '¥' + parseFloat(asset.purchasePrice).toLocaleString() : '—'}</div></div>
+    </div>
+
+    <!-- 备注 -->
+    <div class="section-title">备注</div>
+    <div style="font-size:14px;color:var(--color-text-primary);line-height:1.8;">${asset.remarks || '—'}</div>
+  `;
+  document.getElementById('detailModal').classList.add('active');
+}
+
+// ===== 编辑资产（与 add-asset.html 表单字段保持一致）=====
+function editAsset(code) {
+  viewAsset(code);
+  switchToEdit();
+}
+
+function switchToEdit() {
+  const asset = ASSETS.find(a => a.code === currentDetailCode);
+  if (!asset) return;
+
+  document.getElementById('detailModalTitle').textContent = '编辑资产 — ' + asset.name;
+  document.getElementById('btnEdit').style.display = 'none';
+
+  const tmpl = getConfigTemplate(asset.category);
+
+  // 配置信息编辑表单
+  let configEditHtml = '';
+  if (tmpl.fields.length > 0) {
+    configEditHtml += `<div class="section-title">${tmpl.title}</div><div class="config-grid">`;
+    tmpl.fields.forEach((f, i) => {
+      const val = asset.config ? (asset.config[f.label] || '') : '';
+      configEditHtml += `<div class="config-item"><label>${f.label}</label><input class="form-input" id="edit-config-${i}" value="${val.replace(/"/g, '&quot;')}" placeholder="${f.placeholder}" /></div>`;
+    });
+    configEditHtml += `</div>`;
+  }
+
+  const body = document.getElementById('detailModalBody');
+  body.innerHTML = `
+    <!-- 基础信息 -->
+    <div class="section-title">基础信息</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-label">资产编码</div>
+        <input class="form-input" value="${asset.code}" id="editCode" readonly style="background:#f5f5f5;color:var(--color-text-secondary);cursor:not-allowed;" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">资产名称 <span style="color:#ff4d4f;">*</span></div>
+        <input class="form-input" id="editName" value="${asset.name}" placeholder="请输入资产名称" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">资产分类 <span style="color:#ff4d4f;">*</span></div>
+        <select class="form-select" id="editCategory" onchange="onEditCategoryChange()">
+          <option value="台式电脑" ${asset.category==='台式电脑'?'selected':''}>台式电脑</option>
+          <option value="笔记本电脑" ${asset.category==='笔记本电脑'?'selected':''}>笔记本电脑</option>
+          <option value="打印机" ${asset.category==='打印机'?'selected':''}>打印机</option>
+          <option value="服务器" ${asset.category==='服务器'?'selected':''}>服务器</option>
+          <option value="网络设备" ${asset.category==='网络设备'?'selected':''}>网络设备</option>
+          <option value="照相机" ${asset.category==='照相机'?'selected':''}>照相机</option>
+          <option value="摄像机" ${asset.category==='摄像机'?'selected':''}>摄像机</option>
+          <option value="安全设备" ${asset.category==='安全设备'?'selected':''}>安全设备</option>
+          <option value="存储设备" ${asset.category==='存储设备'?'selected':''}>存储设备</option>
+          <option value="其他设备" ${asset.category==='其他设备'?'selected':''}>其他设备</option>
+        </select>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">品牌</div>
+        <input class="form-input" id="editBrand" value="${asset.brand}" placeholder="请输入品牌" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">型号</div>
+        <input class="form-input" id="editModel" value="${asset.model}" placeholder="请输入型号" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">使用状态</div>
+        <select class="form-select" id="editStatus">
+          <option value="闲置" ${asset.status==='闲置'?'selected':''}>闲置</option>
+          <option value="领用中" ${asset.status==='领用中'?'selected':''}>领用中</option>
+          <option value="维修中" ${asset.status==='维修中'?'selected':''}>维修中</option>
+          <option value="已报废" ${asset.status==='已报废'?'selected':''}>已报废</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 配置信息 -->
+    <div id="editConfigSection">${configEditHtml}</div>
+
+    <!-- 维保信息 -->
+    <div class="section-title">维保信息</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-label">保修截止日期</div>
+        <input class="form-input" type="date" id="editWarrantyDate" value="${asset.warrantyDate || ''}" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">维保状态</div>
+        <select class="form-select" id="editWarranty">
+          <option value="在保" ${asset.warranty==='在保'?'selected':''}>✅ 在保</option>
+          <option value="即将过期" ${asset.warranty==='即将过期'?'selected':''}>⚠️ 即将过期</option>
+          <option value="已过期" ${asset.warranty==='已过期'?'selected':''}>❌ 已过期</option>
+        </select>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">过期提醒</div>
+        <select class="form-select" id="editWarrantyRemind">
+          <option value="提前30天提醒" ${asset.warrantyRemind==='提前30天提醒'?'selected':''}>提前30天提醒</option>
+          <option value="提前60天提醒" ${asset.warrantyRemind==='提前60天提醒'?'selected':''}>提前60天提醒</option>
+          <option value="提前90天提醒" ${asset.warrantyRemind==='提前90天提醒'?'selected':''}>提前90天提醒</option>
+          <option value="不提醒" ${asset.warrantyRemind==='不提醒'?'selected':''}>不提醒</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 采购信息 -->
+    <div class="section-title">采购信息</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-label">采购订单号</div>
+        <input class="form-input" id="editPurchaseOrder" value="${asset.purchaseOrder || ''}" placeholder="请输入采购订单号" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">合同号</div>
+        <input class="form-input" id="editContractNo" value="${asset.contractNo || ''}" placeholder="请输入合同号" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">供应商</div>
+        <input class="form-input" id="editSupplier" value="${asset.supplier || ''}" placeholder="请输入供应商名称" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">采购日期</div>
+        <input class="form-input" type="date" id="editPurchaseDate" value="${asset.purchaseDate || ''}" />
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">采购单价（元）</div>
+        <input class="form-input" type="number" id="editPurchasePrice" value="${asset.purchasePrice || ''}" placeholder="请输入采购单价" />
+      </div>
+    </div>
+
+    <!-- 备注 -->
+    <div class="section-title">备注</div>
+    <textarea class="form-textarea" id="editRemarks" placeholder="可输入资产相关备注信息">${asset.remarks || ''}</textarea>
+  `;
+  document.getElementById('detailModalFooter').innerHTML = `
+    <button class="btn btn-default" onclick="closeDetailModal()">取消</button>
+    <button class="btn btn-primary" onclick="saveAsset()">保存</button>
+  `;
+}
+
+// 编辑时切换资产分类，动态更新配置信息区域
+function onEditCategoryChange() {
+  const newCat = document.getElementById('editCategory').value;
+  const tmpl = getConfigTemplate(newCat);
+  const asset = ASSETS.find(a => a.code === currentDetailCode);
+  if (!tmpl || !asset) return;
+
+  let configEditHtml = '';
+  if (tmpl.fields.length > 0) {
+    configEditHtml += `<div class="section-title">${tmpl.title}</div><div class="config-grid">`;
+    tmpl.fields.forEach((f, i) => {
+      // 切换分类时，尝试保留同名字段的值
+      const oldVal = asset.config && asset.config[f.label] ? asset.config[f.label] : '';
+      configEditHtml += `<div class="config-item"><label>${f.label}</label><input class="form-input" id="edit-config-${i}" value="${oldVal.replace(/"/g, '&quot;')}" placeholder="${f.placeholder}" /></div>`;
+    });
+    configEditHtml += `</div>`;
+  }
+  document.getElementById('editConfigSection').innerHTML = configEditHtml;
+}
+
+// ===== 保存资产 =====
+function saveAsset() {
+  const asset = ASSETS.find(a => a.code === currentDetailCode);
+  if (!asset) return;
+
+  // 保存基础信息
+  asset.name = document.getElementById('editName').value.trim();
+  asset.category = document.getElementById('editCategory').value;
+  asset.brand = document.getElementById('editBrand').value.trim();
+  asset.model = document.getElementById('editModel').value.trim();
+  asset.status = document.getElementById('editStatus').value;
+
+  // 保存维保信息
+  asset.warrantyDate = document.getElementById('editWarrantyDate').value;
+  asset.warranty = document.getElementById('editWarranty').value;
+  asset.warrantyRemind = document.getElementById('editWarrantyRemind').value;
+
+  // 保存采购信息
+  asset.purchaseOrder = document.getElementById('editPurchaseOrder').value.trim();
+  asset.contractNo = document.getElementById('editContractNo').value.trim();
+  asset.supplier = document.getElementById('editSupplier').value.trim();
+  asset.purchaseDate = document.getElementById('editPurchaseDate').value;
+  asset.purchasePrice = document.getElementById('editPurchasePrice').value;
+
+  // 保存备注
+  asset.remarks = document.getElementById('editRemarks').value.trim();
+
+  // 保存配置信息
+  const tmpl = getConfigTemplate(asset.category);
+  if (!asset.config) asset.config = {};
+  tmpl.fields.forEach((f, i) => {
+    const input = document.getElementById('edit-config-' + i);
+    if (input) asset.config[f.label] = input.value.trim();
+  });
+
+  closeDetailModal();
+  filterTable();
+  alert('保存成功！');
+}
+
+function deleteAsset(code) {
+  if (!confirm('确定删除该资产？此操作不可撤销。')) return;
+  const idx = ASSETS.findIndex(a => a.code === code);
+  if (idx !== -1) ASSETS.splice(idx, 1);
+  filterTable();
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('active');
+  currentDetailCode = null;
+}
+
+// 点击遮罩关闭
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetailModal();
+});
+
+// ===== 初始化 =====
+renderTable();
+</script>
+</body>
+</html>
