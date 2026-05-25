@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>添加资产 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-active: #096dd9;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .top-nav {
+    height: 48px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    color: #fff;
+    font-size: 14px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .top-nav .logo {
+    font-size: 16px;
+    font-weight: 600;
+    margin-right: 40px;
+    letter-spacing: 1px;
+  }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item {
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ===== 左侧菜单 ===== */
+  .side-menu {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    width: 200px;
+    bottom: 0;
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 8px 0;
+    overflow-y: auto;
+    z-index: 90;
+  }
+  .side-menu .menu-group-title {
+    padding: 12px 16px 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+  .side-menu .menu-item {
+    padding: 10px 16px 10px 24px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    transition: all 0.15s;
+    border-right: 3px solid transparent;
+  }
+  .side-menu .menu-item:hover {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+  }
+  .side-menu .menu-item.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    border-right-color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main-content {
+    margin-top: 48px;
+    margin-left: 200px;
+    padding: 24px;
+    min-height: calc(100vh - 48px);
+  }
+
+  /* ===== 面包屑 ===== */
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+  }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* ===== 页面标题区 ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ===== 表单多列布局 ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0 24px;
+  }
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+
+  .form-item {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .form-label .required { color: var(--color-danger); margin-right: 4px; }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    transition: border-color 0.2s;
+    font-family: var(--font-family);
+  }
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: var(--color-text-placeholder);
+  }
+  .form-textarea {
+    height: 80px;
+    padding: 8px 12px;
+    resize: vertical;
+  }
+  .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  /* 只读字段样式 */
+  .form-input[readonly],
+  .form-select[disabled] {
+    background: #f5f5f5;
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+  }
+
+  /* ===== 配置信息动态区域 ===== */
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .config-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .config-item label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+  }
+  .config-item .form-input,
+  .config-item .form-select {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    font-family: var(--font-family);
+  }
+  .config-item .form-input:focus,
+  .config-item .form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .config-item .form-input::placeholder {
+    color: var(--color-text-placeholder);
+  }
+
+  /* ===== 维保信息 ===== */
+  .warranty-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .warranty-row .form-item { margin-bottom: 0; flex: 1; }
+
+  /* ===== 批量添加区域 ===== */
+  .batch-section {
+    background: #fafafa;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .batch-section .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .batch-tip {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+  }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-family);
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    padding: 0 8px;
+    height: auto;
+  }
+  .btn-link:hover { color: var(--color-primary-hover); }
+  .btn-danger { color: var(--color-danger); }
+  .btn-sm { height: 28px; padding: 0 12px; font-size: 13px; }
+
+  .btn-group { display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--color-border); margin-top: 24px; }
+
+  /* ===== Tabs ===== */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 20px;
+  }
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--color-primary); }
+  .tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 表格（批量添加预览） ===== */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    background: #fafafa;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    font-size: 13px;
+  }
+  .data-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+  }
+  .data-table tbody tr:hover { background: var(--color-primary-bg); }
+
+  /* ===== Tag ===== */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-success { background: #f6ffed; color: var(--color-success); }
+  .tag-warning { background: #fffbe6; color: var(--color-warning); }
+  .tag-danger { background: #fff1f0; color: var(--color-danger); }
+  .tag-default { background: #f5f5f5; color: var(--color-text-secondary); }
+
+  /* ===== 资产码输入区 ===== */
+  .asset-code-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: var(--font-family);
+    resize: vertical;
+  }
+  .asset-code-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+
+  .code-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .code-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--color-primary-bg);
+    border: 1px solid rgba(24,144,255,0.2);
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+  }
+  .code-chip .remove {
+    cursor: pointer;
+    color: var(--color-text-placeholder);
+    font-size: 14px;
+    line-height: 1;
+  }
+  .code-chip .remove:hover { color: var(--color-danger); }
+
+  /* ===== 分割线 ===== */
+  .divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 20px 0;
+  }
+
+  /* ===== 提示信息条 ===== */
+  .tip-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-primary-bg);
+    border: 1px solid rgba(24,144,255,0.15);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+  }
+
+  /* ===== 状态只读展示 ===== */
+  .status-readonly {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 2px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #f5f5f5;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+  }
+
+  /* ===== 供应商搜索下拉 ===== */
+  .asset-search-wrap {
+    position: relative;
+  }
+  .asset-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .asset-search-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.1s;
+  }
+  .asset-search-item:last-child { border-bottom: none; }
+  .asset-search-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+
+  /* ===== 配置信息区域隐藏 ===== */
+  .config-section.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理</div>
+  <div class="nav-items">
+    <div class="nav-item">管理</div>
+    <div class="nav-item">工作台</div>
+    <div class="nav-item active">指挥调度</div>
+    <div class="nav-item">公共标签</div>
+    <div class="nav-item">采编管理</div>
+    <div class="nav-item">媒资中心</div>
+    <div class="nav-item">数据中心</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item active" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>
+    <a href="asset-list.html">资产管理</a><span class="sep">/</span>
+    添加资产
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">添加资产</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-default" onclick="window.location.href='asset-list.html'">返回列表</button>
+      <button class="btn btn-link" style="font-size:13px;">⬇ 下载导入模板</button>
+    </div>
+  </div>
+
+  <!-- Tab 切换 -->
+  <div class="tabs" style="margin-bottom:0;">
+    <div class="tab active">单个添加</div>
+    <div class="tab">批量添加资产码</div>
+  </div>
+
+  <!-- ===== 单个添加表单 ===== -->
+  <div class="card" style="border-radius:0 8px 8px 8px;">
+
+    <!-- 提示：添加后默认闲置 -->
+    <div class="tip-bar">
+      <span>ℹ</span>
+      <span>资产添加后将默认为「闲置」状态，如需领用请前往 <a href="transfer.html" style="color:var(--color-primary);text-decoration:underline;">资产流转</a> 模块操作。</span>
+    </div>
+
+    <!-- 基础信息 -->
+    <div class="card-title">基础信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>资产编码</label>
+        <input class="form-input" placeholder="系统自动生成或手动输入" />
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>资产名称</label>
+        <input class="form-input" placeholder="请输入资产名称" />
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>资产分类</label>
+        <select class="form-select" id="assetCategory" onchange="onCategoryChange()">
+          <option value="">请选择资产分类</option>
+          <option value="desktop">台式电脑</option>
+          <option value="laptop">笔记本电脑</option>
+          <option value="printer">打印机</option>
+          <option value="server">服务器</option>
+          <option value="network">网络设备</option>
+          <option value="camera">照相机</option>
+          <option value="video">摄像机</option>
+          <option value="security">安全设备</option>
+          <option value="storage">存储设备</option>
+          <option value="other">其他设备</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">品牌</label>
+        <input class="form-input" id="assetBrand" placeholder="请输入品牌，如：Dell、联想、HP" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">型号</label>
+        <input class="form-input" id="assetModel" placeholder="请输入型号，如：OptiPlex 7090" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">使用状态</label>
+        <div class="status-readonly">闲置（默认可用）</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== 配置信息（动态）===== -->
+    <div class="config-section" id="configSection">
+      <div class="card-title">
+        <span id="configTitle">配置信息</span>
+        <span style="font-size:13px;font-weight:400;color:var(--color-text-secondary);" id="configHint">设备硬件配置（选填）</span>
+      </div>
+      <div class="config-grid" id="configGrid">
+        <!-- 动态填充 -->
+      </div>
+    </div>
+
+    <div class="divider" id="configDivider"></div>
+
+    <!-- 维保信息 -->
+    <div class="card-title">维保信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label class="form-label">保修截止日期</label>
+        <input class="form-input" type="date" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">维保状态</label>
+        <select class="form-select"><option value="">根据保修截止日期自动判断</option><option>✅ 在保</option><option>⚠ 即将过期（30天内）</option><option>❌ 已过期</option></select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">过期提醒</label>
+        <select class="form-select"><option value="">请选择</option><option>提前30天提醒</option><option>提前60天提醒</option><option>提前90天提醒</option><option>不提醒</option></select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 采购信息 -->
+    <div class="card-title">采购信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label class="form-label">采购订单号</label>
+        <input class="form-input" placeholder="请输入采购订单号" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">合同号</label>
+        <input class="form-input" placeholder="请输入合同号" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">供应商</label>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div class="asset-search-wrap" style="flex:1;position:relative;">
+            <input class="form-input" id="supplierInput" placeholder="搜索并选择供应商..." oninput="filterSuppliers(this.value)" onfocus="showSupplierDropdown()" />
+            <div class="asset-search-dropdown" id="supplierDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--color-border);border-radius:var(--radius-md);max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+          </div>
+          <button class="btn btn-default btn-sm" onclick="window.open('supplier-add.html','_blank')" title="新增供应商" style="height:36px;padding:0 12px;flex-shrink:0;">+ 新增</button>
+        </div>
+        <div id="selectedSupplier" style="margin-top:6px;font-size:13px;color:var(--color-primary);display:none;">
+          ✓ 已选择：<strong id="selectedSupplierName"></strong>
+          <span style="color:var(--color-text-placeholder);cursor:pointer;margin-left:6px;" onclick="clearSupplier()">✕</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">采购日期</label>
+        <input class="form-input" type="date" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">采购单价（元）</label>
+        <input class="form-input" type="number" placeholder="请输入采购单价" />
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 备注 -->
+    <div class="form-item" style="max-width:100%;">
+      <label class="form-label">备注</label>
+      <textarea class="form-textarea" placeholder="可输入资产相关备注信息"></textarea>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="btn-group">
+      <button class="btn btn-default">取消</button>
+      <button class="btn btn-primary">提交并继续添加</button>
+      <button class="btn btn-primary">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 批量添加资产码（隐藏状态，Tab切换显示）===== -->
+<div class="card" id="batchPanel" style="display:none; border-radius:0 8px 8px 8px;">
+  <div class="card-title">批量添加资产码</div>
+  <div class="tip-bar">
+    <span>ℹ</span>
+    <span>批量添加将创建多条资产记录（默认「闲置」状态），每条记录绑定一个资产码。资产码不区分配置，具体配置信息可在添加后逐个编辑。</span>
+  </div>
+
+  <div class="form-item" style="max-width:100%;">
+    <label class="form-label"><span class="required">*</span>资产码列表（每行一个）</label>
+    <textarea class="asset-code-input" id="codeInput" placeholder="请输入资产码，每行一个，或直接扫描二维码自动录入&#10;示例：&#10;AC-2024-001&#10;AC-2024-002&#10;AC-2024-003"></textarea>
+  </div>
+
+  <div style="display:flex;gap:10px;margin:12px 0 16px;">
+    <button class="btn btn-default btn-sm" onclick="addSampleCodes()">+ 添加示例资产码</button>
+    <button class="btn btn-default btn-sm">📷 扫码录入</button>
+    <button class="btn btn-link btn-sm" style="color:var(--color-danger);">清空全部</button>
+  </div>
+
+  <div class="form-grid" style="margin-bottom:20px;">
+    <div class="form-item">
+      <label class="form-label"><span class="required">*</span>资产分类（统一设置）</label>
+      <select class="form-select">
+        <option value="">请选择资产分类</option>
+        <option>台式电脑</option>
+        <option>笔记本电脑</option>
+        <option>打印机</option>
+        <option>服务器</option>
+        <option>网络设备</option>
+        <option>照相机</option>
+        <option>摄像机</option>
+        <option>安全设备</option>
+        <option>存储设备</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-default">取消</button>
+    <button class="btn btn-primary">确认批量添加（<span id="codeCount">0</span> 条）</button>
+  </div>
+</div>
+
+<script>
+  // ===== 配置信息模板定义 =====
+  const CONFIG_TEMPLATES = {
+    desktop: {
+      title: '配置信息',
+      hint: '台式电脑硬件配置（选填）',
+      fields: [
+        { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+        { label: 'CPU型号', placeholder: '如：Intel i7-12700 / AMD R5-5600G', type: 'text' },
+        { label: '内存容量', placeholder: '如：16GB DDR4-3200', type: 'text' },
+        { label: '硬盘配置', placeholder: '如：512GB NVMe SSD + 1TB HDD', type: 'text' },
+        { label: '显卡型号', placeholder: '如：NVIDIA RTX 3060 / 集成显卡', type: 'text' },
+        { label: '主板型号', placeholder: '如：ASUS B660M / 超微 X12', type: 'text' },
+        { label: '操作系统', placeholder: '如：Windows 11 专业版 / Ubuntu 22.04', type: 'text' },
+        { label: 'IP地址', placeholder: '如：192.168.1.100（固定IP时填写）', type: 'text' },
+        { label: 'MAC地址', placeholder: '如：00-1A-2B-3C-4D-5E', type: 'text' },
+      ]
+    },
+      laptop: {
+        title: '配置信息',
+        hint: '笔记本电脑硬件配置（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: 'CPU型号', placeholder: '如：Intel i7-12700H / M2 Pro', type: 'text' },
+          { label: '内存容量', placeholder: '如：16GB LPDDR5', type: 'text' },
+          { label: '硬盘配置', placeholder: '如：512GB SSD（不可扩展）', type: 'text' },
+          { label: '显卡型号', placeholder: '如：NVIDIA RTX 4060 / 集成', type: 'text' },
+          { label: '屏幕尺寸', placeholder: '如：14英寸 2.8K OLED', type: 'text' },
+          { label: '电池健康度', placeholder: '如：95%（选填）', type: 'text' },
+          { label: '操作系统', placeholder: '如：Windows 11 专业版 / macOS Sonoma', type: 'text' },
+          { label: 'MAC地址（有线）', placeholder: '如：00-1A-2B-3C-4D-5E', type: 'text' },
+        ]
+      },
+      printer: {
+        title: '设备参数',
+        hint: '打印机技术参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '打印机类型', placeholder: '如：激光黑白 / 喷墨彩色 / 针式', type: 'select', options: ['', '激光黑白', '激光彩色', '喷墨黑白', '喷墨彩色', '针式', '热敏'] },
+          { label: '打印速度（页/分钟）', placeholder: '如：A4黑白 30页/分钟', type: 'text' },
+          { label: '网络功能', placeholder: '如：有线网络 / Wi-Fi / USB仅', type: 'select', options: ['', '有线网络', 'Wi-Fi', '有线+Wi-Fi', 'USB仅', '蓝牙'] },
+          { label: '支持纸张尺寸', placeholder: '如：A4 / A3 / A5', type: 'text' },
+          { label: '月打印负荷（页）', placeholder: '如：10000页（建议月负荷）', type: 'text' },
+          { label: 'IP地址（网络打印时）', placeholder: '如：192.168.1.200', type: 'text' },
+          { label: '耗材型号', placeholder: '如：HP 508A 黑色碳粉', type: 'text' },
+        ]
+      },
+      server: {
+        title: '服务器配置',
+        hint: '服务器硬件及系统配置（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: 'CPU型号/数量', placeholder: '如：Intel Xeon Gold 6326 × 2', type: 'text' },
+          { label: '内存容量/规格', placeholder: '如：128GB DDR4 ECC 3200MHz', type: 'text' },
+          { label: '硬盘配置（RAID）', placeholder: '如：4×1.2TB SAS RAID10 / 2×512GB SSD RAID1', type: 'text' },
+          { label: '操作系统', placeholder: '如：Windows Server 2022 / CentOS 8', type: 'text' },
+          { label: '管理IP地址', placeholder: '如：192.168.1.10（业务） / 10.0.0.10（管理）', type: 'text' },
+          { label: '服务器用途/角色', placeholder: '如：数据库服务器 / Web服务器 / 虚拟化宿主', type: 'text' },
+          { label: 'RAID卡型号', placeholder: '如：LSI MegaRAID 9460-8i', type: 'text' },
+          { label: '电源配置', placeholder: '如：双电源 800W（冗余）', type: 'text' },
+        ]
+      },
+      network: {
+        title: '网络设备参数',
+        hint: '网络设备技术参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '设备型号', placeholder: '如：华为 S5735-S24P4X / 思科 C9300-48U', type: 'text' },
+          { label: '设备类型', placeholder: '如：接入交换机 / 核心交换机 / 路由器 / 防火墙', type: 'select', options: ['', '接入交换机', '汇聚交换机', '核心交换机', '路由器', '防火墙', '无线AP', '光模块'] },
+          { label: '端口规格', placeholder: '如：24×千兆电口 + 4×万兆光口', type: 'text' },
+          { label: '管理IP地址', placeholder: '如：192.168.1.1', type: 'text' },
+          { label: '固件版本', placeholder: '如：V200R020C10 / IOS 17.6.3', type: 'text' },
+          { label: '安装位置/机柜', placeholder: '如：机房A-机柜03-U15~U18', type: 'text' },
+          { label: 'PoE供电功率', placeholder: '如：370W（支持PoE+）', type: 'text' },
+        ]
+      },
+      camera: {
+        title: '照相机参数',
+        hint: '照相机技术参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '相机类型', placeholder: '如：单反 / 微单 / 运动相机', type: 'select', options: ['', '单反相机', '微单/无反', '运动相机', '拍立得', '中画幅'] },
+          { label: '传感器尺寸', placeholder: '如：全画幅 35mm / APS-C / M4/3', type: 'text' },
+          { label: '有效像素', placeholder: '如：4500万像素 / 2400万像素', type: 'text' },
+          { label: '镜头卡口', placeholder: '如：佳能 RF / 索尼 E / 尼康 Z', type: 'text' },
+          { label: '视频录制规格', placeholder: '如：8K 30p / 4K 60p 10-bit 4:2:2', type: 'text' },
+          { label: '存储介质', placeholder: '如：CFexpress B型 / SD UHS-II', type: 'text' },
+          { label: '电池型号', placeholder: '如：LP-E6NH / NP-FZ100', type: 'text' },
+        ]
+      },
+      video: {
+        title: '摄像机参数',
+        hint: '摄像机技术参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '摄像机类型', placeholder: '如：演播室摄像机 / 采访摄像机 / 运动相机 / 无人机', type: 'select', options: ['', '演播室摄像机', '肩扛式摄像机', '手持摄像机', '运动相机', '无人机航拍', '360°全景相机'] },
+          { label: '传感器类型', placeholder: '如：3×1/2英寸 CMOS / 全画幅 CMOS', type: 'text' },
+          { label: '镜头规格', placeholder: '如：12倍光学变焦 f2.8~4.5 / 定焦 24mm', type: 'text' },
+          { label: '录制格式', placeholder: '如：XAVC-I 4K 10-bit / ProRes 422 HQ', type: 'text' },
+          { label: '录制分辨率/帧率', placeholder: '如：4K 60p / 1080p 120fps', type: 'text' },
+          { label: '存储介质', placeholder: '如：SxS卡 / CFexpress / SD卡', type: 'text' },
+          { label: '音频输入', placeholder: '如：XLR 2路（支持幻象供电）', type: 'text' },
+          { label: '用途/归属栏目', placeholder: '如：新闻采访 / 综艺录制 / 纪录片', type: 'text' },
+        ]
+      },
+      security: {
+        title: '安全设备参数',
+        hint: '监控及安全设备参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '设备类型', placeholder: '如：网络摄像机 / NVR / 门禁控制器', type: 'select', options: ['', '网络摄像机（IPC）', '模拟摄像机', 'NVR网络录像机', '门禁控制器', '考勤机', '入侵报警主机'] },
+          { label: '分辨率', placeholder: '如：4K 8MP / 2K 4MP / 1080p', type: 'text' },
+          { label: '镜头焦距', placeholder: '如：2.8mm（广角）/ 8mm（中焦）/ 变焦 2.8~12mm', type: 'text' },
+          { label: '夜视/红外距离', placeholder: '如：30米红外 / 全彩夜视 / 星光级', type: 'text' },
+          { label: 'IP地址（网络型）', placeholder: '如：192.168.2.100', type: 'text' },
+          { label: '存储配置（NVR）', placeholder: '如：8TB×4 RAID5 / 支持8路摄像机', type: 'text' },
+          { label: '安装位置', placeholder: '如：一楼大厅 / 停车场入口 / 机房门禁', type: 'text' },
+        ]
+      },
+      storage: {
+        title: '存储设备参数',
+        hint: 'NAS、移动硬盘等存储设备参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号', type: 'text' },
+          { label: '设备类型', placeholder: '如：NAS / 移动硬盘 / 固态硬盘（SSD）/ U盘', type: 'select', options: ['', 'NAS网络存储', '移动机械硬盘', '移动固态硬盘（PSSD）', '内置固态硬盘（SSD）', 'U盘/闪存盘', '光盘存储', '磁带机'] },
+          { label: '存储容量', placeholder: '如：4TB / 8TB × 4（NAS）/ 1TB（SSD）', type: 'text' },
+          { label: '接口类型', placeholder: '如：USB 3.2 Gen2 / Type-C / 2.5GbE（NAS）/ SATA III', type: 'select', options: ['', 'USB 3.0', 'USB 3.2 Gen2', 'USB-C / Type-C', 'Thunderbolt 3', 'Thunderbolt 4', '2.5GbE', '10GbE', 'SATA III', 'NVMe M.2', '以太网 RJ45'] },
+          { label: 'RAID支持（NAS）', placeholder: '如：RAID 0/1/5/6/10（JBOD）', type: 'text' },
+          { label: '硬盘数量/规格（NAS）', placeholder: '如：4盘位 / 支持3.5英寸 SATA HDD', type: 'text' },
+          { label: '缓存/内存（NAS）', placeholder: '如：4GB DDR4（可扩展至8GB）', type: 'text' },
+          { label: '网络功能（NAS）', placeholder: '如：2×2.5GbE / 支持链路聚合 / Wi-Fi可选', type: 'text' },
+          { label: '加密支持', placeholder: '如：AES-256硬件加密 / 无加密 / 软件加密', type: 'text' },
+          { label: '电源/功耗', placeholder: '如：12V/3A适配器（NAS）/ 总线供电（移动硬盘）', type: 'text' },
+        ]
+      },
+      other: {
+        title: '设备信息',
+        hint: '设备相关参数（选填）',
+        fields: [
+          { label: '序列号（S/N）', placeholder: '设备序列号（如有）', type: 'text' },
+          { label: '品牌/型号', placeholder: '如：小米 / 爱普生 / 定制', type: 'text' },
+          { label: '主要参数', placeholder: '如：投影仪亮度 3500流明 / 白板尺寸 120英寸', type: 'text' },
+          { label: '用途说明', placeholder: '如：会议室A使用 / 公共区域展示', type: 'text' },
+        ]
+      }
+    };
+
+  // ===== 资产分类切换 =====
+  function onCategoryChange() {
+    const sel = document.getElementById('assetCategory');
+    const val = sel.value;
+    const section = document.getElementById('configSection');
+    const divider = document.getElementById('configDivider');
+    const grid = document.getElementById('configGrid');
+    const titleEl = document.getElementById('configTitle');
+    const hintEl = document.getElementById('configHint');
+
+    if (!val || !CONFIG_TEMPLATES[val]) {
+      // 未选择或非设备类，隐藏配置区域
+      section.classList.add('hidden');
+      divider.classList.add('hidden');
+      return;
+    }
+
+    const tmpl = CONFIG_TEMPLATES[val];
+    titleEl.textContent = tmpl.title;
+    hintEl.textContent = tmpl.hint;
+
+    // 生成配置字段HTML
+    let html = '';
+    tmpl.fields.forEach(f => {
+      html += `<div class="config-item">`;
+      html += `<label>${f.label}</label>`;
+      if (f.type === 'select') {
+        html += `<select class="form-select">`;
+        f.options.forEach((o, i) => {
+          html += `<option value="">${o || '请选择'}</option>`;
+        });
+        html += `</select>`;
+      } else {
+        html += `<input class="form-input" placeholder="${f.placeholder}" />`;
+      }
+      html += `</div>`;
+    });
+    grid.innerHTML = html;
+
+    // 显示配置区域
+    section.classList.remove('hidden');
+    divider.classList.remove('hidden');
+  }
+
+  // ===== Tab 切换 =====
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isBatch = tab.textContent.includes('批量');
+      document.querySelector('.card').style.display = isBatch ? 'none' : '';
+      document.getElementById('batchPanel').style.display = isBatch ? '' : 'none';
+    });
+  });
+
+  // ===== 资产码计数 =====
+  const codeInput = document.getElementById('codeInput');
+  const codeCount = document.getElementById('codeCount');
+  codeInput.addEventListener('input', () => {
+    const lines = codeInput.value.split('\n').filter(l => l.trim());
+    codeCount.textContent = lines.length;
+  });
+
+  function addSampleCodes() {
+    const sample = ['AC-2024-001', 'AC-2024-002', 'AC-2024-003', 'AC-2024-004', 'AC-2024-005'];
+    codeInput.value = sample.join('\n');
+    codeCount.textContent = sample.length;
+  }
+
+  // ===== 供应商数据（与 supplier.html 同步）=====
+  const SUPPLIERS = [
+    { id: 1, name: '华为技术有限公司' },
+    { id: 2, name: '联想集团有限公司' },
+    { id: 3, name: '戴尔科技集团' },
+    { id: 4, name: '佳能（中国）有限公司' },
+    { id: 5, name: '海康威视数字技术股份有限公司' },
+    { id: 6, name: '新华三技术有限公司' },
+    { id: 7, name: '爱普生（中国）有限公司' },
+    { id: 8, name: '大疆创新科技有限公司' },
+    { id: 9, name: '思科系统（中国）网络技术有限公司' },
+    { id: 10, name: '深圳存储器科技有限公司' },
+    { id: 11, name: '索尼（中国）有限公司' },
+    { id: 12, name: '锐捷网络股份有限公司' }
+  ];
+
+  let selectedSupplierId = null;
+
+  // ===== 供应商搜索下拉 =====
+  function filterSuppliers(keyword) {
+    const dropdown = document.getElementById('supplierDropdown');
+    if (!keyword) { dropdown.style.display = 'none'; return; }
+
+    const filtered = SUPPLIERS.filter(s => s.name.toLowerCase().includes(keyword.toLowerCase()));
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div style="padding:10px 12px;color:var(--color-text-placeholder);font-size:13px;">未找到匹配的供应商，<a href="supplier-add.html" target="_blank" style="color:var(--color-primary);">点击新增</a></div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(s => {
+      html += `<div class="asset-search-item" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--color-border);transition:background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'" onclick="selectSupplier(${s.id}, '${s.name.replace(/'/g, "\\'")}')">${s.name}</div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+  }
+
+  function showSupplierDropdown() {
+    const input = document.getElementById('supplierInput');
+    if (input.value.trim() === '') {
+      // 显示全部供应商
+      filterSuppliers('');
+    }
+  }
+
+  function selectSupplier(id, name) {
+    selectedSupplierId = id;
+    document.getElementById('supplierInput').value = name;
+    document.getElementById('selectedSupplierName').textContent = name;
+    document.getElementById('selectedSupplier').style.display = 'block';
+    document.getElementById('supplierDropdown').style.display = 'none';
+  }
+
+  function clearSupplier() {
+    selectedSupplierId = null;
+    document.getElementById('supplierInput').value = '';
+    document.getElementById('selectedSupplier').style.display = 'none';
+  }
+
+  // 点击页面其他地方时关闭下拉
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.asset-search-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('supplierDropdown').style.display = 'none';
+    }
+  });
+
+  // 页面加载时初始化（若已有选中值）
+  onCategoryChange();
+</script>
+
+</body>
+</html>
