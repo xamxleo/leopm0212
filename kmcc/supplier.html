@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>供应商管理 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-active: #096dd9;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .top-nav {
+    height: 48px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    color: #fff;
+    font-size: 14px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .top-nav .logo {
+    font-size: 16px;
+    font-weight: 600;
+    margin-right: 40px;
+    letter-spacing: 1px;
+  }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item {
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ===== 左侧菜单 ===== */
+  .side-menu {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    width: 200px;
+    bottom: 0;
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 8px 0;
+    overflow-y: auto;
+    z-index: 90;
+  }
+  .side-menu .menu-group-title {
+    padding: 12px 16px 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+  .side-menu .menu-item {
+    padding: 10px 16px 10px 24px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    transition: all 0.15s;
+    border-right: 3px solid transparent;
+  }
+  .side-menu .menu-item:hover {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+  }
+  .side-menu .menu-item.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    border-right-color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main-content {
+    margin-top: 48px;
+    margin-left: 200px;
+    padding: 24px;
+    min-height: calc(100vh - 48px);
+  }
+
+  /* ===== 面包屑 ===== */
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+  }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* ===== 页面标题区 ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* ===== 搜索栏 ===== */
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+  }
+  .search-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    transition: border-color 0.2s;
+    font-family: var(--font-family);
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-placeholder);
+    font-size: 16px;
+  }
+  .search-select {
+    height: 36px;
+    padding: 0 28px 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+    font-family: var(--font-family);
+  }
+  .search-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-family);
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    padding: 0 8px;
+    height: auto;
+  }
+  .btn-link:hover { color: var(--color-primary-hover); }
+  .btn-danger { color: var(--color-danger); }
+  .btn-sm { height: 28px; padding: 0 12px; font-size: 13px; }
+
+  /* ===== 表格 ===== */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    background: #fafafa;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    font-size: 13px;
+  }
+  .data-table td {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    vertical-align: top;
+  }
+  .data-table tbody tr:hover { background: var(--color-primary-bg); }
+  .data-table .actions { display: flex; gap: 8px; }
+
+  /* ===== Tag ===== */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-success { background: #f6ffed; color: var(--color-success); }
+  .tag-warning { background: #fffbe6; color: var(--color-warning); }
+  .tag-danger { background: #fff1f0; color: var(--color-danger); }
+  .tag-default { background: #f5f5f5; color: var(--color-text-secondary); }
+
+  /* ===== 分页 ===== */
+  .pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+  .pagination .page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    transition: all 0.2s;
+  }
+  .pagination .page-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .pagination .page-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+  /* ===== 空状态 ===== */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--color-text-placeholder);
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state .empty-text { font-size: 14px; }
+
+  /* ===== 电话标签 ===== */
+  .phone-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .phone-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    background: #f5f5f5;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-family: monospace;
+  }
+
+  /* ===== 统计卡片 ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 20px;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .stat-value small {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理</div>
+  <div class="nav-items">
+    <div class="nav-item">管理</div>
+    <div class="nav-item">工作台</div>
+    <div class="nav-item active">指挥调度</div>
+    <div class="nav-item">公共标签</div>
+    <div class="nav-item">采编管理</div>
+    <div class="nav-item">媒资中心</div>
+    <div class="nav-item">数据中心</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item active" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>
+    <a href="supplier.html">供应商管理</a><span class="sep">/</span>
+    供应商管理
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">供应商管理</div>
+    <button class="btn btn-primary" onclick="location.href='supplier-add.html'">+ 添加供应商</button>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">供应商总数</div>
+      <div class="stat-value">12 <small>家</small></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">合作中</div>
+      <div class="stat-value" style="color:var(--color-success);">10 <small>家</small></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">已停用</div>
+      <div class="stat-value" style="color:var(--color-text-secondary);">2 <small>家</small></div>
+    </div>
+  </div>
+
+  <!-- 搜索栏 -->
+  <div class="card" style="padding:16px 20px;margin-bottom:16px;">
+    <div class="search-bar" style="margin-bottom:0;">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" placeholder="搜索供应商名称、联系人、电话..." id="searchInput" oninput="filterSuppliers()" />
+      </div>
+      <select class="search-select" id="statusFilter" onchange="filterSuppliers()">
+        <option value="">全部状态</option>
+        <option value="active">合作中</option>
+        <option value="inactive">已停用</option>
+      </select>
+      <button class="btn btn-default btn-sm" onclick="resetFilter()">重置</button>
+    </div>
+  </div>
+
+  <!-- 供应商列表 -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:50px;text-align:center;">#</th>
+          <th>供应商名称</th>
+          <th>联系人</th>
+          <th>联系电话</th>
+          <th>供应类别</th>
+          <th>合作状态</th>
+          <th>添加时间</th>
+          <th style="width:140px;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="supplierTableBody">
+        <!-- 动态渲染 -->
+      </tbody>
+    </table>
+
+    <!-- 空状态 -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">暂无供应商数据，点击右上角「添加供应商」开始录入</div>
+    </div>
+  </div>
+
+  <!-- 分页 -->
+  <div class="pagination">
+    <span>共 <strong id="totalCount">0</strong> 条</span>
+    <div class="page-btn active">1</div>
+    <div class="page-btn">2</div>
+    <div class="page-btn">›</div>
+  </div>
+
+</div>
+
+<script>
+  // ===== 供应商数据 =====
+  let suppliers = [
+    {
+      id: 1,
+      name: '华为技术有限公司',
+      contacts: [
+        { name: '张明', phones: ['13800138001', '010-12345678'] }
+      ],
+      categories: ['服务器', '网络设备', '安全设备'],
+      status: 'active',
+      address: '广东省深圳市龙岗区华为总部',
+      email: 'contact@huawei.com',
+      remark: '核心供应商，长期合作',
+      createTime: '2024-01-15'
+    },
+    {
+      id: 2,
+      name: '联想集团有限公司',
+      contacts: [
+        { name: '李华', phones: ['13900139002'] },
+        { name: '王强（售后）', phones: ['400-990-8888', '010-58868888'] }
+      ],
+      categories: ['台式电脑', '笔记本电脑'],
+      status: 'active',
+      address: '北京市海淀区西北旺东路10号',
+      email: 'contact@lenovo.com',
+      remark: '',
+      createTime: '2024-02-20'
+    },
+    {
+      id: 3,
+      name: '戴尔科技集团',
+      contacts: [
+        { name: '赵丽', phones: ['021-38578000'] }
+      ],
+      categories: ['服务器', '台式电脑', '笔记本电脑'],
+      status: 'active',
+      address: '',
+      email: 'china.support@dell.com',
+      remark: '企业采购折扣协议已签署',
+      createTime: '2024-03-10'
+    },
+    {
+      id: 4,
+      name: '佳能（中国）有限公司',
+      contacts: [
+        { name: '孙伟', phones: ['010-85139999', '13800138004'] }
+      ],
+      categories: ['打印机', '照相机', '摄像机'],
+      status: 'active',
+      address: '',
+      email: '',
+      remark: '',
+      createTime: '2024-05-08'
+    },
+    {
+      id: 5,
+      name: '海康威视数字技术股份有限公司',
+      contacts: [
+        { name: '周磊', phones: ['0571-88075998', '13800138005'] }
+      ],
+      categories: ['安全设备', '摄像机'],
+      status: 'active',
+      address: '浙江省杭州市滨江区阡陌路555号',
+      email: 'info@hikvision.com',
+      remark: '监控设备主要供应商',
+      createTime: '2024-06-15'
+    },
+    {
+      id: 6,
+      name: '新华三技术有限公司',
+      contacts: [
+        { name: '吴芳', phones: ['0571-86760000'] }
+      ],
+      categories: ['网络设备'],
+      status: 'active',
+      address: '',
+      email: '',
+      remark: '',
+      createTime: '2024-08-22'
+    },
+    {
+      id: 7,
+      name: '爱普生（中国）有限公司',
+      contacts: [
+        { name: '郑波', phones: ['010-85221188'] }
+      ],
+      categories: ['打印机'],
+      status: 'inactive',
+      address: '',
+      email: '',
+      remark: '已于2025年停止合作',
+      createTime: '2024-04-10'
+    },
+    {
+      id: 8,
+      name: '大疆创新科技有限公司',
+      contacts: [
+        { name: '王飞', phones: ['400-700-0303', '0755-26656677'] }
+      ],
+      categories: ['摄像机', '安全设备'],
+      status: 'active',
+      address: '广东省深圳市南山区留仙洞总部',
+      email: 'support@dji.com',
+      remark: '无人机及运动相机供应商',
+      createTime: '2025-01-10'
+    },
+    {
+      id: 9,
+      name: '思科系统（中国）网络技术有限公司',
+      contacts: [
+        { name: '陈琳', phones: ['010-85155000'] }
+      ],
+      categories: ['网络设备'],
+      status: 'active',
+      address: '',
+      email: '',
+      remark: '',
+      createTime: '2025-02-18'
+    },
+    {
+      id: 10,
+      name: '深圳存储器科技有限公司',
+      contacts: [
+        { name: '刘洋', phones: ['0755-12345678', '13800138010'] }
+      ],
+      categories: ['服务器'],
+      status: 'inactive',
+      address: '',
+      email: '',
+      remark: '价格竞争力不足，暂停合作',
+      createTime: '2024-07-30'
+    },
+    {
+      id: 11,
+      name: '索尼（中国）有限公司',
+      contacts: [
+        { name: '林晓', phones: ['010-65058888'] }
+      ],
+      categories: ['照相机', '摄像机'],
+      status: 'active',
+      address: '',
+      email: '',
+      remark: '',
+      createTime: '2025-03-05'
+    },
+    {
+      id: 12,
+      name: '锐捷网络股份有限公司',
+      contacts: [
+        { name: '黄健', phones: ['0591-83050000', '13800138012'] }
+      ],
+      categories: ['网络设备'],
+      status: 'active',
+      address: '福建省福州市仓山区金山大道618号',
+      email: 'support@ruijie.com.cn',
+      remark: '国产化替代方案供应商',
+      createTime: '2025-04-12'
+    }
+  ];
+
+  // ===== 渲染表格（正确：8列对齐）=====
+  function renderTableV2(data) {
+    const tbody = document.getElementById('supplierTableBody');
+    const empty = document.getElementById('emptyState');
+    document.getElementById('totalCount').textContent = data.length;
+
+    if (data.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    let html = '';
+    data.forEach((s, idx) => {
+      // 第3列：联系人（仅姓名，多个联系人竖排）
+      const nameHtml = s.contacts.map(c =>
+        '<div style="margin-bottom:4px;font-weight:500;">' + c.name + '</div>'
+      ).join('');
+
+      // 第4列：联系电话（所有联系人的电话，以标签展示）
+      let phoneHtml = '';
+      s.contacts.forEach(c => {
+        c.phones.forEach(p => {
+          phoneHtml += '<span class="phone-tag">' + p + '</span> ';
+        });
+      });
+
+      // 供应类别标签
+      const catHtml = s.categories.map(c =>
+        '<span class="tag tag-default" style="margin-right:4px;margin-bottom:4px;display:inline-block;font-weight:400;">' + c + '</span>'
+      ).join('');
+
+      // 状态标签
+      const statusHtml = s.status === 'active'
+        ? '<span class="tag tag-success">合作中</span>'
+        : '<span class="tag tag-default">已停用</span>';
+
+      html += '<tr>' +
+        '<td style="text-align:center;color:var(--color-text-secondary);">' + (idx + 1) + '</td>' +
+        '<td>' +
+          '<strong>' + s.name + '</strong>' +
+          (s.email ? '<div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;">' + s.email + '</div>' : '') +
+          (s.address ? '<div style="font-size:12px;color:var(--color-text-placeholder);margin-top:2px;">' + s.address + '</div>' : '') +
+          (s.remark ? '<div style="font-size:12px;color:var(--color-warning);margin-top:4px;">📝 ' + s.remark + '</div>' : '') +
+        '</td>' +
+        '<td>' + nameHtml + '</td>' +
+        '<td><div class="phone-tags">' + phoneHtml + '</div></td>' +
+        '<td>' + catHtml + '</td>' +
+        '<td>' + statusHtml + '</td>' +
+        '<td style="color:var(--color-text-secondary);white-space:nowrap;">' + s.createTime + '</td>' +
+        '<td>' +
+          '<div class="actions">' +
+            '<button class="btn btn-link btn-sm" onclick="editSupplier(' + s.id + ')">编辑</button>' +
+            '<button class="btn btn-link btn-sm ' + (s.status === 'active' ? 'btn-danger' : '') + '" onclick="toggleStatus(' + s.id + ')">' + (s.status === 'active' ? '停用' : '启用') + '</button>' +
+            '<button class="btn btn-link btn-sm btn-danger" onclick="deleteSupplier(' + s.id + ')">删除</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // ===== 搜索过滤 =====
+  function filterSuppliers() {
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+
+    let filtered = suppliers;
+
+    if (keyword) {
+      filtered = filtered.filter(s => {
+        const nameMatch = s.name.toLowerCase().includes(keyword);
+        const contactMatch = s.contacts.some(c =>
+          c.name.toLowerCase().includes(keyword) ||
+          c.phones.some(p => p.includes(keyword))
+        );
+        const catMatch = s.categories.some(c => c.toLowerCase().includes(keyword));
+        return nameMatch || contactMatch || catMatch;
+      });
+    }
+
+    if (status) {
+      filtered = filtered.filter(s => s.status === status);
+    }
+
+    renderTableV2(filtered);
+  }
+
+  function resetFilter() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    renderTableV2(suppliers);
+  }
+
+  // ===== 操作：编辑 =====
+  function editSupplier(id) {
+    // 跳转到编辑页面，携带ID参数
+    location.href = 'supplier-add.html?id=' + id;
+  }
+
+  // ===== 操作：启用/停用 =====
+  function toggleStatus(id) {
+    const s = suppliers.find(x => x.id === id);
+    if (!s) return;
+    s.status = s.status === 'active' ? 'inactive' : 'active';
+    filterSuppliers();
+  }
+
+  // ===== 操作：删除 =====
+  function deleteSupplier(id) {
+    if (!confirm('确认删除该供应商？删除后历史采购记录仍保留，但不可再选择该供应商。')) return;
+    suppliers = suppliers.filter(x => x.id !== id);
+    filterSuppliers();
+  }
+
+  // ===== 初始化 =====
+  renderTableV2(suppliers);
+</script>
+
+</body>
+</html>
