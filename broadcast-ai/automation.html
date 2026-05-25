@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>自动化 - 广播AI内容生产平台</title>
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; }
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
+
+    /* 顶部导航栏 */
+    .topbar {
+      height: 56px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex; align-items: center; padding: 0 24px; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0;
+    }
+    .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-right: 40px; white-space: nowrap; }
+    .topbar .logo span { color: #00d4ff; }
+    .top-menu { display: flex; gap: 4px; }
+    .top-menu-item {
+      padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+      color: rgba(255,255,255,0.7); transition: all 0.2s; white-space: nowrap;
+      text-decoration: none; display: inline-block;
+    }
+    .top-menu-item:hover { background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; }
+    .top-menu-item.active { background: rgba(0,212,255,0.2); color: #00d4ff; }
+    .topbar .right-area { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .topbar .notification { position: relative; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+    .topbar .notification .badge {
+      position: absolute; top: -6px; right: -8px; background: #ff4d4f; color: #fff;
+      font-size: 10px; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center;
+    }
+    .topbar .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00d4ff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+    /* 主体布局 */
+    .main-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* 左侧菜单 */
+    .sidebar {
+      width: 220px; min-width: 220px; background: #fff; border-right: 1px solid #e8e8e8;
+      display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar-group { margin-bottom: 8px; }
+    .sidebar-group-title {
+      padding: 16px 16px 8px; font-size: 11px; color: #999; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sidebar-item {
+      display: block; padding: 10px 16px 10px 20px; font-size: 13px; color: #666;
+      cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover { background: #f5f5f5; color: #333; text-decoration: none; }
+    .sidebar-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+
+    /* 主内容区 */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content-header {
+      padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .content-header h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+    .content-header .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .btn:hover { border-color: #1890ff; color: #1890ff; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-success:hover { background: #73d13d; }
+    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-danger:hover { background: #ff7875; }
+
+    /* 筛选栏 */
+    .filter-bar {
+      padding: 12px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-bar .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .filter-bar select {
+      padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; background: #fff; cursor: pointer;
+    }
+    .filter-bar select:focus { border-color: #1890ff; }
+    .filter-bar .search-input {
+      flex: 1; min-width: 180px; padding: 6px 12px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; max-width: 280px;
+    }
+    .filter-bar .search-input:focus { border-color: #1890ff; }
+
+    /* 自动化列表 */
+    .auto-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .auto-card {
+      background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;
+      transition: all 0.2s;
+    }
+    .auto-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #91d5ff; }
+    .auto-card.disabled { opacity: 0.55; border-style: dashed; }
+    .auto-card .ac-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .auto-card .ac-name { font-size: 15px; font-weight: 500; color: #1a1a2e; flex: 1; }
+    .auto-card .ac-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 12px; }
+    .ac-status.enabled { background: #f6ffed; color: #52c41a; }
+    .ac-status.disabled { background: #f5f5f5; color: #999; }
+    .auto-card .ac-rules { font-size: 12px; color: #666; line-height: 1.8; margin-bottom: 10px; }
+    .auto-card .ac-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .auto-card .ac-meta { font-size: 12px; color: #999; display: flex; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+    .auto-card .ac-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* 开关 */
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .4s; border-radius: 22px;
+    }
+    .switch .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #1890ff; }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-text { font-size: 15px; margin-bottom: 8px; }
+    .empty-hint { font-size: 12px; }
+
+    .right-panel { width: 300px; min-width: 300px; background: #fff; border-left: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
+    .right-panel .panel-header { padding: 14px 16px; font-size: 14px; font-weight: 600; color: #1a1a2e; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+    .right-panel .panel-header .ai-badge { background: linear-gradient(135deg, #1890ff, #00d4ff); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 8px; }
+    .quick-actions { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; }
+    .quick-actions .qa-title { font-size: 11px; color: #999; font-weight: 500; margin-bottom: 2px; }
+    .quick-actions .qa-btn { display: block; width: 100%; padding: 8px 12px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fafafa; font-size: 12px; color: #333; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .quick-actions .qa-btn:hover { border-color: #1890ff; background: #e6f7ff; color: #1890ff; }
+    .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .ai-msg { padding: 8px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; max-width: 90%; }
+    .ai-msg.ai { background: #f0f7ff; color: #333; align-self: flex-start; }
+    .ai-msg.ai .msg-label { color: #1890ff; font-weight: 600; margin-bottom: 4px; font-size: 11px; }
+    .ai-msg.notification { background: #fffbe6; border-left: 3px solid #faad14; }
+    .ai-msg.notification .msg-label { color: #fa8c16; }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45); z-index: 1000;
+      display: none; justify-content: center; align-items: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 12px; width: 520px; max-height: 85vh;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+    .close-btn {
+      width: 28px; height: 28px; border-radius: 6px; border: none;
+      background: transparent; color: #999; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover { background: #f5f5f5; color: #333; }
+    .modal-body { padding: 20px; font-size: 13px; color: #666; line-height: 1.8; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 12px 20px; border-top: 1px solid #f0f0f0;
+      display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0;
+    }
+
+    /* 新增任务弹窗表单 */
+    .auto-form { display: flex; flex-direction: column; gap: 14px; }
+    .auto-field { display: flex; flex-direction: column; gap: 5px; }
+    .auto-field label { font-size: 13px; font-weight: 500; color: #333; }
+    .auto-field label .required { color: #ff4d4f; margin-left: 2px; }
+    .auto-field input[type="text"],
+    .auto-field select,
+    .auto-field textarea { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #333; outline: none; transition: border-color 0.2s; font-family: inherit; }
+    .auto-field input[type="text"]:focus,
+    .auto-field select:focus,
+    .auto-field textarea:focus { border-color: #1890ff; }
+    .auto-field textarea { resize: vertical; min-height: 50px; }
+    .auto-field .hint { font-size: 11px; color: #999; }
+
+    /* 多选区域（渠道/来源） */
+    .multi-select-box { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; padding: 8px; border: 1px solid #e8e8e8; border-radius: 6px; background: #fafafa; }
+    .multi-select-box .select-all-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #1890ff; font-weight: 500; cursor: pointer; padding-bottom: 6px; border-bottom: 1px solid #e8e8e8; margin-bottom: 2px; }
+    .multi-select-box .select-all-row input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+    .multi-select-box .cb-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
+    .multi-select-box .cb-row input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+    .multi-select-box .cb-row:hover { color: #1890ff; }
+
+    /* 状态筛选按钮组 */
+    .status-tabs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .status-tab {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #e8e8e8; background: #fff; color: #666; transition: all 0.2s; white-space: nowrap;
+    }
+    .status-tab:hover { border-color: #91d5ff; color: #333; }
+    .status-tab.active { background: #1890ff; color: #fff; border-color: #1890ff; font-weight: 500; }
+    .status-tab .st-count { font-size: 11px; margin-left: 4px; opacity: 0.8; }
+
+    /* 选项卡 */
+    .tab-group { display: inline-flex; gap: 4px; }
+    .tab-btn {
+      padding: 6px 16px; font-size: 13px; cursor: pointer; border: 1px solid #d9d9d9;
+      background: #fff; color: #666; border-radius: 6px; transition: all 0.2s;
+    }
+    .tab-btn:hover { border-color: #1890ff; color: #1890ff; }
+    .tab-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+
+    /* 分区 */
+    .auto-section { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fafafa; }
+    .auto-section-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e8e8e8; }
+
+    /* 频率面板 */
+    .freq-panel { margin-top: 8px; }
+    .freq-panel select,
+    .freq-panel input[type="time"],
+    .freq-panel input[type="date"] {
+      padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; font-family: inherit;
+    }
+    .freq-panel select:focus,
+    .freq-panel input:focus { border-color: #1890ff; }
+
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="logo"><span>AI</span>广播内容生产平台</div>
+  <div class="top-menu">
+    <a class="top-menu-item" href="collect.html">内容生产</a>
+    <a class="top-menu-item active" href="automation.html">自动化</a>
+    <a class="top-menu-item" href="system.html">系统管理</a>
+  </div>
+  <div class="right-area">
+    <div class="notification" onclick="customAlert('暂无新通知')">通知<span class="badge">3</span></div>
+    <div class="user-info"><div class="avatar">王</div><span style="font-size:13px">王总监</span></div>
+  </div>
+</div>
+
+<!-- 主体布局 -->
+<div class="main-body">
+
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">自动化</div>
+      <a class="sidebar-item active" href="automation.html">任务管理</a>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;margin-top:auto">
+      <button class="btn" style="width:100%;font-size:12px;color:#999" onclick="clearCache()">清除缓存 / 重置数据</button>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main-content">
+
+    <!-- 内容头部 -->
+    <div class="content-header">
+      <h2>自动化任务管理</h2>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="addTask()">新增任务</button>
+        <button class="btn" onclick="refreshList()">刷新</button>
+      </div>
+    </div>
+
+    <!-- 筛选栏（状态按钮组） -->
+    <div class="filter-bar">
+      <span class="filter-label">状态</span>
+      <div class="status-tabs" id="status-tabs">
+        <button class="status-tab active" data-status="all" onclick="filterByStatus('all', this)">全部 <span class="st-count" id="count-all">0</span></button>
+        <button class="status-tab" data-status="enabled" onclick="filterByStatus('enabled', this)">已启用 <span class="st-count" id="count-enabled">0</span></button>
+        <button class="status-tab" data-status="disabled" onclick="filterByStatus('disabled', this)">已禁用 <span class="st-count" id="count-disabled">0</span></button>
+      </div>
+      <span class="filter-label">任务搜索</span>
+      <input type="text" class="search-input" id="filter-name" placeholder="输入任务名称..." oninput="applyAutoFilter()">
+    </div>
+
+    <!-- 自动化列表 -->
+    <div class="auto-list" id="auto-list">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-text">暂无自动化任务</div>
+        <div class="empty-hint">点击"新增任务"按钮创建自动化任务。</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧：融媒AI助手 -->
+  <div class="right-panel">
+    <div class="panel-header">
+      <span>融媒AI助手</span>
+      <span class="ai-badge">AI</span>
+    </div>
+    <div class="quick-actions">
+      <div class="qa-title">快捷操作</div>
+      <button class="qa-btn" onclick="quickAction('new-task')">新建自动化任务</button>
+      <button class="qa-btn" onclick="quickAction('view-enabled')">查看已启用任务</button>
+      <button class="qa-btn" onclick="quickAction('view-logs')">查看执行日志</button>
+      <button class="qa-btn" onclick="quickAction('enable-all')">一键启用全部</button>
+    </div>
+    <div class="ai-messages" id="ai-messages">
+      <div class="ai-msg ai">
+        <div class="msg-label">融媒AI</div>
+        您好，我是您的融媒AI助手。自动化任务可以定时或周期执行稿件编校、音频生成、提交播出单等操作，解放您的双手。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增/编辑任务弹窗 -->
+<div class="modal-overlay" id="add-task-modal">
+  <div class="modal" style="width:640px">
+    <div class="modal-header">
+      <h3 id="modal-title">新增自动化任务</h3>
+      <button class="close-btn" onclick="closeAddTaskModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="auto-form">
+
+        <input type="hidden" id="edit-task-id" value="">
+
+        <!-- 基本信息 -->
+        <div class="auto-field">
+          <label>任务名称 <span class="required">*</span></label>
+          <input type="text" id="task-name" placeholder="请输入任务名称">
+        </div>
+
+        <div class="auto-field">
+          <label>生效日期区间（可选，留空表示始终生效）</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="task-start-date" style="padding:6px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none;font-family:inherit;">
+            <span style="color:#999;font-size:13px;">至</span>
+            <input type="date" id="task-end-date" style="padding:6px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none;font-family:inherit;">
+          </div>
+        </div>
+
+        <!-- 触发方式 -->
+        <div class="auto-field">
+          <label>触发方式 <span class="required">*</span></label>
+          <div class="tab-group" id="trigger-tabs">
+            <button class="tab-btn active" data-trigger="timer" onclick="onTriggerChange('timer', this)">定时触发</button>
+            <button class="tab-btn" data-trigger="hot" onclick="onTriggerChange('hot', this)">热度阈值触发</button>
+          </div>
+        </div>
+
+        <!-- 热度阈值（热度触发时显示） -->
+        <div class="auto-field" id="hot-threshold-field" style="display:none;">
+          <label>热度阈值 <span class="required">*</span></label>
+          <input type="number" id="hot-threshold" placeholder="输入热度阈值（如 1000）" min="0" style="padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none;font-family:inherit;">
+          <div class="hint">当监测内容的热度超过此值时自动触发任务</div>
+        </div>
+
+        <!-- 执行频率（定时触发时显示） -->
+        <div class="auto-field" id="freq-field">
+          <label>执行频率 <span class="required">*</span></label>
+          <div class="tab-group" id="freq-tabs">
+            <button class="tab-btn active" data-freq="cycle" onclick="onFreqTabChange('cycle', this)">周期</button>
+            <button class="tab-btn" data-freq="interval" onclick="onFreqTabChange('interval', this)">按间隔</button>
+            <button class="tab-btn" data-freq="once" onclick="onFreqTabChange('once', this)">单次</button>
+          </div>
+
+          <!-- 周期 -->
+          <div class="freq-panel" id="freq-panel-cycle">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="cycle-type">
+                <option value="daily">每天</option>
+                <option value="weekly">每周一</option>
+                <option value="monthly">每月1日</option>
+                <option value="custom">自定义</option>
+              </select>
+              <input type="time" id="cycle-time" value="09:00">
+            </div>
+          </div>
+
+          <!-- 按间隔 -->
+          <div class="freq-panel" id="freq-panel-interval" style="display:none;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="interval-type" onchange="onIntervalTypeChange()">
+                <option value="6h">每6小时</option>
+                <option value="12h">每12小时</option>
+                <option value="custom">自定义</option>
+              </select>
+              <input type="text" id="interval-custom" placeholder="输入自定义间隔" style="display:none;padding:6px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;outline:none;font-family:inherit;width:180px;">
+            </div>
+          </div>
+
+          <!-- 单次 -->
+          <div class="freq-panel" id="freq-panel-once" style="display:none;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="date" id="once-date">
+              <input type="time" id="once-time" value="09:00">
+            </div>
+          </div>
+        </div>
+
+        <!-- 稿件生成规则 -->
+        <div class="auto-section">
+          <div class="auto-section-title">稿件生成规则</div>
+
+          <div class="auto-field">
+            <label>选择渠道（可多选）</label>
+            <div class="multi-select-box" id="channel-box">
+              <div class="select-all-row">
+                <input type="checkbox" id="channel-select-all" onchange="toggleSelectAll('channel')">
+                <span onclick="this.previousElementSibling.click()">全选</span>
+              </div>
+              <label class="cb-row"><input type="checkbox" value="微信" onchange="onMultiSelectChange('channel')"> 微信</label>
+              <label class="cb-row"><input type="checkbox" value="微博" onchange="onMultiSelectChange('channel')"> 微博</label>
+              <label class="cb-row"><input type="checkbox" value="抖音" onchange="onMultiSelectChange('channel')"> 抖音</label>
+              <label class="cb-row"><input type="checkbox" value="快手" onchange="onMultiSelectChange('channel')"> 快手</label>
+              <label class="cb-row"><input type="checkbox" value="头条" onchange="onMultiSelectChange('channel')"> 头条</label>
+              <label class="cb-row"><input type="checkbox" value="小红书" onchange="onMultiSelectChange('channel')"> 小红书</label>
+            </div>
+          </div>
+
+          <div class="auto-field">
+            <label>选择来源大类（可多选）</label>
+            <div class="multi-select-box" id="source-category-box">
+              <div class="select-all-row">
+                <input type="checkbox" id="source-category-select-all" onchange="toggleSelectAll('source-category')">
+                <span onclick="this.previousElementSibling.click()">全选</span>
+              </div>
+              <label class="cb-row"><input type="checkbox" value="央级媒体" onchange="onSourceCategoryChange()"> 央级媒体</label>
+              <label class="cb-row"><input type="checkbox" value="省级媒体" onchange="onSourceCategoryChange()"> 省级媒体</label>
+              <label class="cb-row"><input type="checkbox" value="市级媒体" onchange="onSourceCategoryChange()"> 市级媒体</label>
+              <label class="cb-row"><input type="checkbox" value="商业媒体" onchange="onSourceCategoryChange()"> 商业媒体</label>
+            </div>
+          </div>
+
+          <div class="auto-field">
+            <label>选择来源子类（可多选，按来源大类自动筛选）</label>
+            <div class="multi-select-box" id="source-sub-box">
+              <div class="select-all-row">
+                <input type="checkbox" id="source-sub-select-all" onchange="toggleSelectAll('source-sub')" disabled>
+                <span onclick="this.previousElementSibling.click()">全选（请先选择来源大类）</span>
+              </div>
+            </div>
+            <div class="hint">请先在"选择来源大类"中勾选，此处会自动显示对应的来源子类。</div>
+          </div>
+
+          <div class="auto-field">
+            <label>关键词过滤（可选）</label>
+            <input type="text" id="task-keywords" placeholder="输入关键词，多个用逗号分隔">
+          </div>
+        </div>
+
+        <!-- 音频生成规则 -->
+        <div class="auto-section">
+          <div class="auto-section-title">音频生成规则</div>
+
+          <div class="auto-field">
+            <label>声音模型</label>
+            <select id="voice-model">
+              <option value="male-anchor">男声主播</option>
+              <option value="female-anchor">女声主播</option>
+              <option value="male-youth">男声青年</option>
+            </select>
+          </div>
+
+          <div class="auto-field">
+            <label>TTS语速</label>
+            <select id="tts-speed">
+              <option value="normal">正常</option>
+              <option value="slow">偏慢</option>
+              <option value="fast">偏快</option>
+            </select>
+          </div>
+
+          <div class="auto-field">
+            <label>背景音乐</label>
+            <select id="bg-music">
+              <option value="none">无</option>
+              <option value="news">新闻标准</option>
+              <option value="soft">轻柔舒缓</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 自动审核规则 -->
+        <div class="auto-section">
+          <div class="auto-section-title">自动审核规则</div>
+          <div class="hint" style="margin-bottom:8px;">以下审核环节将在自动化流程中自动执行，人工审核环节默认通过</div>
+          <div class="multi-select-box" id="rules-box">
+            <div class="select-all-row">
+              <input type="checkbox" id="rules-select-all" onchange="toggleSelectAll('rules')">
+              <span onclick="this.previousElementSibling.click()">全选</span>
+            </div>
+            <label class="cb-row"><input type="checkbox" value="自动编校" checked> 自动编校（AI智能校对）</label>
+            <label class="cb-row"><input type="checkbox" value="自动确认" checked> 自动确认（稿件确认）</label>
+            <label class="cb-row"><input type="checkbox" value="自动技审" checked> 自动技审（技术审核）</label>
+            <label class="cb-row"><input type="checkbox" value="自动通过" checked> 自动通过（人工审核默认通过）</label>
+            <label class="cb-row"><input type="checkbox" value="自动生成音频" checked> 自动生成音频（TTS合成）</label>
+            <label class="cb-row"><input type="checkbox" value="自动提交播出单"> 自动提交播出单</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddTaskModal()">取消</button>
+      <button class="btn btn-primary" id="confirm-btn" onclick="confirmAddTask()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 来源子类数据（按来源大类分类）==========
+const SOURCE_SUBCLASS_MAP = {
+  '央级媒体': ['新华社', '人民日报', '央视新闻', '光明日报', '中国日报', '中央人民广播电台'],
+  '省级媒体': ['云南日报', '浙江日报', '四川日报', '广州日报', '湖南日报', '湖北日报'],
+  '市级媒体': ['昆明日报', '春城晚报', '都市时报', '每日经济新闻', '北京晚报', '上海日报'],
+  '商业媒体': ['抖音热榜', '微博热搜', '今日头条', '小红书热门', '快手热榜', 'B站热门']
+};
+
+// ========== 通用自定义弹窗（与停止任务弹窗样式统一）==========
+function customConfirm(message, onConfirm, onCancel) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>确认</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn" id="cc-cancel">取消</button>' +
+        '<button class="btn btn-primary" id="cc-confirm">确认</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doCancel() {
+    overlay.remove();
+    if (typeof onCancel === 'function') onCancel();
+  }
+  overlay.querySelector('.close-btn').onclick = doCancel;
+  document.getElementById('cc-cancel').onclick = doCancel;
+  document.getElementById('cc-confirm').onclick = function() {
+    overlay.remove();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) doCancel(); };
+}
+
+function customAlert(message, onOk) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>提示</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn btn-primary" id="ca-ok">确定</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doOk() {
+    overlay.remove();
+    if (typeof onOk === 'function') onOk();
+  }
+  overlay.querySelector('.close-btn').onclick = doOk;
+  document.getElementById('ca-ok').onclick = doOk;
+  overlay.onclick = function(e) { if (e.target === overlay) doOk(); };
+}
+
+// ========== 多选全选逻辑 ==========
+function toggleSelectAll(group) {
+  var selectAllCb;
+  var container;
+  if (group === 'channel') {
+    selectAllCb = document.getElementById('channel-select-all');
+    container = document.getElementById('channel-box');
+  } else if (group === 'source-category') {
+    selectAllCb = document.getElementById('source-category-select-all');
+    container = document.getElementById('source-category-box');
+  } else if (group === 'source-sub') {
+    selectAllCb = document.getElementById('source-sub-select-all');
+    container = document.getElementById('source-sub-box');
+  } else if (group === 'rules') {
+    selectAllCb = document.getElementById('rules-select-all');
+    container = document.getElementById('rules-box');
+  }
+  if (!selectAllCb || !container) return;
+  var itemCbs = container.querySelectorAll('.cb-row input[type="checkbox"]');
+  itemCbs.forEach(function(cb) { cb.checked = selectAllCb.checked; });
+}
+
+function onMultiSelectChange(group) {
+  var selectAllCb;
+  var container;
+  if (group === 'channel') {
+    selectAllCb = document.getElementById('channel-select-all');
+    container = document.getElementById('channel-box');
+  } else if (group === 'source-category') {
+    selectAllCb = document.getElementById('source-category-select-all');
+    container = document.getElementById('source-category-box');
+  } else if (group === 'source-sub') {
+    selectAllCb = document.getElementById('source-sub-select-all');
+    container = document.getElementById('source-sub-box');
+  } else if (group === 'rules') {
+    selectAllCb = document.getElementById('rules-select-all');
+    container = document.getElementById('rules-box');
+  }
+  if (!selectAllCb || !container) return;
+  var itemCbs = container.querySelectorAll('.cb-row input[type="checkbox"]');
+  var allChecked = true;
+  itemCbs.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+  selectAllCb.checked = allChecked;
+}
+
+// ========== 来源大类变化 → 动态加载来源子类 ==========
+function onSourceCategoryChange() {
+  var container = document.getElementById('source-sub-box');
+  var selectAllRow = container.querySelector('.select-all-row');
+  // 收集已选的大类
+  var checkedCategories = [];
+  document.querySelectorAll('#source-category-box .cb-row input:checked').forEach(function(cb) {
+    checkedCategories.push(cb.value);
+  });
+  // 清空旧子类
+  container.querySelectorAll('.cb-row').forEach(function(row) { row.remove(); });
+  // 如果没有选任何大类
+  if (checkedCategories.length === 0) {
+    selectAllRow.querySelector('span').textContent = '全选（请先选择来源大类）';
+    document.getElementById('source-sub-select-all').disabled = true;
+    document.getElementById('source-sub-select-all').checked = false;
+    return;
+  }
+  // 启用全选
+  document.getElementById('source-sub-select-all').disabled = false;
+  selectAllRow.querySelector('span').textContent = '全选';
+  // 合并所有对应子类的选项（去重）
+  var subSet = {};
+  checkedCategories.forEach(function(cat) {
+    (SOURCE_SUBCLASS_MAP[cat] || []).forEach(function(sub) {
+      subSet[sub] = true;
+    });
+  });
+  var subs = Object.keys(subSet);
+  // 动态插入子类复选框
+  subs.forEach(function(sub) {
+    var label = document.createElement('label');
+    label.className = 'cb-row';
+    label.innerHTML = '<input type="checkbox" value="' + escapeHtml(sub) + '" onchange="onMultiSelectChange(\'source-sub\')"> ' + escapeHtml(sub);
+    container.appendChild(label);
+  });
+  // 重置全选状态
+  document.getElementById('source-sub-select-all').checked = false;
+}
+
+// ========== 全局状态 ==========
+let autoTasks = [];
+
+// ========== 页面初始化 ==========
+(function() {
+  var page = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.top-menu-item').forEach(function(t) {
+    t.classList.remove('active');
+    if (t.getAttribute('href') === page) t.classList.add('active');
+  });
+  loadAutoTasks();
+  applyAutoFilter();
+})();
+
+// ========== 加载自动化任务 ==========
+function loadAutoTasks() {
+  autoTasks = JSON.parse(localStorage.getItem('auto_tasks') || '[]');
+  if (autoTasks.length === 0) {
+    autoTasks = [
+      {
+        id: 'auto-001',
+        name: '早间新闻自动生产',
+        enabled: true,
+        triggerType: 'timer',
+        freqMode: 'cycle',
+        cycleType: 'daily',
+        cycleTime: '08:00',
+        startDate: '',
+        endDate: '',
+        channels: ['微信', '微博', '头条'],
+        sourceCategories: ['央级媒体', '省级媒体'],
+        sourceSubclasses: ['新华社', '人民日报', '云南日报'],
+        keywords: '时政,民生',
+        voiceModel: 'male-anchor',
+        ttsSpeed: 'normal',
+        bgMusic: 'news',
+        rules: ['自动编校', '自动确认', '自动技审', '自动通过', '自动生成音频'],
+        createdAt: '2026-05-20 08:00'
+      },
+      {
+        id: 'auto-002',
+        name: '热点内容自动追踪',
+        enabled: true,
+        triggerType: 'hot',
+        hotThreshold: '5000',
+        startDate: '2026-05-01',
+        endDate: '2026-12-31',
+        channels: ['抖音', '快手', '小红书'],
+        sourceCategories: ['商业媒体'],
+        sourceSubclasses: ['抖音热榜', '微博热搜', '小红书热门'],
+        keywords: '突发,热点',
+        voiceModel: 'female-anchor',
+        ttsSpeed: 'fast',
+        bgMusic: 'soft',
+        rules: ['自动编校', '自动确认', '自动技审', '自动通过', '自动生成音频', '自动提交播出单'],
+        createdAt: '2026-05-20 10:00'
+      },
+      {
+        id: 'auto-003',
+        name: '每周深度报道',
+        enabled: false,
+        triggerType: 'timer',
+        freqMode: 'cycle',
+        cycleType: 'weekly',
+        cycleTime: '09:00',
+        startDate: '',
+        endDate: '',
+        channels: ['微信'],
+        sourceCategories: ['央级媒体'],
+        sourceSubclasses: ['央视新闻', '光明日报'],
+        keywords: '',
+        voiceModel: 'male-youth',
+        ttsSpeed: 'normal',
+        bgMusic: 'none',
+        rules: ['自动编校', '自动确认'],
+        createdAt: '2026-05-21 14:00'
+      }
+    ];
+    localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  }
+  renderAutoTasks();
+}
+
+// ========== 渲染自动化任务列表 ==========
+function renderAutoTasks() {
+  var list = document.getElementById('auto-list');
+  var emptyState = document.getElementById('empty-state');
+  var filtered = getFilteredAutoTasks();
+  if (filtered.length === 0) {
+    emptyState.style.display = 'block';
+  } else {
+    emptyState.style.display = 'none';
+  }
+  list.querySelectorAll('.auto-card').forEach(function(card) { card.remove(); });
+  filtered.forEach(function(task) {
+    var card = createAutoCard(task);
+    list.appendChild(card);
+  });
+  updateAutoCounts();
+}
+
+// ========== 状态筛选 ==========
+var currentAutoStatusFilter = 'all';
+
+function filterByStatus(status, el) {
+  currentAutoStatusFilter = status;
+  document.querySelectorAll('.status-tab').forEach(function(si) { si.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderAutoTasks();
+}
+
+function updateAutoCounts() {
+  var counts = { all: autoTasks.length, enabled: 0, disabled: 0 };
+  autoTasks.forEach(function(t) { if (t.enabled) counts.enabled++; else counts.disabled++; });
+  var map = { all: 'count-all', enabled: 'count-enabled', disabled: 'count-disabled' };
+  for (var key in map) {
+    var el = document.getElementById(map[key]);
+    if (el) el.textContent = counts[key] || 0;
+  }
+}
+
+// ========== 获取筛选后的任务 ==========
+function getFilteredAutoTasks() {
+  var name = document.getElementById('filter-name').value.trim().toLowerCase();
+  return autoTasks.filter(function(task) {
+    var show = true;
+    if (currentAutoStatusFilter === 'enabled' && !task.enabled) show = false;
+    if (currentAutoStatusFilter === 'disabled' && task.enabled) show = false;
+    if (name && task.name.toLowerCase().indexOf(name) === -1) show = false;
+    return show;
+  });
+}
+
+function applyAutoFilter() {
+  renderAutoTasks();
+}
+
+// ========== 清除缓存 / 重置数据 ==========
+function clearCache() {
+  customConfirm('确定要清除所有自动化任务数据并重置为示例数据吗？', function() {
+    localStorage.removeItem('auto_tasks');
+    location.reload();
+  });
+}
+
+// ========== 创建自动化任务卡片 ==========
+function createAutoCard(task) {
+  var card = document.createElement('div');
+  card.className = 'auto-card' + (task.enabled ? '' : ' disabled');
+  card.dataset.id = task.id;
+
+  var statusText = task.enabled ? '已启用' : '已禁用';
+  var statusClass = task.enabled ? 'enabled' : 'disabled';
+
+  var rulesHtml = '';
+  (task.rules || []).forEach(function(rule) {
+    rulesHtml += '<div class="ac-rule-item">' + escapeHtml(rule) + '</div>';
+  });
+
+  // 触发方式文字
+  var triggerText = '';
+  if (task.triggerType === 'hot') {
+    triggerText = '热度阈值触发（阈值 ' + (task.hotThreshold || '0') + '）';
+  } else {
+    var freqMap = { cycle: '周期', interval: '按间隔', once: '单次' };
+    var freqText = freqMap[task.freqMode] || '定时';
+    var detail = '';
+    if (task.freqMode === 'cycle') {
+      var cycleMap = { daily: '每天', weekly: '每周一', monthly: '每月1日', custom: '自定义' };
+      detail = (cycleMap[task.cycleType] || '') + ' ' + (task.cycleTime || '');
+    } else if (task.freqMode === 'interval') {
+      var intervalMap = { '6h': '每6小时', '12h': '每12小时', custom: task.intervalCustom || '自定义' };
+      detail = intervalMap[task.intervalType] || '';
+    } else if (task.freqMode === 'once') {
+      detail = (task.onceDate || '') + ' ' + (task.onceTime || '');
+    }
+    triggerText = freqText + '：' + detail;
+  }
+
+  // 生效日期
+  var dateRange = '';
+  if (task.startDate || task.endDate) {
+    dateRange = (task.startDate || '始终') + ' 至 ' + (task.endDate || '始终');
+  }
+
+  // 音频规则
+  var voiceMap = { 'male-anchor': '男声主播', 'female-anchor': '女声主播', 'male-youth': '男声青年' };
+  var audioText = (voiceMap[task.voiceModel] || '默认') + ' / ' + (task.ttsSpeed === 'slow' ? '偏慢' : task.ttsSpeed === 'fast' ? '偏快' : '正常');
+
+  var channelText = (task.channels || []).join('、');
+  var sourceText = (task.sourceCategories || []).join('、');
+
+  card.innerHTML =
+    '<div class="ac-header">' +
+      '<div class="ac-name">' + escapeHtml(task.name) + '</div>' +
+      '<div class="ac-status ' + statusClass + '">' + statusText + '</div>' +
+    '</div>' +
+    '<div class="ac-rules">' + rulesHtml + '</div>' +
+    '<div class="ac-meta">' +
+      '<span>触发：' + escapeHtml(triggerText) + '</span>' +
+      (dateRange ? '<span>生效：' + escapeHtml(dateRange) + '</span>' : '') +
+      (channelText ? '<span>渠道：' + escapeHtml(channelText) + '</span>' : '') +
+      (sourceText ? '<span>来源：' + escapeHtml(sourceText) + '</span>' : '') +
+      '<span>音频：' + escapeHtml(audioText) + '</span>' +
+      '<span>创建：' + escapeHtml(task.createdAt || '未知') + '</span>' +
+    '</div>' +
+    '<div class="ac-actions">' +
+      '<button class="btn btn-sm" onclick="toggleTask(\'' + task.id + '\')">' + (task.enabled ? '禁用' : '启用') + '</button>' +
+      '<button class="btn btn-sm" onclick="editTask(\'' + task.id + '\')">编辑</button>' +
+      '<button class="btn btn-sm btn-danger" onclick="deleteTask(\'' + task.id + '\')">删除</button>' +
+    '</div>';
+
+  return card;
+}
+
+// ========== 切换任务状态 ==========
+function toggleTask(id) {
+  var task = autoTasks.find(function(t) { return t.id === id; });
+  if (!task) return;
+  task.enabled = !task.enabled;
+  localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  renderAutoTasks();
+}
+
+// ========== 触发方式切换 ==========
+function onTriggerChange(trigger, el) {
+  document.querySelectorAll('#trigger-tabs .tab-btn').forEach(function(btn) { btn.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  var freqField = document.getElementById('freq-field');
+  var hotField = document.getElementById('hot-threshold-field');
+
+  if (trigger === 'hot') {
+    freqField.style.display = 'none';
+    hotField.style.display = '';
+  } else {
+    freqField.style.display = '';
+    hotField.style.display = 'none';
+  }
+}
+
+// ========== 频率选项卡切换 ==========
+function onFreqTabChange(freq, el) {
+  document.querySelectorAll('#freq-tabs .tab-btn').forEach(function(btn) { btn.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  document.getElementById('freq-panel-cycle').style.display = (freq === 'cycle') ? '' : 'none';
+  document.getElementById('freq-panel-interval').style.display = (freq === 'interval') ? '' : 'none';
+  document.getElementById('freq-panel-once').style.display = (freq === 'once') ? '' : 'none';
+}
+
+// ========== 间隔类型切换 ==========
+function onIntervalTypeChange() {
+  var type = document.getElementById('interval-type').value;
+  var customInput = document.getElementById('interval-custom');
+  customInput.style.display = (type === 'custom') ? '' : 'none';
+}
+
+// ========== 编辑任务 ==========
+function editTask(id) {
+  var task = autoTasks.find(function(t) { return t.id === id; });
+  if (!task) { customAlert('任务不存在'); return; }
+
+  // 回填基本信息
+  document.getElementById('modal-title').textContent = '编辑自动化任务';
+  document.getElementById('confirm-btn').textContent = '确认保存';
+  document.getElementById('edit-task-id').value = task.id;
+  document.getElementById('task-name').value = task.name || '';
+  document.getElementById('task-start-date').value = task.startDate || '';
+  document.getElementById('task-end-date').value = task.endDate || '';
+  document.getElementById('task-keywords').value = task.keywords || '';
+
+  // 触发方式
+  var trigger = task.triggerType || 'timer';
+  onTriggerChange(trigger);
+  document.querySelectorAll('#trigger-tabs .tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.trigger === trigger);
+  });
+  document.getElementById('hot-threshold').value = task.hotThreshold || '';
+
+  // 频率选项卡
+  var freqMode = task.freqMode || 'cycle';
+  onFreqTabChange(freqMode);
+  document.querySelectorAll('#freq-tabs .tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.freq === freqMode);
+  });
+
+  // 周期
+  document.getElementById('cycle-type').value = task.cycleType || 'daily';
+  document.getElementById('cycle-time').value = task.cycleTime || '09:00';
+
+  // 间隔
+  document.getElementById('interval-type').value = task.intervalType || '6h';
+  document.getElementById('interval-custom').value = task.intervalCustom || '';
+  document.getElementById('interval-custom').style.display = (task.intervalType === 'custom') ? '' : 'none';
+
+  // 单次
+  document.getElementById('once-date').value = task.onceDate || '';
+  document.getElementById('once-time').value = task.onceTime || '09:00';
+
+  // 音频规则
+  document.getElementById('voice-model').value = task.voiceModel || 'male-anchor';
+  document.getElementById('tts-speed').value = task.ttsSpeed || 'normal';
+  document.getElementById('bg-music').value = task.bgMusic || 'none';
+
+  // 渠道
+  resetCheckboxes('channel');
+  (task.channels || []).forEach(function(v) { setCheckbox('channel', v, true); });
+  onMultiSelectChange('channel');
+
+  // 来源大类
+  resetCheckboxes('source-category');
+  (task.sourceCategories || []).forEach(function(v) { setCheckbox('source-category', v, true); });
+  onSourceCategoryChange();
+
+  // 来源子类（需在onSourceCategoryChange之后）
+  setTimeout(function() {
+    (task.sourceSubclasses || []).forEach(function(v) { setCheckbox('source-sub', v, true); });
+    onMultiSelectChange('source-sub');
+  }, 0);
+
+  // 执行规则
+  resetCheckboxes('rules');
+  (task.rules || []).forEach(function(v) { setCheckbox('rules', v, true); });
+  onMultiSelectChange('rules');
+
+  document.getElementById('add-task-modal').classList.add('show');
+}
+
+// ========== 删除任务 ==========
+function deleteTask(id) {
+  customConfirm('确定要删除该自动化任务吗？', function() {
+    autoTasks = autoTasks.filter(function(t) { return t.id !== id; });
+    localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+    renderAutoTasks();
+  });
+}
+
+// ========== 刷新列表 ==========
+function refreshList() {
+  loadAutoTasks();
+  customAlert('刷新成功！');
+}
+
+// ========== 工具函数 ==========
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// ========== 辅助函数：重置/设置复选框 ==========
+function resetCheckboxes(group) {
+  var container;
+  if (group === 'channel') container = document.getElementById('channel-box');
+  else if (group === 'source-category') container = document.getElementById('source-category-box');
+  else if (group === 'source-sub') container = document.getElementById('source-sub-box');
+  else if (group === 'rules') container = document.getElementById('rules-box');
+  if (container) {
+    container.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+  }
+}
+
+function setCheckbox(group, value, checked) {
+  var container;
+  if (group === 'channel') container = document.getElementById('channel-box');
+  else if (group === 'source-category') container = document.getElementById('source-category-box');
+  else if (group === 'source-sub') container = document.getElementById('source-sub-box');
+  else if (group === 'rules') container = document.getElementById('rules-box');
+  if (!container) return;
+  container.querySelectorAll('.cb-row input[type="checkbox"]').forEach(function(cb) {
+    if (cb.value === value) cb.checked = checked;
+  });
+}
+
+// ========== 新增任务弹窗 ==========
+function addTask() {
+  document.getElementById('modal-title').textContent = '新增自动化任务';
+  document.getElementById('confirm-btn').textContent = '确认创建';
+  document.getElementById('edit-task-id').value = '';
+
+  // 基本信息
+  document.getElementById('task-name').value = '';
+  document.getElementById('task-start-date').value = '';
+  document.getElementById('task-end-date').value = '';
+  document.getElementById('task-keywords').value = '';
+
+  // 触发方式默认定时
+  onTriggerChange('timer');
+  document.querySelectorAll('#trigger-tabs .tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.trigger === 'timer');
+  });
+  document.getElementById('hot-threshold').value = '';
+
+  // 频率默认周期
+  onFreqTabChange('cycle');
+  document.querySelectorAll('#freq-tabs .tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.freq === 'cycle');
+  });
+  document.getElementById('cycle-type').value = 'daily';
+  document.getElementById('cycle-time').value = '09:00';
+  document.getElementById('interval-type').value = '6h';
+  document.getElementById('interval-custom').value = '';
+  document.getElementById('interval-custom').style.display = 'none';
+  document.getElementById('once-date').value = '';
+  document.getElementById('once-time').value = '09:00';
+
+  // 音频规则
+  document.getElementById('voice-model').value = 'male-anchor';
+  document.getElementById('tts-speed').value = 'normal';
+  document.getElementById('bg-music').value = 'none';
+
+  // 重置所有多选
+  ['channel', 'source-category', 'rules'].forEach(function(group) { resetCheckboxes(group); });
+  onMultiSelectChange('channel');
+  onMultiSelectChange('source-category');
+  onMultiSelectChange('rules');
+
+  // 重置来源子类区域
+  var subContainer = document.getElementById('source-sub-box');
+  subContainer.querySelectorAll('.cb-row').forEach(function(row) { row.remove(); });
+  var subSelectAllRow = subContainer.querySelector('.select-all-row');
+  subSelectAllRow.querySelector('span').textContent = '全选（请先选择来源大类）';
+  document.getElementById('source-sub-select-all').disabled = true;
+  document.getElementById('source-sub-select-all').checked = false;
+
+  document.getElementById('add-task-modal').classList.add('show');
+}
+
+function closeAddTaskModal() {
+  document.getElementById('add-task-modal').classList.remove('show');
+}
+
+function getSelectedValues(group) {
+  var container;
+  if (group === 'channel') container = document.getElementById('channel-box');
+  else if (group === 'source-category') container = document.getElementById('source-category-box');
+  else if (group === 'source-sub') container = document.getElementById('source-sub-box');
+  else if (group === 'rules') container = document.getElementById('rules-box');
+  if (!container) return [];
+  var vals = [];
+  container.querySelectorAll('.cb-row input[type="checkbox"]:checked').forEach(function(cb) {
+    vals.push(cb.value);
+  });
+  return vals;
+}
+
+function confirmAddTask() {
+  var name = document.getElementById('task-name').value.trim();
+  if (!name) { customAlert('请输入任务名称'); return; }
+
+  var editId = document.getElementById('edit-task-id').value;
+
+  // 触发方式
+  var triggerBtn = document.querySelector('#trigger-tabs .tab-btn.active');
+  var triggerType = triggerBtn ? triggerBtn.dataset.trigger : 'timer';
+
+  var hotThreshold = '';
+  if (triggerType === 'hot') {
+    hotThreshold = document.getElementById('hot-threshold').value.trim();
+    if (!hotThreshold) { customAlert('请输入热度阈值'); return; }
+  }
+
+  // 频率（仅定时触发时）
+  var freqMode = '', cycleType = '', cycleTime = '', intervalType = '', intervalCustom = '', onceDate = '', onceTime = '';
+  if (triggerType === 'timer') {
+    var freqBtn = document.querySelector('#freq-tabs .tab-btn.active');
+    freqMode = freqBtn ? freqBtn.dataset.freq : 'cycle';
+
+    if (freqMode === 'cycle') {
+      cycleType = document.getElementById('cycle-type').value;
+      cycleTime = document.getElementById('cycle-time').value;
+      if (!cycleTime) { customAlert('请选择执行时间'); return; }
+    } else if (freqMode === 'interval') {
+      intervalType = document.getElementById('interval-type').value;
+      if (intervalType === 'custom') {
+        intervalCustom = document.getElementById('interval-custom').value.trim();
+        if (!intervalCustom) { customAlert('请输入自定义间隔'); return; }
+      }
+    } else if (freqMode === 'once') {
+      onceDate = document.getElementById('once-date').value;
+      onceTime = document.getElementById('once-time').value;
+      if (!onceDate) { customAlert('请选择执行日期'); return; }
+      if (!onceTime) { customAlert('请选择执行时间'); return; }
+    }
+  }
+
+  // 稿件规则
+  var channels = getSelectedValues('channel');
+  var categories = getSelectedValues('source-category');
+  var subclasses = getSelectedValues('source-sub');
+  if (channels.length === 0) { customAlert('请至少选择一个渠道'); return; }
+  if (categories.length === 0) { customAlert('请至少选择一个来源大类'); return; }
+  if (subclasses.length === 0) { customAlert('请至少选择一个来源子类'); return; }
+
+  var rules = getSelectedValues('rules');
+  if (rules.length === 0) { customAlert('请至少选择一个执行规则'); return; }
+
+  var taskData = {
+    id: editId || ('auto-' + Date.now()),
+    name: name,
+    enabled: true,
+    triggerType: triggerType,
+    hotThreshold: hotThreshold,
+    freqMode: freqMode,
+    cycleType: cycleType,
+    cycleTime: cycleTime,
+    intervalType: intervalType,
+    intervalCustom: intervalCustom,
+    onceDate: onceDate,
+    onceTime: onceTime,
+    startDate: document.getElementById('task-start-date').value,
+    endDate: document.getElementById('task-end-date').value,
+    channels: channels,
+    sourceCategories: categories,
+    sourceSubclasses: subclasses,
+    keywords: document.getElementById('task-keywords').value.trim(),
+    voiceModel: document.getElementById('voice-model').value,
+    ttsSpeed: document.getElementById('tts-speed').value,
+    bgMusic: document.getElementById('bg-music').value,
+    rules: rules,
+    createdAt: editId ? undefined : new Date().toISOString().slice(0,16).replace('T',' ')
+  };
+
+  if (editId) {
+    var idx = autoTasks.findIndex(function(t) { return t.id === editId; });
+    if (idx >= 0) {
+      taskData.enabled = autoTasks[idx].enabled;
+      taskData.createdAt = autoTasks[idx].createdAt;
+      autoTasks[idx] = taskData;
+    }
+    customAlert('任务保存成功！');
+  } else {
+    autoTasks.push(taskData);
+    customAlert('任务创建成功！');
+  }
+
+  localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  closeAddTaskModal();
+  renderAutoTasks();
+}
+
+// ========== 融媒AI快捷操作 ==========
+function quickAction(action) {
+  switch(action) {
+    case 'new-task':
+      addTask();
+      break;
+    case 'view-enabled':
+      document.getElementById('filter-status').value = 'enabled';
+      applyAutoFilter();
+      appendAIMsg('<div class="msg-label">融媒AI</div>已筛选显示已启用的自动化任务。');
+      break;
+    case 'view-logs':
+      appendAIMsg('<div class="msg-label">融媒AI</div>最近执行记录：<br>• 自动编校任务 — 08:00 成功<br>• 自动技审任务 — 08:05 成功<br>• 自动通过任务 — 08:10 成功');
+      break;
+    case 'enable-all':
+      autoTasks.forEach(function(t) { t.enabled = true; });
+      localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+      renderAutoTasks();
+      appendAIMsg('<div class="msg-label">融媒AI</div>已启用全部自动化任务。');
+      break;
+  }
+}
+
+// ========== 融媒AI助手消息 ==========
+function appendAIMsg(html) {
+  var container = document.getElementById('ai-messages');
+  if (!container) return;
+  var div = document.createElement('div');
+  div.className = 'ai-msg ai notification';
+  div.innerHTML = html;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+</script>
+
+</body>
+</html>
