@@ -1,0 +1,41 @@
+# WorkBuddy Claw 项目 .gitignore
+
+# ===== 必须排除（含敏感信息）=====
+# 环境变量 / 密钥
+.env
+..env.*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# 数据库文件（各机器独立）
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== 建议排除（本地缓存/依赖）=====
+node_modules/
+__pycache__/
+*.pyc
+venv/
+env/
+dist/
+build/
+out/
+..next/
+..nuxt/
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# IDE 配置
+.vscode/
+.idea/
+*.iml
