@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>音频管理 - 广播AI内容生产平台</title>
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; }
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
+
+    /* 顶部导航栏 */
+    .topbar {
+      height: 56px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex; align-items: center; padding: 0 24px; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0;
+    }
+    .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-right: 40px; white-space: nowrap; }
+    .topbar .logo span { color: #00d4ff; }
+    .top-menu { display: flex; gap: 4px; }
+    .top-menu-item {
+      padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+      color: rgba(255,255,255,0.7); transition: all 0.2s; white-space: nowrap;
+      text-decoration: none; display: inline-block;
+    }
+    .top-menu-item:hover { background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; }
+    .top-menu-item.active { background: rgba(0,212,255,0.2); color: #00d4ff; }
+    .topbar .right-area { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .topbar .notification { position: relative; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+    .topbar .notification .badge {
+      position: absolute; top: -6px; right: -8px; background: #ff4d4f; color: #fff;
+      font-size: 10px; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center;
+    }
+    .topbar .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00d4ff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+    /* 主体布局 */
+    .main-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* 左侧菜单 */
+    .sidebar {
+      width: 220px; min-width: 220px; background: #fff; border-right: 1px solid #e8e8e8;
+      display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar-group { margin-bottom: 8px; }
+    .sidebar-group-title {
+      padding: 16px 16px 8px; font-size: 11px; color: #999; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sidebar-item {
+      display: block; padding: 10px 16px 10px 20px; font-size: 13px; color: #666;
+      cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover { background: #f5f5f5; color: #333; text-decoration: none; }
+    .sidebar-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+
+    /* 主内容区 */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content-header {
+      padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .content-header h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+    .content-header .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* 筛选栏 */
+    .filter-bar {
+      padding: 12px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-bar .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .filter-bar select {
+      padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; background: #fff; cursor: pointer;
+    }
+    .filter-bar select:focus { border-color: #1890ff; }
+    .filter-bar .search-input {
+      flex: 1; min-width: 180px; padding: 6px 12px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; max-width: 280px;
+    }
+    .filter-bar .search-input:focus { border-color: #1890ff; }
+    .btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .btn:hover { border-color: #1890ff; color: #1890ff; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-success:hover { background: #73d13d; }
+    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-danger:hover { background: #ff7875; }
+
+    /* 音频列表 */
+    .audio-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .audio-card {
+      background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;
+      transition: all 0.2s;
+    }
+    .audio-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #91d5ff; }
+    .audio-card .ac-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .audio-card .ac-title { font-size: 15px; font-weight: 500; color: #1a1a2e; flex: 1; }
+    .audio-card .ac-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 12px; }
+    .ac-status.running { background: #e6f7ff; color: #1890ff; }
+    .ac-status.done { background: #f6ffed; color: #52c41a; }
+    .ac-status.failed { background: #fff1f0; color: #ff4d4f; }
+    .ac-status.pending { background: #fff7e6; color: #fa8c16; }
+    .audio-card .ac-meta { font-size: 12px; color: #999; display: flex; gap: 16px; flex-wrap: wrap; }
+    .audio-card .ac-actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* 状态筛选按钮组 */
+    .status-filter { display: flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; }
+    .status-filter .sf-btn {
+      padding: 5px 14px; font-size: 13px; cursor: pointer; border: none; background: #fff;
+      color: #666; transition: all 0.2s; border-right: 1px solid #d9d9d9;
+    }
+    .status-filter .sf-btn:last-child { border-right: none; }
+    .status-filter .sf-btn:hover { background: #f5f5f5; color: #333; }
+    .status-filter .sf-btn.active { background: #1890ff; color: #fff; }
+
+    /* 音频播放器 */
+    .audio-player {
+      margin-top: 12px; padding: 12px; background: #f7f9fc; border-radius: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .audio-player audio { flex: 1; }
+    .audio-player .play-btn {
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .audio-player .play-btn:hover { border-color: #1890ff; color: #1890ff; }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-text { font-size: 15px; margin-bottom: 8px; }
+    .empty-hint { font-size: 12px; }
+
+    /* 底部系统日志 */
+    .sys-footer { background: #1a1a2e; color: #aaa; font-size: 11px; padding: 6px 24px; display: flex; gap: 24px; overflow-x: auto; white-space: nowrap; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="logo"><span>AI</span>广播内容生产平台</div>
+  <div class="top-menu">
+    <a class="top-menu-item active" href="collect.html">内容生产</a>
+    <a class="top-menu-item" href="automation.html">自动化</a>
+    <a class="top-menu-item" href="system.html">系统管理</a>
+  </div>
+  <div class="right-area">
+    <div class="notification" onclick="customAlert('暂无新通知')">通知<span class="badge">3</span></div>
+    <div class="user-info"><div class="avatar">王</div><span style="font-size:13px">王总监</span></div>
+  </div>
+</div>
+
+<!-- 主体布局 -->
+<div class="main-body">
+
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">内容生产</div>
+      <a class="sidebar-item" href="collect.html">数据中心</a>
+      <a class="sidebar-item" href="draft.html">稿件管理</a>
+      <a class="sidebar-item active" href="audio.html">音频管理</a>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main-content">
+
+    <!-- 内容头部 -->
+    <div class="content-header">
+      <h2>音频管理</h2>
+      <div class="header-right">
+        <button class="btn" onclick="refreshList()">刷新</button>
+      </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <span class="filter-label">状态</span>
+      <div class="status-filter" id="filter-status">
+        <button class="sf-btn active" data-value="all" onclick="setAudioStatusFilter('all', this)">全部</button>
+        <button class="sf-btn" data-value="running" onclick="setAudioStatusFilter('running', this)">生成中</button>
+        <button class="sf-btn" data-value="done" onclick="setAudioStatusFilter('done', this)">已完成</button>
+        <button class="sf-btn" data-value="failed" onclick="setAudioStatusFilter('failed', this)">失败</button>
+        <button class="sf-btn" data-value="pending" onclick="setAudioStatusFilter('pending', this)">待确认</button>
+      </div>
+      <span class="filter-label">标题搜索</span>
+      <input type="text" class="search-input" id="filter-title" placeholder="输入音频标题关键词..." oninput="applyAudioFilter()">
+    </div>
+
+    <!-- 音频列表 -->
+    <div class="audio-list" id="audio-list">
+      <!-- 空状态（默认显示，有数据时隐藏） -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-text">暂无音频</div>
+        <div class="empty-hint">请在"稿件管理"中确认通过稿件，然后提交生成音频。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 底部系统日志 -->
+<div class="sys-footer">
+  <span>系统日志：</span>
+  <span><span style="color:#52c41a">[08:00]</span> 定时采集启动（央级媒体）</span>
+  <span><span style="color:#52c41a">[08:05]</span> 采集成功：215 条入库</span>
+  <span><span style="color:#fa8c16">[10:30]</span> 警告：商业媒体连接限流</span>
+  <span><span style="color:#1890ff">[10:35]</span> 热点识别完成：47 条热点</span>
+</div>
+
+<script>
+// ========== 通用自定义弹窗（替代 confirm/alert，兼容内置浏览器） ==========
+function customConfirm(message, onConfirm, onCancel) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<div class="modal-header-top">' +
+          '<h3>确认</h3>' +
+          '<button class="close-btn" onclick="this.closest(\'.modal-overlay\').remove()">X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn" id="cc-cancel">取消</button>' +
+        '<button class="btn btn-primary" id="cc-confirm">确认</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('cc-cancel').onclick = function() {
+    overlay.remove();
+    if (typeof onCancel === 'function') onCancel();
+  };
+  document.getElementById('cc-confirm').onclick = function() {
+    overlay.remove();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+function customAlert(message, onOk) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<div class="modal-header-top">' +
+          '<h3>提示</h3>' +
+          '<button class="close-btn" onclick="this.closest(\'.modal-overlay\').remove()">X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn btn-primary" id="ca-ok">确定</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('ca-ok').onclick = function() {
+    overlay.remove();
+    if (typeof onOk === 'function') onOk();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+// 全局状态
+let audios = [];
+
+// 页面初始化
+(function() {
+  const page = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.top-menu-item').forEach(t => {
+    t.classList.remove('active');
+    if(t.getAttribute('href') === page) t.classList.add('active');
+  });
+  loadAudios();
+  applyAudioFilter();
+})();
+
+// 加载音频数据
+function loadAudios() {
+  audios = JSON.parse(localStorage.getItem('audios') || '[]');
+  // 如果没有数据，创建一些示例数据
+  if (audios.length === 0) {
+    audios = [
+      {
+        id: 'audio-001',
+        title: 'AI技术突破引发全球关注，多国加速布局',
+        status: 'done',
+        createdAt: '2026-05-21T10:00',
+        duration: '3:24',
+        anchor: '男声主播',
+        voice: '标准'
+      },
+      {
+        id: 'audio-002',
+        title: '新能源汽车销量创新高，市场渗透率突破50%',
+        status: 'running',
+        createdAt: '2026-05-21T10:30',
+        duration: '',
+        anchor: '女声主播',
+        voice: '温暖'
+      },
+      {
+        id: 'audio-003',
+        title: '极端天气预警：南方多地将迎来强降雨',
+        status: 'pending',
+        createdAt: '2026-05-21T11:00',
+        duration: '5:12',
+        anchor: '男声青年',
+        voice: '活泼'
+      }
+    ];
+    localStorage.setItem('audios', JSON.stringify(audios));
+  }
+  renderAudios();
+}
+
+// 渲染音频列表
+function renderAudios() {
+  const list = document.getElementById('audio-list');
+  const emptyState = document.getElementById('empty-state');
+  const filtered = getFilteredAudios();
+  
+  if (filtered.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  } else {
+    emptyState.style.display = 'none';
+  }
+  
+  // 清除现有卡片（保留空状态）
+  list.querySelectorAll('.audio-card').forEach(card => card.remove());
+  
+  filtered.forEach(audio => {
+    const card = createAudioCard(audio);
+    list.appendChild(card);
+  });
+}
+
+// 设置状态筛选
+function setAudioStatusFilter(value, btn) {
+  document.querySelectorAll('#filter-status .sf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyAudioFilter();
+}
+
+// 获取筛选后的音频
+function getFilteredAudios() {
+  const activeBtn = document.querySelector('#filter-status .sf-btn.active');
+  const status = activeBtn ? activeBtn.dataset.value : 'all';
+  const title = document.getElementById('filter-title').value.trim().toLowerCase();
+  
+  return audios.filter(audio => {
+    let show = true;
+    if (status !== 'all' && audio.status !== status) show = false;
+    if (title && audio.title.toLowerCase().indexOf(title) === -1) show = false;
+    return show;
+  });
+}
+
+// 应用筛选
+function applyAudioFilter() {
+  renderAudios();
+}
+
+// 创建音频卡片
+function createAudioCard(audio) {
+  const card = document.createElement('div');
+  card.className = 'audio-card';
+  card.dataset.id = audio.id;
+  
+  const statusText = { 'running': '生成中', 'done': '已完成', 'failed': '失败', 'pending': '待确认' }[audio.status] || audio.status;
+  const statusClass = audio.status;
+  
+  card.innerHTML =
+    '<div class="ac-header">' +
+      '<div class="ac-title">' + escapeHtml(audio.title) + '</div>' +
+      '<div class="ac-status ' + statusClass + '">' + statusText + '</div>' +
+    '</div>' +
+    '<div class="ac-meta">' +
+      '<span>创建时间：' + (audio.createdAt || '未知') + '</span>' +
+      '<span>时长：' + (audio.duration || '生成中...') + '</span>' +
+      '<span>主播：' + (audio.anchor || '未知') + '</span>' +
+      '<span>音色：' + (audio.voice || '未知') + '</span>' +
+    '</div>' +
+    (audio.status === 'done' ? 
+      '<div class="audio-player">' +
+        '<audio controls src="placeholder.mp3"></audio>' +
+        '<button class="play-btn" onclick="downloadAudio(\'' + audio.id + '\')">下载</button>' +
+      '</div>' : '') +
+    '<div class="ac-actions">' +
+      (audio.status === 'running' ? 
+        '<button class="btn btn-sm btn-danger" onclick="stopAudio(\'' + audio.id + '\')">停止生成</button>' : '') +
+      (audio.status === 'done' ? 
+        '<button class="btn btn-sm" onclick="playAudio(\'' + audio.id + '\')">播放</button>' +
+        '<button class="btn btn-sm btn-primary" onclick="submitBroadcast(\'' + audio.id + '\')">提交播出单</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteAudio(\'' + audio.id + '\')">删除</button>' : '') +
+      (audio.status === 'pending' ? 
+        '<button class="btn btn-sm btn-success" onclick="confirmAudio(\'' + audio.id + '\')">确认通过</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="rejectAudio(\'' + audio.id + '\')">驳回</button>' : '') +
+    '</div>';
+  
+  return card;
+}
+
+// 停止生成
+function stopAudio(id) {
+  customConfirm('确定要停止当前音频生成任务吗？', function() {
+    const audio = audios.find(a => a.id === id);
+    if (audio) {
+      audio.status = 'failed';
+      localStorage.setItem('audios', JSON.stringify(audios));
+      renderAudios();
+    }
+  });
+}
+
+// 播放
+function playAudio(id) {
+  customAlert('播放音频：' + id + '\n\n（实际项目中调用音频播放器）');
+}
+
+// 下载
+function downloadAudio(id) {
+  customAlert('下载音频：' + id + '\n\n（实际项目中下载音频文件）');
+}
+
+// 提交播出单
+function submitBroadcast(id) {
+  customConfirm('确定要提交播出单吗？\n\n提交后音频将进入播出队列。', function() {
+    customAlert('播出单已提交！');
+  });
+}
+
+// 确认通过
+function confirmAudio(id) {
+  const audio = audios.find(a => a.id === id);
+  if (audio) {
+    audio.status = 'done';
+    localStorage.setItem('audios', JSON.stringify(audios));
+    renderAudios();
+  }
+}
+
+// 驳回
+function rejectAudio(id) {
+  customConfirm('确定要驳回该音频吗？', function() {
+    const audio = audios.find(a => a.id === id);
+    if (audio) {
+      audio.status = 'failed';
+      localStorage.setItem('audios', JSON.stringify(audios));
+      renderAudios();
+    }
+  });
+}
+
+// 删除
+function deleteAudio(id) {
+  customConfirm('确定要删除该音频吗？', function() {
+    audios = audios.filter(a => a.id !== id);
+    localStorage.setItem('audios', JSON.stringify(audios));
+    renderAudios();
+  });
+}
+
+// 刷新列表
+function refreshList() {
+  loadAudios();
+  customAlert('刷新成功！');
+}
+
+// 工具函数
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
