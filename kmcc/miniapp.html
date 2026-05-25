@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KMCC资产详情</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f5f5;
+    color: #262626;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 414px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* 顶部 */
+  .header {
+    background: linear-gradient(135deg, #1890ff, #096dd9);
+    color: #fff;
+    padding: 20px 16px 24px;
+    position: relative;
+  }
+  .header .back {
+    font-size: 14px; cursor: pointer; opacity: 0.85;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-bottom: 12px;
+  }
+  .header .asset-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .header .asset-code { font-size: 12px; opacity: 0.75; font-family: "SF Mono", Consolas, monospace; }
+  .status-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 10px;
+    font-size: 12px; font-weight: 500; margin-top: 8px;
+  }
+  .status-badge.in-use { background: rgba(255,255,255,0.2); }
+  .header .scan-again {
+    position: absolute; right: 16px; top: 20px;
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    padding: 6px 12px; border-radius: 16px; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* 信息卡片 */
+  .info-card {
+    background: #fff; margin: -12px 12px 12px; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 16px;
+    position: relative; z-index: 1;
+  }
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: #8c8c8c; }
+  .info-value { color: #262626; font-weight: 500; text-align: right; max-width: 55%; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; }
+  .tag-success { background: #f6ffed; color: #52c41a; }
+  .tag-warning { background: #fffbe6; color: #d46b08; }
+  .tag-danger { background: #fff2f0; color: #ff4d4f; }
+
+  /* 备注卡片 */
+  .remark-card {
+    background: #fff; margin: 0 12px 12px; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 16px;
+    position: relative; z-index: 1;
+  }
+  .remark-text { font-size: 13px; color: #595959; line-height: 1.8; }
+
+  /* 折叠/展开区域 */
+  .detail-sections { display: none; }
+  .detail-sections.open { display: block; }
+
+  /* 展开/收起按钮（居中胶囊样式） */
+  .toggle-detail-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin: 0 auto 12px; padding: 8px 20px;
+    background: #f0f5ff; border: 1px solid #d6e4ff; border-radius: 20px;
+    font-size: 13px; color: #1890ff; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .toggle-detail-btn:active { background: #d6e4ff; }
+  .toggle-detail-btn svg {
+    width: 14px; height: 14px; transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+  .toggle-detail-btn.open svg { transform: rotate(180deg); }
+
+  /* 维修记录列表 */
+  .section-title {
+    font-size: 14px; font-weight: 600; padding: 0 12px; margin-bottom: 8px; color: #262626;
+  }
+  .repair-record-list { margin: 0 12px 12px; }
+  .repair-record-item {
+    background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .repair-record-item:active { background: #f0f5ff; }
+  .repair-record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .repair-record-code { font-size: 13px; color: #1890ff; font-family: "SF Mono", Consolas, monospace; font-weight: 500; }
+  .repair-record-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  .repair-record-status.pending { background: #fff7e6; color: #d46b08; }
+  .repair-record-status.in-progress { background: #e6f7ff; color: #1890ff; }
+  .repair-record-status.resolved { background: #f6ffed; color: #52c41a; }
+  .repair-record-status.closed { background: #fff1f0; color: #ff4d4f; }
+  .repair-record-name { font-size: 14px; font-weight: 500; color: #262626; margin-bottom: 4px; }
+  .repair-record-desc { font-size: 13px; color: #595959; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .repair-record-meta { font-size: 12px; color: #8c8c8c; display: flex; justify-content: space-between; }
+
+  /* 底部固定操作栏 */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 414px;
+    background: #fff;
+    padding: 10px 12px;
+    border-top: 1px solid #e8e8e8;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    display: flex; gap: 8px;
+    z-index: 100;
+  }
+  .bottom-btn {
+    flex: 1; height: 44px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .bottom-btn.primary { background: #1890ff; color: #fff; }
+  .bottom-btn.primary:active { background: #096dd9; }
+  .bottom-btn.default { background: #f5f5f5; color: #262626; }
+  .bottom-btn.default:active { background: #e8e8e8; }
+  .bottom-btn.success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+  .bottom-btn.success:active { background: #d9f7be; }
+
+  /* 弹窗 */
+  .modal-overlay {
+    display: none; position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    justify-content: center; align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; width: 100%; max-width: 414px;
+    border-radius: 16px 16px 0 0; padding: 20px 16px 24px;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; text-align: center; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 13px; color: #8c8c8c; margin-bottom: 6px; }
+  .modal-field select,
+  .modal-field textarea,
+  .modal-field input {
+    width: 100%; padding: 10px 12px; border: 1px solid #e8e8e8;
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    color: #262626; background: #fafafa; box-sizing: border-box;
+  }
+  .modal-field textarea { height: 80px; resize: none; }
+  .modal-field input[type="date"] { cursor: pointer; }
+  .modal-field input[type="number"] { -moz-appearance: textfield; }
+  .modal-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .modal-btn {
+    width: 100%; height: 44px; border-radius: 8px; border: none;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    font-family: inherit; margin-top: 8px;
+  }
+  .modal-btn.primary { background: #1890ff; color: #fff; }
+  .modal-btn.primary:active { background: #096dd9; }
+  .modal-btn.default { background: #f5f5f5; color: #262626; margin-top: 10px; }
+  .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .radio-item {
+    flex: 1; text-align: center; padding: 10px;
+    border: 1px solid #e8e8e8; border-radius: 8px;
+    font-size: 14px; cursor: pointer; transition: all 0.15s;
+    min-width: 0;
+  }
+  .radio-item.selected { border-color: #1890ff; background: #e6f7ff; color: #1890ff; }
+
+  /* 弹窗内维修历史时间线 */
+  .modal-timeline { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+  .modal-timeline-title { font-size: 13px; font-weight: 600; color: #262626; margin-bottom: 10px; }
+  .modal-timeline-item { display: flex; gap: 8px; margin-bottom: 10px; font-size: 12px; color: #595959; }
+  .modal-timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #1890ff; margin-top: 4px; flex-shrink: 0; }
+  .modal-timeline-dot.green { background: #52c41a; }
+  .modal-timeline-dot.orange { background: #faad14; }
+  .modal-timeline-content { flex: 1; }
+  .modal-timeline-action { font-weight: 500; color: #262626; }
+  .modal-timeline-time { color: #8c8c8c; margin-top: 2px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- 顶部资产概览 -->
+<div class="header">
+  <div class="back" onclick="goBackToScan()">← 返回扫码</div>
+  <button class="scan-again" onclick="alert('调用微信扫码接口')">🔄 重新扫码</button>
+  <div class="asset-name">台式电脑 Dell OptiPlex 7090</div>
+  <div class="asset-code">编码：AC-2024-0156</div>
+  <span class="status-badge in-use">使用中</span>
+</div>
+
+<!-- 基本信息卡片（默认展示） -->
+<div class="info-card">
+  <div class="info-row"><span class="info-label">资产编码</span><span class="info-value" style="font-family:monospace;font-size:12px;">AC-2024-0156</span></div>
+  <div class="info-row"><span class="info-label">资产名称</span><span class="info-value">台式电脑 Dell OptiPlex 7090</span></div>
+  <div class="info-row"><span class="info-label">资产分类</span><span class="info-value">台式电脑</span></div>
+  <div class="info-row"><span class="info-label">使用部门</span><span class="info-value">技术部</span></div>
+  <div class="info-row"><span class="info-label">领用人</span><span class="info-value">张三</span></div>
+  <div class="info-row"><span class="info-label">存放位置</span><span class="info-value">技术部301室</span></div>
+  <div class="info-row"><span class="info-label">采购日期</span><span class="info-value">2024-01-15</span></div>
+  <div class="info-row"><span class="info-label">供应商</span><span class="info-value">戴尔科技集团</span></div>
+</div>
+
+<!-- 展开/收起按钮 -->
+<button class="toggle-detail-btn" id="toggleDetailBtn" onclick="toggleDetail()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#1890ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+  展开详细信息
+</button>
+
+<!-- 折叠区域：配置信息 + 维保信息 + 备注 -->
+<div class="detail-sections" id="detailSections">
+
+  <div class="info-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:#262626;">⚙ 配置信息</div>
+    <div class="info-row"><span class="info-label">CPU</span><span class="info-value">Intel i7-12700</span></div>
+    <div class="info-row"><span class="info-label">内存</span><span class="info-value">16GB DDR4</span></div>
+    <div class="info-row"><span class="info-label">硬盘</span><span class="info-value">512GB SSD</span></div>
+    <div class="info-row"><span class="info-label">显卡</span><span class="info-value">NVIDIA RTX 3060</span></div>
+    <div class="info-row"><span class="info-label">操作系统</span><span class="info-value">Windows 11 专业版</span></div>
+    <div class="info-row"><span class="info-label">序列号</span><span class="info-value" style="font-family:monospace;font-size:12px;">DEL7090-2024-00156</span></div>
+  </div>
+
+  <div class="info-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:#262626;">🔧 维保信息</div>
+    <div class="info-row"><span class="info-label">保修截止日期</span><span class="info-value" style="color:#52c41a;">2027-01-14</span></div>
+    <div class="info-row"><span class="info-label">维保状态</span><span class="info-value"><span class="tag tag-success">✅ 在保</span></span></div>
+    <div class="info-row"><span class="info-label">剩余天数</span><span class="info-value">756天</span></div>
+    <div class="info-row"><span class="info-label">过期提醒</span><span class="info-value"><span class="tag tag-success">提前30天提醒</span></span></div>
+    <div class="info-row"><span class="info-label">供应商</span><span class="info-value">戴尔科技集团</span></div>
+  </div>
+
+  <div class="remark-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:#262626;">📝 备注</div>
+    <div class="remark-text">设备由技术部张三于2024-01-15领用，日常用于编辑制作工作。序列号已录入资产台账。</div>
+  </div>
+
+</div><!-- /detail-sections -->
+
+<!-- 当前资产维修记录 -->
+<div class="section-title">🛠 维修记录（本设备）</div>
+<div class="repair-record-list" id="repairRecordList"></div>
+
+<!-- 底部固定操作栏 -->
+<div class="bottom-bar">
+  <button class="bottom-btn default" onclick="alert('调用微信扫码接口扫下一个')">📷 扫下一个</button>
+  <button class="bottom-btn primary" onclick="openModal('check')">📋 盘点登记</button>
+  <button class="bottom-btn success" onclick="openMaintainModal()">🔧 维护记录</button>
+</div>
+
+<!-- 盘点登记弹窗 -->
+<div class="modal-overlay" id="checkModal">
+  <div class="modal">
+    <div class="modal-title">📋 盘点登记</div>
+    <div class="modal-field">
+      <label>盘点状态</label>
+      <div class="radio-group">
+        <div class="radio-item selected" onclick="selectRadio(this)">✅ 正常</div>
+        <div class="radio-item" onclick="selectRadio(this)">❌ 异常</div>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>当前位置确认</label>
+      <input style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;" value="技术部301室" />
+    </div>
+    <div class="modal-field">
+      <label>备注（选填）</label>
+      <textarea placeholder="可输入盘点备注信息"></textarea>
+    </div>
+    <button class="modal-btn primary" onclick="submitCheck()">提交盘点</button>
+    <button class="modal-btn default" onclick="closeModal('checkModal')">取消</button>
+  </div>
+</div>
+
+<!-- 维护记录弹窗 -->
+<div class="modal-overlay" id="maintainModal">
+  <div class="modal">
+    <div class="modal-title" id="maintainModalTitle">🔧 维护记录</div>
+
+    <!-- 故障描述 -->
+    <div class="modal-field">
+      <label>故障描述 <span style="color:#ff4d4f;">*</span></label>
+      <textarea id="maintainDesc" placeholder="请详细描述故障现象或维护内容" style="height:80px;"></textarea>
+    </div>
+
+    <!-- 报修人 + 联系方式 -->
+    <div style="display:flex;gap:10px;">
+      <div class="modal-field" style="flex:1;">
+        <label>报修人</label>
+        <input id="maintainReporter" value="张三（技术部）" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;background:#fafafa;" readonly />
+      </div>
+      <div class="modal-field" style="flex:1;">
+        <label>联系方式</label>
+        <input id="maintainPhone" value="13800001111" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;background:#fafafa;" />
+      </div>
+    </div>
+
+    <!-- 办公室门牌 + 报修日期 -->
+    <div style="display:flex;gap:10px;">
+      <div class="modal-field" style="flex:1;">
+        <label>办公室门牌</label>
+        <input id="maintainOffice" value="技术部301室" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;background:#fafafa;" />
+      </div>
+      <div class="modal-field" style="flex:1;">
+        <label>报修日期 <span style="color:#ff4d4f;">*</span></label>
+        <input type="date" id="maintainReportDate" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;background:#fafafa;" />
+      </div>
+    </div>
+
+    <!-- 维修状态 -->
+    <div class="modal-field">
+      <label>维修状态 <span style="color:#ff4d4f;">*</span></label>
+      <div class="radio-group" id="maintainStatusGroup">
+        <div class="radio-item selected" onclick="selectRadio(this)">待处理</div>
+        <div class="radio-item" onclick="selectRadio(this)">维修中</div>
+        <div class="radio-item" onclick="selectRadio(this)">已完成</div>
+        <div class="radio-item" onclick="selectRadio(this)">已关闭</div>
+      </div>
+    </div>
+
+    <!-- 维修人/维修商 -->
+    <div class="modal-field">
+      <label>维修人/维修商</label>
+      <input id="maintainRepairer" placeholder="默认当前操作人，可填写供应商" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;" />
+    </div>
+
+    <!-- 维修类型 -->
+    <div class="modal-field">
+      <label>维修类型 <span style="color:#ff4d4f;">*</span></label>
+      <div class="radio-group" id="maintainTypeGroup">
+        <div class="radio-item" onclick="selectRadio(this)">软件维修</div>
+        <div class="radio-item selected" onclick="selectRadio(this)">硬件维修</div>
+      </div>
+    </div>
+
+    <!-- 设备配置信息（硬件维修时显示） -->
+    <div class="modal-field" id="configSection">
+      <label>⚙️ 设备配置信息（硬件维修后请更新配置）</label>
+      <div style="background:#fafafa;padding:12px;border:1px solid #e8e8e8;border-radius:8px;">
+        <div style="margin-bottom:8px;">
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">CPU</label>
+          <input id="configCpu" value="Intel i7-12700" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">内存</label>
+          <input id="configMemory" value="16GB DDR4" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">硬盘</label>
+          <input id="configDisk" value="512GB SSD" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">显卡</label>
+          <input id="configGpu" value="NVIDIA RTX 3060" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">操作系统</label>
+          <input id="configOs" value="Windows 11 专业版" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size:12px;color:#8c8c8c;display:block;margin-bottom:4px;">序列号</label>
+          <input id="configSn" value="DEL7090-2024-00156" style="width:100%;padding:8px 10px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-family:inherit;font-family:monospace;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 维修措施 -->
+    <div class="modal-field">
+      <label>维修措施 <span style="color:#ff4d4f;">*</span></label>
+      <textarea id="maintainAction" placeholder="请输入维修措施和处理结果" style="height:80px;"></textarea>
+    </div>
+
+    <!-- 维修费用 + 完成日期（仅"已完成"状态显示） -->
+    <div id="completeFields" style="display:none;">
+      <div style="display:flex;gap:10px;">
+        <div class="modal-field" style="flex:1;">
+          <label>维修费用（元）</label>
+          <input type="number" id="maintainCost" placeholder="请输入费用" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;" />
+        </div>
+        <div class="modal-field" style="flex:1;">
+          <label>完成日期</label>
+          <input type="date" id="maintainCompleteDate" style="width:100%;padding:10px 12px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 备注 -->
+    <div class="modal-field">
+      <label>备注</label>
+      <textarea id="maintainRemark" placeholder="可输入维修相关备注" style="height:60px;"></textarea>
+    </div>
+
+    <!-- 维修历史记录（编辑模式显示） -->
+    <div class="modal-timeline" id="maintainHistory" style="display:none;">
+      <div class="modal-timeline-title">📋 维修历史记录</div>
+      <div id="maintainHistoryList"></div>
+    </div>
+
+    <button class="modal-btn primary" id="maintainSubmitBtn" onclick="submitMaintain()">提交维护记录</button>
+    <button class="modal-btn default" onclick="closeModal('maintainModal')">取消</button>
+  </div>
+</div>
+
+<script>
+// ===== 当前操作人 =====
+var CURRENT_USER = '管理员';
+var CURRENT_ASSET_CODE = 'AC-2024-0156';
+var CURRENT_ASSET_NAME = '台式电脑 Dell OptiPlex 7090';
+
+// ===== 维修记录数据 =====
+var MAINTAIN_RECORDS = [
+  {
+    wxCode: 'WX-2026-00128',
+    assetCode: 'AC-2024-0156',
+    assetName: '台式电脑 Dell OptiPlex 7090',
+    faultDesc: '无法开机，电源指示灯不亮',
+    reporter: '张三（技术部）',
+    phone: '13800001111',
+    office: '技术部301室',
+    reportDate: '2026-05-18',
+    repairType: '硬件维修',
+    status: '维修中',
+    repairer: '昆明XX电脑维修中心',
+    action: '已送修，预计3个工作日完成',
+    cost: '',
+    completeDate: '',
+    remark: '',
+    history: [
+      { time: '2026-05-18 09:30', operator: '张三', action: '创建维修记录' },
+      { time: '2026-05-18 14:00', operator: '管理员', action: '状态变更：待处理 → 维修中' }
+    ]
+  },
+  {
+    wxCode: 'WX-2025-00087',
+    assetCode: 'AC-2024-0156',
+    assetName: '台式电脑 Dell OptiPlex 7090',
+    faultDesc: '内存条接触不良，重新插拔后正常',
+    reporter: '张三（技术部）',
+    phone: '13800001111',
+    office: '技术部301室',
+    reportDate: '2025-11-03',
+    repairType: '硬件维修',
+    status: '已完成',
+    repairer: '张三',
+    action: '重新插拔内存条，故障排除',
+    cost: '0',
+    completeDate: '2025-11-03',
+    remark: '自行处理',
+    history: [
+      { time: '2025-11-03 08:00', operator: '张三', action: '创建维修记录' },
+      { time: '2025-11-03 09:30', operator: '张三', action: '状态变更：待处理 → 已完成，处理结果：已解决' }
+    ]
+  },
+  {
+    wxCode: 'WX-2025-00042',
+    assetCode: 'AC-2024-0156',
+    assetName: '台式电脑 Dell OptiPlex 7090',
+    faultDesc: '系统运行缓慢，清理灰尘并重装系统',
+    reporter: '张三（技术部）',
+    phone: '13800001111',
+    office: '技术部301室',
+    reportDate: '2025-06-17',
+    repairType: '软件维修',
+    status: '已完成',
+    repairer: '张三',
+    action: '清理灰尘，重装Windows 11',
+    cost: '0',
+    completeDate: '2025-06-17',
+    remark: '定期维护',
+    history: [
+      { time: '2025-06-17 14:00', operator: '张三', action: '创建维修记录' },
+      { time: '2025-06-17 17:00', operator: '张三', action: '状态变更：待处理 → 已完成，处理结果：已解决' }
+    ]
+  }
+];
+
+var nextWxId = 129;
+var editingRecordIndex = null;
+
+// ===== 返回扫码 =====
+function goBackToScan() {
+  alert('调用微信扫码接口');
+}
+
+// ===== 页面加载初始化 =====
+window.addEventListener('DOMContentLoaded', function() {
+  renderRepairRecords();
+  var today = new Date().toISOString().slice(0,10);
+  var reportDate = document.getElementById('maintainReportDate');
+  if (reportDate) reportDate.value = today;
+});
+
+// ===== 动态渲染维修记录列表 =====
+function renderRepairRecords() {
+  var list = document.getElementById('repairRecordList');
+  if (!list) return;
+  var assetRecords = MAINTAIN_RECORDS.filter(function(r) {
+    return r.assetCode === CURRENT_ASSET_CODE;
+  }).sort(function(a, b) {
+    return b.reportDate.localeCompare(a.reportDate);
+  });
+  if (assetRecords.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#8c8c8c;padding:20px 0;font-size:13px;">暂无维修记录</div>';
+    return;
+  }
+  var html = '';
+  assetRecords.forEach(function(r) {
+    var statusClass = '';
+    if (r.status === '待处理') statusClass = 'pending';
+    else if (r.status === '维修中') statusClass = 'in-progress';
+    else if (r.status === '已完成') statusClass = 'resolved';
+    else if (r.status === '已关闭') statusClass = 'closed';
+    html += '<div class="repair-record-item" onclick="editMaintainByWxCode(\'' + r.wxCode + '\')">'
+      + '<div class="repair-record-header">'
+      + '<span class="repair-record-code">' + r.wxCode + '</span>'
+      + '<span class="repair-record-status ' + statusClass + '">' + r.status + '</span>'
+      + '</div>'
+      + '<div class="repair-record-name">' + r.assetName + '</div>'
+      + '<div class="repair-record-desc">' + r.faultDesc + '</div>'
+      + '<div class="repair-record-meta">'
+      + '<span>报修人：' + (r.reporter || '').replace(/（.*）/, '') + '</span>'
+      + '<span>' + r.reportDate + '</span>'
+      + '</div>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+// ===== 点击「维护记录」按钮 =====
+function openMaintainModal() {
+  var activeRecord = null;
+  for (var i = 0; i < MAINTAIN_RECORDS.length; i++) {
+    if (MAINTAIN_RECORDS[i].assetCode === CURRENT_ASSET_CODE
+      && (MAINTAIN_RECORDS[i].status === '待处理' || MAINTAIN_RECORDS[i].status === '维修中')) {
+      activeRecord = MAINTAIN_RECORDS[i];
+      editingRecordIndex = i;
+      break;
+    }
+  }
+  if (activeRecord) {
+    fillMaintainForm(activeRecord, true);
+  } else {
+    editingRecordIndex = null;
+    fillMaintainForm(null, false);
+  }
+  openModal('maintain');
+}
+
+// ===== 根据WX单号编辑 =====
+function editMaintainByWxCode(wxCode) {
+  for (var i = 0; i < MAINTAIN_RECORDS.length; i++) {
+    if (MAINTAIN_RECORDS[i].wxCode === wxCode) {
+      editingRecordIndex = i;
+      fillMaintainForm(MAINTAIN_RECORDS[i], true);
+      openModal('maintain');
+      return;
+    }
+  }
+}
+
+// ===== 填充表单 =====
+function fillMaintainForm(record, isEditMode) {
+  var title = document.getElementById('maintainModalTitle');
+  var historyDiv = document.getElementById('maintainHistory');
+  var historyList = document.getElementById('maintainHistoryList');
+
+  if (isEditMode && record) {
+    title.textContent = '🔧 编辑维护记录 - ' + record.wxCode;
+    document.getElementById('maintainDesc').value = record.faultDesc || '';
+    document.getElementById('maintainReporter').value = record.reporter || '';
+    document.getElementById('maintainPhone').value = record.phone || '';
+    document.getElementById('maintainOffice').value = record.office || '';
+    document.getElementById('maintainReportDate').value = record.reportDate || '';
+    document.getElementById('maintainRepairer').value = record.repairer || '';
+    document.getElementById('maintainAction').value = record.action || '';
+    document.getElementById('maintainCost').value = record.cost || '';
+    document.getElementById('maintainCompleteDate').value = record.completeDate || '';
+    document.getElementById('maintainRemark').value = record.remark || '';
+    setRadioGroupValue('maintainStatusGroup', record.status);
+    setRadioGroupValue('maintainTypeGroup', record.repairType);
+    // 设置条件显示
+    var completeFields = document.getElementById('completeFields');
+    if (completeFields) completeFields.style.display = (record.status === '已完成') ? 'block' : 'none';
+    var configSection = document.getElementById('configSection');
+    if (configSection) configSection.style.display = (record.repairType === '硬件维修') ? 'block' : 'none';
+    historyDiv.style.display = 'block';
+    renderMaintainHistory(record.history, historyList);
+  } else {
+    title.textContent = '🔧 新增维护记录';
+    document.getElementById('maintainDesc').value = '';
+    var today = new Date().toISOString().slice(0,10);
+    document.getElementById('maintainReportDate').value = today;
+    document.getElementById('maintainRepairer').value = CURRENT_USER;
+    document.getElementById('maintainAction').value = '';
+    document.getElementById('maintainCost').value = '';
+    document.getElementById('maintainCompleteDate').value = '';
+    document.getElementById('maintainRemark').value = '';
+    setRadioGroupValue('maintainStatusGroup', '待处理');
+    setRadioGroupValue('maintainTypeGroup', '硬件维修');
+    // 设置条件显示（新增模式：默认隐藏费用，显示配置）
+    var completeFields = document.getElementById('completeFields');
+    if (completeFields) completeFields.style.display = 'none';
+    var configSection = document.getElementById('configSection');
+    if (configSection) configSection.style.display = 'block';
+    historyDiv.style.display = 'none';
+  }
+}
+
+function setRadioGroupValue(groupId, value) {
+  var group = document.getElementById(groupId);
+  if (!group) return;
+  var items = group.querySelectorAll('.radio-item');
+  items.forEach(function(item) {
+    if (item.innerText.trim() === value) {
+      item.classList.add('selected');
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+}
+function setRadioGroupValueById(groupId, value) {
+  setRadioGroupValue(groupId, value);
+}
+
+// ===== 渲染维修历史时间线 =====
+function renderMaintainHistory(history, container) {
+  if (!history || !container) return;
+  var html = '';
+  history.forEach(function(h) {
+    var dotClass = 'green';
+    if (h.action.indexOf('创建') !== -1) dotClass = 'green';
+    else if (h.action.indexOf('状态变更') !== -1) dotClass = 'orange';
+    else if (h.action.indexOf('完成') !== -1) dotClass = 'green';
+    else dotClass = 'orange';
+    html += '<div class="modal-timeline-item">'
+      + '<div class="modal-timeline-dot ' + dotClass + '"></div>'
+      + '<div class="modal-timeline-content">'
+      + '<div class="modal-timeline-action">' + h.action + '</div>'
+      + '<div class="modal-timeline-time">' + h.time + ' · 操作人：' + h.operator + '</div>'
+      + '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ===== 提交维护记录 =====
+function submitMaintain() {
+  var desc = document.getElementById('maintainDesc').value.trim();
+  if (!desc) { alert('请填写故障描述'); return; }
+
+  var statusEl = document.querySelector('#maintainStatusGroup .radio-item.selected');
+  var status = statusEl ? statusEl.innerText.trim() : '待处理';
+  var repairTypeEl = document.querySelector('#maintainTypeGroup .radio-item.selected');
+  var repairType = repairTypeEl ? repairTypeEl.innerText.trim() : '硬件维修';
+
+  var now = new Date();
+  var nowStr = now.getFullYear() + '-'
+    + String(now.getMonth()+1).padStart(2,'0') + '-'
+    + String(now.getDate()).padStart(2,'0') + ' '
+    + String(now.getHours()).padStart(2,'0') + ':'
+    + String(now.getMinutes()).padStart(2,'0');
+
+  if (editingRecordIndex !== null) {
+    var record = MAINTAIN_RECORDS[editingRecordIndex];
+    var oldStatus = record.status;
+    record.faultDesc = desc;
+    record.reporter = document.getElementById('maintainReporter').value;
+    record.phone = document.getElementById('maintainPhone').value;
+    record.office = document.getElementById('maintainOffice').value;
+    record.reportDate = document.getElementById('maintainReportDate').value;
+    record.repairType = repairType;
+    record.status = status;
+    record.repairer = document.getElementById('maintainRepairer').value.trim();
+    record.action = document.getElementById('maintainAction').value.trim();
+    record.cost = document.getElementById('maintainCost').value;
+    record.completeDate = document.getElementById('maintainCompleteDate').value;
+    record.remark = document.getElementById('maintainRemark').value.trim();
+    var historyAction = '信息更新';
+    if (oldStatus !== status) {
+      historyAction = '状态变更：' + oldStatus + ' → ' + status;
+    }
+    record.history.push({ time: nowStr, operator: CURRENT_USER, action: historyAction });
+    alert('✅ 维护记录更新成功！\nWX单号：' + record.wxCode + '\n' + historyAction + '\n更新时间：' + nowStr);
+  } else {
+    var newWxCode = 'WX-2026-' + String(nextWxId++).padStart(5, '0');
+    var newRecord = {
+      wxCode: newWxCode,
+      assetCode: CURRENT_ASSET_CODE,
+      assetName: CURRENT_ASSET_NAME,
+      faultDesc: desc,
+      reporter: document.getElementById('maintainReporter').value,
+      phone: document.getElementById('maintainPhone').value,
+      office: document.getElementById('maintainOffice').value,
+      reportDate: document.getElementById('maintainReportDate').value,
+      repairType: repairType,
+      status: status,
+      repairer: document.getElementById('maintainRepairer').value.trim(),
+      action: document.getElementById('maintainAction').value.trim(),
+      cost: document.getElementById('maintainCost').value,
+      completeDate: document.getElementById('maintainCompleteDate').value,
+      remark: document.getElementById('maintainRemark').value.trim(),
+      history: [
+        { time: nowStr, operator: CURRENT_USER, action: '创建维修记录' }
+      ]
+    };
+    MAINTAIN_RECORDS.push(newRecord);
+    for (var i = 0; i < MAINTAIN_RECORDS.length; i++) {
+      if (MAINTAIN_RECORDS[i].wxCode === newWxCode) {
+        editingRecordIndex = i;
+        break;
+      }
+    }
+    alert('✅ 维护记录创建成功！\nWX单号：' + newWxCode + '\n创建时间：' + nowStr);
+  }
+  renderRepairRecords();
+  closeModal('maintainModal');
+}
+
+// ===== 弹窗控制 =====
+function openModal(type) {
+  document.getElementById(type + 'Modal').classList.add('open');
+}
+
+function closeModal(id) {
+  if (typeof id === 'string') {
+    document.getElementById(id).classList.remove('open');
+  } else {
+    id.classList.remove('open');
+  }
+}
+
+function selectRadio(el) {
+  el.parentElement.querySelectorAll('.radio-item').forEach(function(r) { r.classList.remove('selected'); });
+  el.classList.add('selected');
+  // 条件显示逻辑
+  var groupId = el.parentElement.id;
+  if (groupId === 'maintainStatusGroup') {
+    var isCompleted = el.innerText.trim() === '已完成';
+    var completeFields = document.getElementById('completeFields');
+    if (completeFields) completeFields.style.display = isCompleted ? 'block' : 'none';
+  }
+  if (groupId === 'maintainTypeGroup') {
+    var isHardware = el.innerText.trim() === '硬件维修';
+    var configSection = document.getElementById('configSection');
+    if (configSection) configSection.style.display = isHardware ? 'block' : 'none';
+  }
+}
+
+function submitCheck() {
+  alert('盘点登记提交成功！\n盘点时间：' + new Date().toLocaleString());
+  closeModal('checkModal');
+}
+
+// ===== 展开/收起详细信息 =====
+function toggleDetail() {
+  var sections = document.getElementById('detailSections');
+  var btn = document.getElementById('toggleDetailBtn');
+  var isOpen = sections.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  var textNode = btn.childNodes[btn.childNodes.length - 1];
+  textNode.textContent = isOpen ? ' 收起详细信息' : ' 展开详细信息';
+}
+
+// ===== 点击遮罩关闭弹窗 =====
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
