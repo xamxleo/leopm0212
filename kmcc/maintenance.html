@@ -1,0 +1,1277 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>维修记录 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --color-danger-bg: #fff2f0;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: var(--font-family); background: var(--color-bg-page); color: var(--color-text-primary); font-size: 14px; line-height: 1.6; }
+  .top-nav { height: 48px; background: var(--color-primary); display: flex; align-items: center; padding: 0 24px; color: #fff; font-size: 14px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+  .top-nav .logo { font-size: 16px; font-weight: 600; margin-right: 40px; }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item { padding: 0 16px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active { color: #fff; border-bottom-color: #fff; background: rgba(255,255,255,0.1); }
+  .side-menu { position: fixed; top: 48px; left: 0; width: 200px; bottom: 0; background: var(--color-bg-surface); border-right: 1px solid var(--color-border); padding: 8px 0; overflow-y: auto; z-index: 90; }
+  .side-menu .menu-group-title { padding: 12px 16px 4px; font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
+  .side-menu .menu-item { padding: 10px 16px 10px 24px; cursor: pointer; color: var(--color-text-primary); font-size: 14px; transition: all 0.15s; border-right: 3px solid transparent; }
+  .side-menu .menu-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+  .side-menu .menu-item.active { background: var(--color-primary-bg); color: var(--color-primary); border-right-color: var(--color-primary); font-weight: 500; }
+  .main-content { margin-top: 48px; margin-left: 200px; padding: 24px; min-height: calc(100vh - 48px); }
+  .breadcrumb { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 600; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 16px; border:1px solid transparent; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: var(--font-family); white-space: nowrap; gap: 4px; }
+  .btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default { background: var(--color-bg-surface); color: var(--color-text-primary); border-color: var(--color-border); }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-danger { color: var(--color-danger); border-color: var(--color-danger); background: var(--color-danger-bg); }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .card { background: var(--color-bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px 24px; margin-bottom: 20px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar select, .filter-bar input { height: 32px; padding: 0 10px; border:1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-text-primary); background: var(--color-bg-surface); font-family: var(--font-family); }
+  .filter-bar select { cursor: pointer; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { background: #fafafa; padding: 10px 12px; text-align: left; font-weight: 500; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); vertical-align: top; }
+  .data-table tbody tr:hover { background: var(--color-primary-bg); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 12px; font-weight: 500; }
+  .tag-success { background: #f6ffed; color: var(--color-success); }
+  .tag-warning { background: #fffbe6; color: var(--color-warning); }
+  .tag-danger { background: var(--color-danger-bg); color: var(--color-danger); }
+  .tag-default { background: #f5f5f5; color: var(--color-text-secondary); }
+  .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 16px; font-size: 13px; color: var(--color-text-secondary); }
+  .pagination button { height: 28px; min-width: 28px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-surface); cursor: pointer; font-size: 13px; font-family: var(--font-family); color: var(--color-text-primary); }
+  .pagination button:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .pagination button.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  /* 抽屉弹窗 */
+  .drawer-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 200; justify-content: flex-end; }
+  .drawer-overlay.open { display: flex; }
+  .drawer { width: 680px; max-width: 95vw; background: var(--color-bg-surface); height: 100%; display: flex; flex-direction: column; box-shadow: -4px 0 12px rgba(0,0,0,0.1); }
+  .drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--color-border); font-size: 16px; font-weight: 600; }
+  .drawer-close { cursor: pointer; font-size: 18px; color: var(--color-text-secondary); background: none; border: none; padding: 4px; border-radius: 4px; }
+  .drawer-close:hover { background: #f5f5f5; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+  .drawer-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--color-border); }
+  .form-item { margin-bottom: 18px; }
+  .form-label { display: block; margin-bottom: 6px; font-size: 14px; color: var(--color-text-primary); font-weight: 500; }
+  .form-label .required { color: var(--color-danger); margin-right: 4px; }
+  .form-input, .form-select, .form-textarea { width: 100%; height: 36px; padding: 0 12px; border:1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-text-primary); background: var(--color-bg-surface); font-family: var(--font-family); }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
+  .form-textarea { height: 80px; padding: 8px 12px; resize: vertical; }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  /* 资产搜索下拉 */
+  .asset-search-wrap { position: relative; }
+  .asset-search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border:1px solid var(--color-border); border-radius: var(--radius-md); max-height: 260px; overflow-y: auto; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .asset-search-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--color-border); transition: background 0.1s; }
+  .asset-search-item:last-child { border-bottom: none; }
+  .asset-search-item:hover { background: var(--color-primary-bg); }
+  .asset-search-item .asset-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .asset-search-item .asset-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .asset-search-empty { padding: 12px; font-size: 13px; color: var(--color-text-placeholder); }
+  #selectedAsset { font-size: 13px; color: var(--color-primary); margin-top: 6px; }
+  #selectedAsset span { cursor: pointer; color: var(--color-text-placeholder); margin-left: 6px; }
+  /* 报修人搜索下拉 */
+  .reporter-search-wrap { position: relative; }
+  .reporter-search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border:1px solid var(--color-border); border-radius: var(--radius-md); max-height: 240px; overflow-y: auto; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .reporter-search-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--color-border); transition: background 0.1s; font-size: 13px; }
+  .reporter-search-item:last-child { border-bottom: none; }
+  .reporter-search-item:hover { background: var(--color-primary-bg); }
+  .reporter-search-item .reporter-name { font-weight: 500; color: var(--color-text-primary); }
+  .reporter-search-item .reporter-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 1px; }
+  .reporter-search-empty { padding: 10px 12px; font-size: 13px; color: var(--color-text-placeholder); }
+  /* 快捷故障按钮 */
+  .quick-fault-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .quick-fault-btn { height: 26px; padding: 0 10px; font-size: 12px; border:1px solid var(--color-border); border-radius: 12px; background: #fafafa; color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; font-family: var(--font-family); white-space: nowrap; }
+  .quick-fault-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-bg); }
+  /* 时间线 */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--color-border); }
+  .timeline-item { position: relative; padding-bottom: 20px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-dot { position: absolute; left: -20px; top: 6px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-primary); background: var(--color-bg-surface); }
+  .timeline-dot.success { border-color: var(--color-success); background: var(--color-success); }
+  .timeline-dot.warning { border-color: var(--color-warning); background: var(--color-warning); }
+  .timeline-dot.danger { border-color: var(--color-danger); background: var(--color-danger); }
+  .timeline-dot.default { border-color: #d9d9d9; background: #d9d9d9; }
+  .timeline-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .timeline-desc { font-size: 13px; color: var(--color-text-secondary); }
+  .timeline-time { font-size: 12px; color: var(--color-text-placeholder); margin-top: 2px; }
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .status-badge.pending { background: #fff7e6; color: #d46b08; }
+  .status-badge.in-progress { background: var(--color-primary-bg); color: var(--color-primary); }
+  .status-badge.resolved { background: #f6ffed; color: var(--color-success); }
+  /* 维修类型单选 */
+  .radio-group { display: flex; gap: 20px; }
+  .radio-item { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; color: var(--color-text-primary); }
+  .radio-item input[type="radio"] { cursor: pointer; }
+  /* 配置信息变更区域 */
+  .config-change-area { background: #fafafa; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px; margin-top: 12px; }
+  .config-change-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .config-change-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--color-primary); border-radius: 2px; }
+  .config-field { margin-bottom: 12px; }
+  .config-field:last-child { margin-bottom: 0; }
+  .config-field label { display: block; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .config-field input, .config-field select { width: 100%; height: 32px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-text-primary); background: #fff; font-family: var(--font-family); }
+  .config-field textarea { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-text-primary); background: #fff; font-family: var(--font-family); resize: vertical; }
+  .config-field input:focus, .config-field select:focus, .config-field textarea:focus { outline: none; border-color: var(--color-primary); }
+  .config-hint { font-size: 12px; color: var(--color-text-placeholder); margin-top: 4px; }
+  /* 供应商搜索下拉 */
+  .supplier-search-wrap { position: relative; }
+  .supplier-search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border:1px solid var(--color-border); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .supplier-search-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--color-border); transition: background 0.1s; font-size: 13px; }
+  .supplier-search-item:last-child { border-bottom: none; }
+  .supplier-search-item:hover { background: var(--color-primary-bg); }
+  .supplier-search-empty { padding: 10px 12px; font-size: 13px; color: var(--color-text-placeholder); }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="logo">KMCC资产管理</div>
+  <div class="nav-items">
+    <div class="nav-item">管理</div>
+    <div class="nav-item">工作台</div>
+    <div class="nav-item active">资产管理</div>
+    <div class="nav-item">媒资中心</div>
+    <div class="nav-item">数据中心</div>
+  </div>
+</div>
+
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item active" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<div class="main-content">
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>资产管理 / 维修记录
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">维修记录</div>
+    <button class="btn btn-primary" onclick="openDrawer('add')">+ 新增维修记录</button>
+  </div>
+
+  <!-- 筛选栏 -->
+  <div class="filter-bar">
+    <select><option>全部状态</option><option>待处理</option><option>维修中</option><option>已完成</option><option>已关闭</option></select>
+    <select><option>全部设备</option><option>台式电脑</option><option>笔记本电脑</option><option>打印机</option><option>服务器</option><option>存储设备</option></select>
+    <input type="date" title="开始日期" />
+    <span style="color:var(--color-text-secondary);">至</span>
+    <input type="date" title="结束日期" />
+    <input class="form-input" style="width:160px;height:32px;" placeholder="搜索维修单号/报修人" />
+    <button class="btn btn-default">查询</button>
+    <button class="btn btn-default">重置</button>
+  </div>
+
+  <!-- 维修记录表格 -->
+  <div class="card" style="padding:0;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>维修单号</th>
+          <th>资产名称</th>
+          <th>资产编码</th>
+          <th>故障描述</th>
+          <th>报修人</th>
+          <th>报修日期</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="repairTableBody">
+        <tr>
+          <td style="color:var(--color-primary);cursor:pointer;">WX-2026-00128</td>
+          <td>台式电脑 Dell OptiPlex 7090</td>
+          <td><span style="font-family:monospace;">AC-2026-0156</span></td>
+          <td>无法开机，电源指示灯不亮</td>
+          <td>张三</td>
+          <td>2026-05-18</td>
+          <td><span class="tag tag-warning">维修中</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('view','WX-2026-00128')">查看</button>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('edit','WX-2026-00128')">编辑</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);cursor:pointer;">WX-2026-00127</td>
+          <td>笔记本电脑 ThinkPad X1</td>
+          <td><span style="font-family:monospace;">AC-2026-0089</span></td>
+          <td>屏幕闪烁，偶尔花屏</td>
+          <td>李四</td>
+          <td>2026-05-15</td>
+          <td><span class="tag tag-success">已完成</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('view','WX-2026-00127')">查看</button>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('edit','WX-2026-00127')">编辑</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);cursor:pointer;">WX-2026-00126</td>
+          <td>打印机 HP LaserJet Pro</td>
+          <td><span style="font-family:monospace;">AC-2026-0234</span></td>
+          <td>卡纸频繁，定影组件异常</td>
+          <td>王五</td>
+          <td>2026-05-12</td>
+          <td><span class="tag tag-default">待处理</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('view','WX-2026-00126')">查看</button>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('edit','WX-2026-00126')">编辑</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);cursor:pointer;">WX-2026-00125</td>
+          <td>NAS网络存储 群晖 DS923+</td>
+          <td><span style="font-family:monospace;">AC-2026-0456</span></td>
+          <td>磁盘阵列报警，RAID降级</td>
+          <td>赵六</td>
+          <td>2026-05-10</td>
+          <td><span class="tag tag-success">已完成</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('view','WX-2026-00125')">查看</button>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('edit','WX-2026-00125')">编辑</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="color:var(--color-primary);cursor:pointer;">WX-2026-00124</td>
+          <td>会议室投影仪</td>
+          <td><span style="font-family:monospace;">AC-2026-0312</span></td>
+          <td>亮度下降明显，色彩失真</td>
+          <td>孙七</td>
+          <td>2026-05-08</td>
+          <td><span class="tag tag-danger">已关闭</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('view','WX-2026-00124')">查看</button>
+            <button class="btn btn-default btn-sm" onclick="openDrawer('edit','WX-2026-00124')">编辑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span>共 23 条</span>
+      <button class="active">1</button>
+      <button>2</button>
+      <button>3</button>
+      <button>›</button>
+    </div>
+  </div>
+</div>
+
+<!-- 抽屉弹窗：新增/查看/编辑维修记录 -->
+<div class="drawer-overlay" id="drawer">
+  <div class="drawer">
+    <div class="drawer-header">
+      <span id="drawerTitle">新增维修记录</span>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <!-- ① 关联资产：搜索下拉 -->
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>关联资产</label>
+        <div class="asset-search-wrap" style="position:relative;">
+          <input class="form-input" id="assetInput" placeholder="输入资产编码 / 序列号 / 资产名称 / 使用人搜索..." oninput="filterAssets(this.value)" onfocus="showAssetDropdown()" />
+          <div class="asset-search-dropdown" id="assetDropdown" style="display:none;"></div>
+        </div>
+        <div id="selectedAsset" style="display:none;">
+          ✓ 已关联：<strong id="selectedAssetName"></strong>
+          <span onclick="clearAsset()">✕</span>
+        </div>
+      </div>
+
+      <!-- ② 故障描述 + 快捷按钮 -->
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>故障描述</label>
+        <div class="quick-fault-bar" id="quickFaultBar">
+          <!-- 根据资产分类动态填充 -->
+        </div>
+        <textarea class="form-textarea" id="faultDesc" placeholder="请详细描述故障现象，或点击上方快捷按钮自动填入"></textarea>
+      </div>
+
+      <!-- ③ 报修人信息（下拉选择，自动填充联系方式和门牌） -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>报修人</label>
+          <div class="reporter-search-wrap" style="position:relative;">
+            <input class="form-input" id="reporterInput" placeholder="搜索并选择报修人..." oninput="filterReporters(this.value)" onfocus="showReporterDropdown()" autocomplete="off" />
+            <div class="reporter-search-dropdown" id="reporterDropdown" style="display:none;"></div>
+          </div>
+          <div id="selectedReporter" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+            ✓ <span id="selectedReporterName"></span>
+            <span onclick="clearReporter()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+          </div>
+        </div>
+        <div class="form-item">
+          <label class="form-label">联系方式</label>
+          <input class="form-input" id="reporterPhone" placeholder="自动填充" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+        <div class="form-item">
+          <label class="form-label">办公室门牌</label>
+          <input class="form-input" id="reporterOffice" placeholder="自动填充，如：A座301" />
+        </div>
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>报修日期</label>
+          <input class="form-input" type="date" id="reportDate" />
+        </div>
+      </div>
+
+      <!-- ④ 维修状态 + 维修人 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>维修状态</label>
+          <select class="form-select" id="repairStatus" onchange="onStatusChange()"><option>待处理</option><option>维修中</option><option>已完成</option><option>已关闭</option></select>
+        </div>
+        <div class="form-item">
+          <label class="form-label">维修人/维修商</label>
+          <div class="supplier-search-wrap" style="position:relative;">
+            <input class="form-input" id="repairerInput" placeholder="默认当前操作人，可搜索供应商..." oninput="filterSuppliers(this.value)" onfocus="showSupplierDropdown()" />
+            <div class="supplier-search-dropdown" id="supplierDropdown" style="display:none;"></div>
+          </div>
+          <div id="selectedRepairer" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+            ✓ <span id="selectedRepairerName"></span>
+            <span onclick="clearRepairer()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ 维修类型（移至维修措施上方） -->
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>维修类型</label>
+        <div class="radio-group" id="repairTypeGroup">
+          <label class="radio-item">
+            <input type="radio" name="repairType" value="software" onchange="onRepairTypeChange()" />
+            软件维修
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="repairType" value="hardware" onchange="onRepairTypeChange()" />
+            硬件维修
+          </label>
+        </div>
+      </div>
+
+      <!-- ⑥ 维修措施 -->
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>维修措施</label>
+        <textarea class="form-textarea" id="repairAction" placeholder="请输入维修措施和处理结果"></textarea>
+      </div>
+
+      <!-- ⑦ 硬件维修：配置信息变更（仅硬件维修时显示） -->
+      <div class="form-item" id="configChangeArea" style="display:none;">
+        <div class="config-change-area">
+          <div class="config-change-title">🔧 硬件变更 - 配置信息更新</div>
+          <div id="configFields">
+            <!-- 根据资产分类动态生成配置字段 -->
+          </div>
+          <div class="config-hint">💡 硬件维修后请同步更新设备配置信息，确保资产数据与实际情况一致。提交后将自动更新资产档案。</div>
+        </div>
+      </div>
+
+      <div id="completeFields" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+          <div class="form-item">
+            <label class="form-label">维修费用（元）</label>
+            <input class="form-input" type="number" id="repairCost" placeholder="请输入维修费用" />
+          </div>
+          <div class="form-item">
+            <label class="form-label">完成日期</label>
+            <input class="form-input" type="date" id="completeDate" />
+          </div>
+        </div>
+      </div>
+      <!-- 备注 -->
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="repairRemark" placeholder="可输入维修相关备注"></textarea>
+      </div>
+
+      <!-- 维修历史记录（由 JS 动态渲染）-->
+      <div id="drawerHistorySection" style="display:none; margin-top:24px;">
+        <div style="font-size:15px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--color-border);">维修历史记录</div>
+        <div class="timeline" id="drawerHistoryTimeline"></div>
+      </div>
+    </div><!-- /drawer-body -->
+      <button class="btn btn-default" onclick="closeDrawer()">取消</button>
+      <button class="btn btn-primary" onclick="submitRepair()">提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 当前操作人（实际应从登录信息获取）=====
+  const CURRENT_USER = '管理员';
+
+  // ===== 维修记录数据（含 history 维修历史）=====
+  let MAINTAIN_RECORDS = [
+    {
+      wxCode: 'WX-2026-00128',
+      assetCode: 'AC-2026-0156',
+      assetName: '台式电脑 Dell OptiPlex 7090',
+      faultDesc: '无法开机，电源指示灯不亮',
+      reporter: '张三',
+      phone: '13800001111',
+      office: 'A座301',
+      reportDate: '2026-05-18',
+      repairType: '硬件维修',
+      status: '维修中',
+      repairer: '昆明XX电脑维修中心',
+      action: '已送修，预计3个工作日完成',
+      cost: '',
+      completeDate: '',
+      remark: '',
+      history: [
+        { time: '2026-05-18 09:30', operator: '张三', action: '创建维修记录' },
+        { time: '2026-05-18 14:00', operator: '管理员', action: '状态变更：待处理 → 维修中' }
+      ]
+    },
+    {
+      wxCode: 'WX-2026-00127',
+      assetCode: 'AC-2026-0089',
+      assetName: '笔记本电脑 ThinkPad X1',
+      faultDesc: '屏幕闪烁，偶尔花屏',
+      reporter: '李四',
+      phone: '13800002222',
+      office: 'A座302',
+      reportDate: '2026-05-15',
+      repairType: '硬件维修',
+      status: '已完成',
+      repairer: '李四',
+      action: '更换屏幕排线，故障排除',
+      cost: '0',
+      completeDate: '2026-05-16',
+      remark: '保修期内，免费维修',
+      history: [
+        { time: '2026-05-15 10:00', operator: '李四', action: '创建维修记录' },
+        { time: '2026-05-15 14:30', operator: '管理员', action: '状态变更：待处理 → 维修中' },
+        { time: '2026-05-16 09:00', operator: '李四', action: '状态变更：维修中 → 已完成，处理结果：已解决' }
+      ]
+    },
+    {
+      wxCode: 'WX-2026-00126',
+      assetCode: 'AC-2026-0234',
+      assetName: '打印机 HP LaserJet Pro',
+      faultDesc: '卡纸频繁，定影组件异常',
+      reporter: '王五',
+      phone: '13800003333',
+      office: 'B座205',
+      reportDate: '2026-05-12',
+      repairType: '硬件维修',
+      status: '待处理',
+      repairer: '',
+      action: '',
+      cost: '',
+      completeDate: '',
+      remark: '',
+      history: [
+        { time: '2026-05-12 08:30', operator: '王五', action: '创建维修记录' }
+      ]
+    },
+    {
+      wxCode: 'WX-2026-00125',
+      assetCode: 'AC-2026-0456',
+      assetName: 'NAS网络存储 群晖 DS923+',
+      faultDesc: '磁盘阵列报警，RAID降级',
+      reporter: '赵六',
+      phone: '13800004444',
+      office: 'B座210',
+      reportDate: '2026-05-10',
+      repairType: '硬件维修',
+      status: '已完成',
+      repairer: '赵六',
+      action: '更换故障硬盘（盘位2），重建RAID',
+      cost: '1200',
+      completeDate: '2026-05-11',
+      remark: '硬盘保修期内，免费更换',
+      history: [
+        { time: '2026-05-10 11:00', operator: '赵六', action: '创建维修记录' },
+        { time: '2026-05-10 15:00', operator: '管理员', action: '状态变更：待处理 → 维修中' },
+        { time: '2026-05-11 10:00', operator: '赵六', action: '状态变更：维修中 → 已完成，处理结果：已解决' }
+      ]
+    },
+    {
+      wxCode: 'WX-2026-00124',
+      assetCode: 'AC-2026-0312',
+      assetName: '会议室投影仪 Epson CB-W42',
+      faultDesc: '亮度下降明显，色彩失真',
+      reporter: '孙七',
+      phone: '13800005555',
+      office: 'C座101',
+      reportDate: '2026-05-08',
+      repairType: '硬件维修',
+      status: '已关闭',
+      repairer: '孙七',
+      action: '评估后决定不再维修，拟报废',
+      cost: '0',
+      completeDate: '2026-05-09',
+      remark: '设备已使用超过5年，维修价值低',
+      history: [
+        { time: '2026-05-08 09:00', operator: '孙七', action: '创建维修记录' },
+        { time: '2026-05-09 14:30', operator: '管理员', action: '状态变更：待处理 → 已关闭，处理结果：无法修复' }
+      ]
+    }
+  ];
+  let nextWxId = 129;
+  let editingRecordIndex = null;
+
+  // ===== 系统用户数据（来自其他模块，此处为示例）=====
+  const USERS = [
+    { id: 1, name: '张三', phone: '13800001111', office: 'A座301' },
+    { id: 2, name: '李四', phone: '13800002222', office: 'A座302' },
+    { id: 3, name: '王五', phone: '13800003333', office: 'B座205' },
+    { id: 4, name: '赵六', phone: '13800004444', office: 'B座210' },
+    { id: 5, name: '孙七', phone: '13800005555', office: 'C座101' },
+    { id: 6, name: '周八', phone: '13800006666', office: 'A座305' },
+    { id: 7, name: '吴九', phone: '13800007777', office: 'C座203' },
+    { id: 8, name: '郑十', phone: '13800008888', office: 'B座118' },
+  ];
+
+  // ===== 资产数据（示例，实际应从接口获取）=====
+  const ASSETS = [
+    { id: 1, code: 'AC-2026-0156', name: '台式电脑 Dell OptiPlex 7090', category: '台式电脑', sn: 'CN-ABC123456', user: '张三', status: '使用中',
+      config: { brand: 'Dell', model: 'OptiPlex 7090', cpu: 'Intel i5-10500', memory: '16GB DDR4', storage: '512GB SSD', gpu: '集成显卡', os: 'Windows 10' } },
+    { id: 2, code: 'AC-2026-0089', name: '笔记本电脑 ThinkPad X1', category: '笔记本电脑', sn: 'PF-XYZ789012', user: '李四', status: '使用中',
+      config: { brand: 'Lenovo', model: 'ThinkPad X1', cpu: 'Intel i7-1165G7', memory: '16GB LPDDR4X', storage: '1TB SSD', gpu: 'Intel Iris Xe', screen: '14寸 2K', os: 'Windows 11' } },
+    { id: 3, code: 'AC-2026-0234', name: '打印机 HP LaserJet Pro', category: '打印机', sn: 'CN-DEF345678', user: '王五', status: '闲置',
+      config: { brand: 'HP', model: 'LaserJet Pro M404dn', type: '激光', color: '黑白', speed: '38页/分钟', duplex: '自动双面' } },
+    { id: 4, code: 'AC-2026-0456', name: 'NAS网络存储 群晖 DS923+', category: '存储设备', sn: 'SN-NAS001', user: '赵六', status: '使用中',
+      config: { deviceType: 'NAS', capacity: '16TB', interface: '2.5GbE', raid: 'RAID 5', driveCount: 4, cache: '4GB', encryption: 'AES-256' } },
+    { id: 5, code: 'AC-2026-0312', name: '会议室投影仪 Epson CB-W42', category: '其他设备', sn: 'EP-2023-001', user: '孙七', status: '使用中',
+      config: { brand: 'Epson', model: 'CB-W42', resolution: 'WXGA 1280×800', brightness: '3600流明', contrast: '15000:1' } },
+    { id: 6, code: 'AC-2026-0067', name: '台式电脑 组装机', category: '台式电脑', sn: 'CUSTOM-001', user: '张三', status: '维修中',
+      config: { brand: '组装', model: 'Custom', cpu: 'AMD Ryzen 5 5600X', memory: '32GB DDR4', storage: '1TB NVMe SSD', gpu: 'RTX 3060', os: 'Windows 10' } },
+    { id: 7, code: 'AC-2026-0198', name: '移动硬盘 希捷 4TB', category: '存储设备', sn: 'ST-4TB-002', user: '李四', status: '使用中',
+      config: { deviceType: '便携HDD', capacity: '4TB', interface: 'USB 3.0', encryption: '否' } },
+    { id: 8, code: 'AC-2026-0281', name: '交换机 华为 S5735', category: '网络设备', sn: 'HW-SW-001', user: '赵六', status: '使用中',
+      config: { brand: '华为', model: 'S5735-S24P4X', ports: '24×GE PoE+ 4×10GE SFP+', power: '370W', management: 'Web+CLI+SNMP' } },
+  ];
+
+  // ===== 供应商数据 =====
+  const SUPPLIERS = [
+    { id: 1, name: '昆明XX电脑科技有限公司', contact: '张经理', phone: '13888888888' },
+    { id: 2, name: '云南YY办公设备有限公司', contact: '李总', phone: '13999999999' },
+    { id: 3, name: '深圳ZZ电子科技有限公司', contact: '王工', phone: '13666666666' },
+    { id: 4, name: '昆明迅维电脑维修中心', contact: '赵师傅', phone: '13555555555' },
+  ];
+
+  // ===== 配置字段模板（与 add-asset.html 一致）=====
+  const CONFIG_FIELDS = {
+    '台式电脑': [
+      { key: 'brand', label: '品牌', type: 'text' },
+      { key: 'model', label: '型号', type: 'text' },
+      { key: 'cpu', label: '处理器', type: 'text' },
+      { key: 'memory', label: '内存', type: 'text' },
+      { key: 'storage', label: '存储', type: 'text' },
+      { key: 'gpu', label: '显卡', type: 'text' },
+      { key: 'os', label: '操作系统', type: 'text' },
+    ],
+    '笔记本电脑': [
+      { key: 'brand', label: '品牌', type: 'text' },
+      { key: 'model', label: '型号', type: 'text' },
+      { key: 'cpu', label: '处理器', type: 'text' },
+      { key: 'memory', label: '内存', type: 'text' },
+      { key: 'storage', label: '存储', type: 'text' },
+      { key: 'gpu', label: '显卡', type: 'text' },
+      { key: 'screen', label: '屏幕尺寸/分辨率', type: 'text' },
+      { key: 'os', label: '操作系统', type: 'text' },
+    ],
+    '打印机': [
+      { key: 'brand', label: '品牌', type: 'text' },
+      { key: 'model', label: '型号', type: 'text' },
+      { key: 'type', label: '类型', type: 'text' },
+      { key: 'color', label: '色彩', type: 'text' },
+      { key: 'speed', label: '打印速度', type: 'text' },
+      { key: 'duplex', label: '双面打印', type: 'text' },
+    ],
+    '存储设备': [
+      { key: 'deviceType', label: '设备类型', type: 'text' },
+      { key: 'capacity', label: '存储容量', type: 'text' },
+      { key: 'interface', label: '接口类型', type: 'text' },
+      { key: 'raid', label: 'RAID支持', type: 'text' },
+      { key: 'driveCount', label: '硬盘数量/规格', type: 'text' },
+      { key: 'cache', label: '缓存/内存', type: 'text' },
+      { key: 'network', label: '网络功能', type: 'text' },
+      { key: 'encryption', label: '加密支持', type: 'text' },
+    ],
+    '网络设备': [
+      { key: 'brand', label: '品牌', type: 'text' },
+      { key: 'model', label: '型号', type: 'text' },
+      { key: 'ports', label: '端口配置', type: 'text' },
+      { key: 'power', label: '功率/PoE', type: 'text' },
+      { key: 'management', label: '管理方式', type: 'text' },
+    ],
+    '其他设备': [
+      { key: 'brand', label: '品牌', type: 'text' },
+      { key: 'model', label: '型号', type: 'text' },
+      { key: 'specs', label: '规格参数', type: 'textarea' },
+    ],
+  };
+
+  // ===== 常见故障快捷描述 =====
+  const QUICK_FAULTS = {
+    '台式电脑':      ['无法开机', '频繁蓝屏', '运行卡顿', '异响/噪音大', '显示器无信号'],
+    '笔记本电脑':    ['无法开机', '电池不充电', '屏幕闪烁/花屏', '键盘失灵', '过热降频'],
+    '打印机':        ['卡纸频繁', '打印模糊/偏色', '无法连接网络', '定影异常', '耗材报警'],
+    '服务器':        ['无法启动', 'RAID报警', '过热报警', '硬盘故障灯亮', '网络不通'],
+    '网络设备':      ['端口无法连通', 'PoE供电异常', '配置丢失', '频繁断网', '指示灯异常'],
+    '照相机':        ['无法开机', '存储卡无法识别', '镜头通信错误', '取景器异常', '按键失灵'],
+    '摄像机':        ['无法录制', '音频输入异常', '镜头变焦故障', '传感器报错', '电池不识别'],
+    '安全设备':      ['无法联网', '夜视画面异常', '录像中断', '移动侦测失效', '电源故障'],
+    '存储设备':      ['RAID降级/报警', '无法挂载', '读写速度异常', '磁盘坏道', '电源故障'],
+    '其他设备':      ['无法开机', '功能异常', '连接中断', '物理损坏', '需校准/维护'],
+  };
+
+  let selectedAssetId = null;
+  let selectedSupplierId = null;
+  let selectedReporterId = null;
+
+  // ===== 初始化：维修人默认当前操作人 =====
+  function initRepairer() {
+    document.getElementById('repairerInput').value = CURRENT_USER;
+    document.getElementById('selectedRepairer').style.display = 'none';
+    selectedSupplierId = null;
+  }
+
+  // ===== 报修人搜索下拉 =====
+  function filterReporters(keyword) {
+    const dropdown = document.getElementById('reporterDropdown');
+    const val = keyword.trim();
+    if (!val) {
+      // 显示全部用户列表
+      showReporterList(USERS);
+      return;
+    }
+    const kw = val.toLowerCase();
+    const filtered = USERS.filter(u =>
+      u.name.toLowerCase().includes(kw) ||
+      (u.phone && u.phone.includes(kw)) ||
+      (u.office && u.office.toLowerCase().includes(kw))
+    );
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div class="reporter-search-empty">未找到匹配的用户</div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+    showReporterList(filtered);
+  }
+
+  function showReporterList(list) {
+    const dropdown = document.getElementById('reporterDropdown');
+    let html = '';
+    list.forEach(u => {
+      const safeName = (u.name || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safePhone = (u.phone || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safeOffice = (u.office || '').replace(/'/g, '’').replace(/"/g, '”');
+      html += `<div class="reporter-search-item" onclick="selectReporter(${u.id}, '${safeName}', '${safePhone}', '${safeOffice}')">
+        <span class="reporter-name">${u.name}</span>
+        <span class="reporter-meta">${u.phone || ''} &nbsp;|&nbsp; ${u.office || ''}</span>
+      </div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+  }
+
+  function showReporterDropdown() {
+    const input = document.getElementById('reporterInput');
+    if (!selectedReporterId) {
+      input.value = '';
+      showReporterList(USERS);
+    }
+  }
+
+  function selectReporter(id, name, phone, office) {
+    selectedReporterId = id;
+    document.getElementById('reporterInput').value = name;
+    document.getElementById('selectedReporterName').textContent = name;
+    document.getElementById('selectedReporter').style.display = 'block';
+    document.getElementById('reporterDropdown').style.display = 'none';
+    // 自动填充联系方式和办公室门牌
+    document.getElementById('reporterPhone').value = phone || '';
+    document.getElementById('reporterOffice').value = office || '';
+  }
+
+  function clearReporter() {
+    selectedReporterId = null;
+    document.getElementById('reporterInput').value = '';
+    document.getElementById('selectedReporter').style.display = 'none';
+    document.getElementById('reporterPhone').value = '';
+    document.getElementById('reporterOffice').value = '';
+  }
+
+  // ===== 资产搜索下拉 =====
+  function filterAssets(keyword) {
+    const dropdown = document.getElementById('assetDropdown');
+    if (!keyword.trim()) { dropdown.style.display = 'none'; return; }
+    const kw = keyword.toLowerCase();
+    const filtered = ASSETS.filter(a =>
+      a.code.toLowerCase().includes(kw) ||
+      a.name.toLowerCase().includes(kw) ||
+      (a.sn && a.sn.toLowerCase().includes(kw)) ||
+      (a.user && a.user.toLowerCase().includes(kw))
+    );
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div class="asset-search-empty">未找到匹配的资产，请核对编码或名称</div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+    let html = '';
+    filtered.forEach(a => {
+      const safeName = (a.name || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safeCode = (a.code || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safeCategory = (a.category || '').replace(/'/g, '’').replace(/"/g, '”');
+      html += `<div class="asset-search-item" onclick="selectAsset(${a.id}, '${safeName}', '${safeCode}', '${safeCategory}')">
+        <div class="asset-name">${a.name}</div>
+        <div class="asset-meta">编码：${a.code} &nbsp;|&nbsp; 分类：${a.category} &nbsp;|&nbsp; 使用人：${a.user || '未分配'} &nbsp;|&nbsp; 状态：${a.status}</div>
+      </div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+  }
+
+  function showAssetDropdown() {
+    const input = document.getElementById('assetInput');
+    if (input.value.trim() === '') {
+      filterAssets('');
+    }
+  }
+
+  function selectAsset(id, name, code, category) {
+    selectedAssetId = Number(id);
+    document.getElementById('assetInput').value = name + '  (' + code + ')';
+    document.getElementById('selectedAssetName').textContent = name + '  (' + code + ')';
+    document.getElementById('selectedAsset').style.display = 'block';
+    document.getElementById('assetDropdown').style.display = 'none';
+    updateQuickFaultButtons(category);
+    // 如果已选硬件维修，重新生成配置字段
+    const repairType = document.querySelector('input[name="repairType"]:checked');
+    if (repairType && repairType.value === 'hardware') {
+      generateConfigFields(Number(id));
+    }
+  }
+
+  function clearAsset() {
+    selectedAssetId = null;
+    document.getElementById('assetInput').value = '';
+    document.getElementById('selectedAsset').style.display = 'none';
+    document.getElementById('quickFaultBar').innerHTML = '';
+    document.getElementById('configFields').innerHTML = '';
+  }
+
+  // ===== 供应商搜索下拉（维修人/维修商）=====
+  function filterSuppliers(keyword) {
+    const dropdown = document.getElementById('supplierDropdown');
+    const val = keyword.trim();
+    if (val === CURRENT_USER) return;
+    if (!val) {
+      showSupplierList(SUPPLIERS);
+      return;
+    }
+    const kw = val.toLowerCase();
+    const filtered = SUPPLIERS.filter(s =>
+      s.name.toLowerCase().includes(kw) ||
+      (s.contact && s.contact.toLowerCase().includes(kw)) ||
+      (s.phone && s.phone.includes(kw))
+    );
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div class="supplier-search-empty">未找到匹配的供应商，可手动输入</div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+    showSupplierList(filtered);
+  }
+
+  function showSupplierList(list) {
+    const dropdown = document.getElementById('supplierDropdown');
+    let html = '';
+    list.forEach(s => {
+      const safeName = (s.name || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safeContact = (s.contact || '').replace(/'/g, '’').replace(/"/g, '”');
+      const safePhone = (s.phone || '').replace(/'/g, '’').replace(/"/g, '”');
+      html += `<div class="supplier-search-item" onclick="selectSupplier(${s.id}, '${safeName}', '${safeContact}', '${safePhone}')">
+        ${s.name}（联系人：${s.contact}，电话：${s.phone}）
+      </div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+  }
+
+  function showSupplierDropdown() {
+    const input = document.getElementById('repairerInput');
+    if (input.value === CURRENT_USER) {
+      input.value = '';
+      showSupplierList(SUPPLIERS);
+    }
+  }
+
+  function selectSupplier(id, name, contact, phone) {
+    selectedSupplierId = id;
+    document.getElementById('repairerInput').value = name + '（联系人：' + contact + '，电话：' + phone + '）';
+    document.getElementById('selectedRepairerName').textContent = '已选择供应商：' + name;
+    document.getElementById('selectedRepairer').style.display = 'block';
+    document.getElementById('supplierDropdown').style.display = 'none';
+  }
+
+  function clearRepairer() {
+    selectedSupplierId = null;
+    initRepairer();
+  }
+
+  // ===== 点击页面其他地方关闭所有下拉 =====
+  document.addEventListener('click', function(e) {
+    // 资产下拉
+    const assetWrap = document.querySelector('.asset-search-wrap');
+    if (assetWrap && !assetWrap.contains(e.target)) {
+      const dd = document.getElementById('assetDropdown');
+      if (dd) dd.style.display = 'none';
+    }
+    // 报修人下拉
+    const reporterWrap = document.querySelector('.reporter-search-wrap');
+    if (reporterWrap && !reporterWrap.contains(e.target)) {
+      const dd = document.getElementById('reporterDropdown');
+      if (dd) dd.style.display = 'none';
+    }
+    // 供应商下拉
+    const suppWrap = document.querySelector('.supplier-search-wrap');
+    if (suppWrap && !suppWrap.contains(e.target)) {
+      const dd = document.getElementById('supplierDropdown');
+      if (dd) dd.style.display = 'none';
+    }
+  });
+
+  // ===== 快捷故障按钮 =====
+  function updateQuickFaultButtons(category) {
+    const bar = document.getElementById('quickFaultBar');
+    const faults = QUICK_FAULTS[category] || QUICK_FAULTS['其他设备'];
+    let html = '';
+    faults.forEach(f => {
+      const safeF = (f || '').replace(/'/g, '’').replace(/"/g, '”');
+      html += `<button type="button" class="quick-fault-btn" onclick="fillFaultDesc('${safeF}')">${f}</button>`;
+    });
+    bar.innerHTML = html;
+  }
+
+  function fillFaultDesc(text) {
+    const ta = document.getElementById('faultDesc');
+    ta.value = ta.value ? ta.value + '；' + text : text;
+    ta.focus();
+  }
+
+  // ===== 维修类型切换 =====
+  function onRepairTypeChange() {
+    const repairType = document.querySelector('input[name="repairType"]:checked');
+    const configArea = document.getElementById('configChangeArea');
+    if (!repairType || repairType.value !== 'hardware') {
+      configArea.style.display = 'none';
+      return;
+    }
+    configArea.style.display = 'block';
+    if (selectedAssetId) {
+      generateConfigFields(Number(selectedAssetId));
+    } else {
+      document.getElementById('configFields').innerHTML = '<div style="color:var(--color-text-placeholder);font-size:13px;padding:8px 0;">⚠️ 请先选择关联资产，配置信息将在选择资产后自动加载。</div>';
+    }
+  }
+
+  // ===== 维修状态切换 =====
+  function onStatusChange() {
+    const statusSelect = document.getElementById('repairStatus');
+    const completeFields = document.getElementById('completeFields');
+    if (!statusSelect || !completeFields) return;
+    const isCompleted = statusSelect.value === '已完成';
+    completeFields.style.display = isCompleted ? 'block' : 'none';
+  }
+
+  // ===== 生成配置信息编辑字段 =====
+  function generateConfigFields(assetId) {
+    const asset = ASSETS.find(a => Number(a.id) === Number(assetId));
+    if (!asset) {
+      document.getElementById('configFields').innerHTML = '<div style="color:var(--color-danger);font-size:13px;padding:8px 0;">⚠️ 未找到对应资产，无法加载配置信息。</div>';
+      return;
+    }
+    const fields = CONFIG_FIELDS[asset.category] || CONFIG_FIELDS['其他设备'];
+    const currentConfig = asset.config || {};
+    let html = `<div style="margin-bottom:8px;font-size:12px;color:var(--color-primary);">当前资产：<b>${asset.name}</b>（${asset.category}）</div>`;
+    fields.forEach(f => {
+      const val = currentConfig[f.key] || '';
+      if (f.type === 'textarea') {
+        html += `<div class="config-field">
+          <label style="font-size:13px;color:var(--color-text-secondary);">${f.label}</label>
+          <textarea id="config_${f.key}" style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-family);resize:vertical;">${val}</textarea>
+        </div>`;
+      } else {
+        html += `<div class="config-field" style="display:grid;grid-template-columns:120px 1fr;gap:0 12px;align-items:center;margin-bottom:10px;">
+          <label style="font-size:13px;color:var(--color-text-secondary);text-align:right;padding-right:8px;">${f.label}</label>
+          <input type="text" id="config_${f.key}" value="${val}" placeholder="请输入${f.label}" style="height:32px;padding:0 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);font-size:13px;color:var(--color-text-primary);background:#fff;font-family:var(--font-family);" />
+        </div>`;
+      }
+    });
+    html += `<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--color-border);font-size:12px;color:var(--color-text-placeholder);">
+      ✅ 当前配置已加载，修改后点击"提交"将同步更新资产档案
+    </div>`;
+    document.getElementById('configFields').innerHTML = html;
+  }
+
+  // ===== 抽屉控制 =====
+  function openDrawer(mode, id) {
+    const overlay = document.getElementById('drawer');
+    const title = document.getElementById('drawerTitle');
+    // 重置表单
+    clearAsset();
+    clearReporter();
+    document.getElementById('faultDesc').value = '';
+    document.getElementById('quickFaultBar').innerHTML = '';
+    document.getElementById('repairAction').value = '';
+    document.getElementById('repairCost').value = '';
+    document.getElementById('completeDate').value = '';
+    document.getElementById('repairRemark').value = '';
+    document.getElementById('reporterPhone').value = '';
+    document.getElementById('reporterOffice').value = '';
+    document.getElementById('configFields').innerHTML = '';
+    document.getElementById('configChangeArea').style.display = 'none';
+    document.querySelectorAll('input[name="repairType"]').forEach(r => r.checked = false);
+    initRepairer();
+    // 隐藏维修历史
+    const historySection = document.getElementById('drawerHistorySection');
+    if (historySection) historySection.style.display = 'none';
+
+    if (mode === 'add') {
+      // 新增模式
+      title.textContent = '新增维修记录';
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('reportDate').value = today;
+      editingRecordIndex = null;
+    } else if (mode === 'edit') {
+      // 编辑模式：加载记录详情，显示维修历史
+      title.textContent = '编辑维修记录';
+      loadRecordToDrawer(String(id));
+    } else {
+      // 查看模式：只读，显示维修历史
+      title.textContent = '查看维修记录';
+      loadRecordToDrawer(String(id));
+      // 设为只读
+      setDrawerReadonly(true);
+    }
+    overlay.classList.add('open');
+  }
+
+  function loadRecordToDrawer(recordId) {
+    // recordId 对应 MAINTAIN_RECORDS 的索引（此处用 wxCode 匹配）
+    let record = null;
+    let idx = -1;
+    // id 参数实际传入的是表格行索引，需要通过 wxCode 查找
+    // 简化处理：直接通过传入的 id 作为 MAINTAIN_RECORDS 的索引
+    // 实际应改为 wxCode 查找，此处保持与原有逻辑兼容
+    // 重新设计：openDrawer('edit', wxCode) 传入 wxCode
+    const wxCode = String(recordId);
+    for (let i = 0; i < MAINTAIN_RECORDS.length; i++) {
+      if (MAINTAIN_RECORDS[i].wxCode === wxCode) {
+        record = MAINTAIN_RECORDS[i];
+        idx = i;
+        break;
+      }
+    }
+    if (!record) { editingRecordIndex = null; return; }
+    editingRecordIndex = idx;
+
+    // 填充表单
+    // 关联资产
+    const asset = ASSETS.find(a => a.code === record.assetCode);
+    if (asset) {
+      selectedAssetId = asset.id;
+      document.getElementById('assetInput').value = asset.name + '  (' + asset.code + ')';
+      document.getElementById('selectedAssetName').textContent = asset.name + '  (' + asset.code + ')';
+      document.getElementById('selectedAsset').style.display = 'block';
+      updateQuickFaultButtons(asset.category);
+    }
+    // 报修人
+    document.getElementById('reporterInput').value = record.reporter || '';
+    document.getElementById('reporterPhone').value = record.phone || '';
+    document.getElementById('reporterOffice').value = record.office || '';
+    // 报修日期
+    document.getElementById('reportDate').value = record.reportDate || '';
+    // 故障描述
+    document.getElementById('faultDesc').value = record.faultDesc || '';
+    // 维修状态
+    const statusSelect = document.getElementById('repairStatus');
+    if (statusSelect) {
+      for (let i = 0; i < statusSelect.options.length; i++) {
+        if (statusSelect.options[i].value === record.status || statusSelect.options[i].text === record.status) {
+          statusSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    // 维修人/维修商
+    document.getElementById('repairerInput').value = record.repairer || '';
+    // 维修类型
+    if (record.repairType === '软件维修') {
+      const radio = document.querySelector('input[name="repairType"][value="software"]');
+      if (radio) radio.checked = true;
+    } else if (record.repairType === '硬件维修') {
+      const radio = document.querySelector('input[name="repairType"][value="hardware"]');
+      if (radio) radio.checked = true;
+      onRepairTypeChange();
+    }
+    // 维修措施
+    document.getElementById('repairAction').value = record.action || '';
+    // 维修费用
+    document.getElementById('repairCost').value = record.cost || '';
+    // 完成日期
+    document.getElementById('completeDate').value = record.completeDate || '';
+    // 备注
+    document.getElementById('repairRemark').value = record.remark || '';
+
+    // 触发状态联动，控制费用/完成日期显示
+    onStatusChange();
+    // 渲染维修历史
+    renderDrawerHistory(record.history);
+  }
+
+  function setDrawerReadonly(readonly) {
+    const fields = ['assetInput','reporterInput','reporterPhone','reporterOffice',
+                    'reportDate','faultDesc','repairStatus','repairerInput',
+                    'repairAction','repairCost','completeDate','repairRemark'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = readonly;
+    });
+    // radio 也设为禁用
+    document.querySelectorAll('input[name="repairType"]').forEach(r => r.disabled = readonly);
+    // 底部按钮：查看模式隐藏提交按钮
+    const footer = document.querySelector('.drawer-footer');
+    if (footer) footer.style.display = readonly ? 'none' : 'flex';
+  }
+
+  // ===== 动态渲染维修历史时间线 =====
+  function renderDrawerHistory(history) {
+    let section = document.getElementById('drawerHistorySection');
+    if (!section) {
+      // 创建维修历史区域（插入在 drawer-body 末尾，drawer-footer 之前）
+      const drawerBody = document.querySelector('.drawer-body');
+      section = document.createElement('div');
+      section.id = 'drawerHistorySection';
+      section.style.marginTop = '24px';
+      section.innerHTML = '<div style="font-size:15px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--color-border);">维修历史记录</div>';
+      const timeline = document.createElement('div');
+      timeline.id = 'drawerHistoryTimeline';
+      timeline.className = 'timeline';
+      section.appendChild(timeline);
+      // 插入到 drawer-footer 之前
+      const footer = document.querySelector('.drawer-footer');
+      drawerBody.insertBefore(section, footer);
+    }
+    section.style.display = 'block';
+    const timeline = document.getElementById('drawerHistoryTimeline');
+    if (!history || history.length === 0) {
+      timeline.innerHTML = '<div style="font-size:13px;color:var(--color-text-placeholder);padding:8px 0;">暂无历史记录</div>';
+      return;
+    }
+    let html = '';
+    history.forEach(h => {
+      let dotClass = 'default';
+      if (h.action.indexOf('创建') !== -1) dotClass = 'success';
+      else if (h.action.indexOf('状态变更') !== -1) dotClass = 'warning';
+      else if (h.action.indexOf('完成') !== -1) dotClass = 'success';
+      else if (h.action.indexOf('信息更新') !== -1) dotClass = 'warning';
+      html += '<div class="timeline-item">'
+        + '<div class="timeline-dot ' + dotClass + '"></div>'
+        + '<div class="timeline-title">' + h.action + '</div>'
+        + '<div class="timeline-time">' + h.time + ' &nbsp;·&nbsp; 操作人：' + h.operator + '</div>'
+        + '</div>';
+    });
+    timeline.innerHTML = html;
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    editingRecordIndex = null;
+    // 恢复表单可编辑状态（防止查看模式后无法编辑）
+    setDrawerReadonly(false);
+  }
+
+  // ===== 提交维修记录 =====
+  function submitRepair() {
+    // 获取表单值
+    const repairType = document.querySelector('input[name="repairType"]:checked');
+    if (!repairType) {
+      alert('请选择维修类型（软件/硬件）');
+      return;
+    }
+    const repairTypeValue = repairType.value === 'software' ? '软件维修' : '硬件维修';
+    const statusSelect = document.getElementById('repairStatus');
+    const status = statusSelect ? statusSelect.value : '待处理';
+    const reporter = document.getElementById('reporterInput').value.trim();
+    const phone = document.getElementById('reporterPhone').value.trim();
+    const office = document.getElementById('reporterOffice').value.trim();
+    const reportDate = document.getElementById('reportDate').value;
+    const faultDesc = document.getElementById('faultDesc').value.trim();
+    if (!faultDesc) { alert('请填写故障描述'); return; }
+    const repairer = document.getElementById('repairerInput').value.trim();
+    const action = document.getElementById('repairAction').value.trim();
+    const cost = document.getElementById('repairCost').value;
+    const completeDate = document.getElementById('completeDate').value;
+    const remark = document.getElementById('repairRemark').value.trim();
+
+    // 获取当前时间字符串
+    const now = new Date();
+    const nowStr = now.getFullYear() + '-'
+      + String(now.getMonth()+1).padStart(2,'0') + '-'
+      + String(now.getDate()).padStart(2,'0') + ' '
+      + String(now.getHours()).padStart(2,'0') + ':'
+      + String(now.getMinutes()).padStart(2,'0');
+
+    if (editingRecordIndex !== null) {
+      // 编辑模式：更新现有记录
+      const record = MAINTAIN_RECORDS[editingRecordIndex];
+      if (!record) { alert('记录不存在'); return; }
+      const oldStatus = record.status;
+      // 更新字段
+      record.faultDesc = faultDesc;
+      record.reporter = reporter;
+      record.phone = phone;
+      record.office = office;
+      record.reportDate = reportDate;
+      record.repairType = repairTypeValue;
+      record.status = status;
+      record.repairer = repairer;
+      record.action = action;
+      record.cost = cost;
+      record.completeDate = completeDate;
+      record.remark = remark;
+      // 添加历史记录
+      let historyAction = '信息更新';
+      if (oldStatus !== status) {
+        historyAction = '状态变更：' + oldStatus + ' → ' + status;
+      }
+      record.history.push({ time: nowStr, operator: CURRENT_USER, action: historyAction });
+      alert('✅ 维修记录更新成功！\nWX单号：' + record.wxCode + '\n' + historyAction + '\n更新时间：' + nowStr);
+    } else {
+      // 新增模式：创建新记录
+      const assetCode = selectedAssetId ? ASSETS.find(a => Number(a.id) === Number(selectedAssetId))?.code || '' : '';
+      const assetName = selectedAssetId ? ASSETS.find(a => Number(a.id) === Number(selectedAssetId))?.name || '' : '';
+      const newWxCode = 'WX-2026-' + String(nextWxId++).padStart(5,'0');
+      const newRecord = {
+        wxCode: newWxCode,
+        assetCode: assetCode,
+        assetName: assetName,
+        faultDesc: faultDesc,
+        reporter: reporter,
+        phone: phone,
+        office: office,
+        reportDate: reportDate,
+        repairType: repairTypeValue,
+        status: status,
+        repairer: repairer,
+        action: action,
+        cost: cost,
+        completeDate: completeDate,
+        remark: remark,
+        history: [
+          { time: nowStr, operator: CURRENT_USER, action: '创建维修记录' }
+        ]
+      };
+      MAINTAIN_RECORDS.push(newRecord);
+      // 更新 editingRecordIndex 指向新记录
+      for (let i = 0; i < MAINTAIN_RECORDS.length; i++) {
+        if (MAINTAIN_RECORDS[i].wxCode === newWxCode) {
+          editingRecordIndex = i;
+          break;
+        }
+      }
+      alert('✅ 维修记录创建成功！\nWX单号：' + newWxCode + '\n创建时间：' + nowStr);
+    }
+
+    // 如果选了硬件维修，同步更新资产配置
+    if (repairType.value === 'hardware' && selectedAssetId) {
+      const asset = ASSETS.find(a => Number(a.id) === Number(selectedAssetId));
+      if (asset) {
+        const fields = CONFIG_FIELDS[asset.category] || CONFIG_FIELDS['其他设备'];
+        if (!asset.config) asset.config = {};
+        fields.forEach(f => {
+          const input = document.getElementById('config_' + f.key);
+          if (input && input.value.trim()) {
+            asset.config[f.key] = input.value.trim();
+          }
+        });
+      }
+    }
+
+    // 刷新表格（动态渲染）
+    renderRepairTable();
+    closeDrawer();
+  }
+
+  // ===== 动态渲染维修记录表格 =====
+  function renderRepairTable() {
+    const tbody = document.getElementById('repairTableBody');
+    if (!tbody) return;
+    let html = '';
+    MAINTAIN_RECORDS.forEach(r => {
+      let statusClass = '';
+      if (r.status === '待处理') statusClass = 'tag-default';
+      else if (r.status === '维修中') statusClass = 'tag-warning';
+      else if (r.status === '已完成') statusClass = 'tag-success';
+      else if (r.status === '已关闭') statusClass = 'tag-danger';
+      const canEdit = (r.status === '待处理' || r.status === '维修中');
+      const viewBtn = '<button class="btn btn-default btn-sm" onclick="openDrawer(\'view\',\'' + r.wxCode + '\')">查看</button>';
+      const editBtn = canEdit ? '<button class="btn btn-default btn-sm" onclick="openDrawer(\'edit\',\'' + r.wxCode + '\')">编辑</button>' : '';
+      html += '<tr>'
+        + '<td style="color:var(--color-primary);cursor:pointer;">' + r.wxCode + '</td>'
+        + '<td>' + (r.assetName || '') + '</td>'
+        + '<td><span style="font-family:monospace;">' + (r.assetCode || '') + '</span></td>'
+        + '<td>' + (r.faultDesc || '') + '</td>'
+        + '<td>' + (r.reporter || '') + '</td>'
+        + '<td>' + (r.reportDate || '') + '</td>'
+        + '<td><span class="tag ' + statusClass + '">' + r.status + '</span></td>'
+        + '<td>' + viewBtn + editBtn + '</td>'
+        + '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // 点击遮罩关闭
+  document.getElementById('drawer').addEventListener('click', function(e) {
+    if (e.target === this) closeDrawer();
+  });
+
+  // 页面加载初始化
+  window.addEventListener('DOMContentLoaded', function() {
+    initRepairer();
+    renderRepairTable();
+  });
+</script>
+</body>
+</html>
+
