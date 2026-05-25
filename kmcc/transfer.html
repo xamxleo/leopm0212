@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资产流转 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .top-nav {
+    height: 48px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    color: #fff;
+    font-size: 14px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .top-nav .logo { font-size: 16px; font-weight: 600; margin-right: 40px; }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item {
+    padding: 0 16px; height: 48px; display: flex; align-items: center;
+    color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active {
+    color: #fff; border-bottom-color: #fff; background: rgba(255,255,255,0.1);
+  }
+
+  /* ===== 左侧菜单 ===== */
+  .side-menu {
+    position: fixed; top: 48px; left: 0; width: 200px; bottom: 0;
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 8px 0; overflow-y: auto; z-index: 90;
+  }
+  .side-menu .menu-group-title {
+    padding: 12px 16px 4px; font-size: 12px;
+    color: var(--color-text-secondary); font-weight: 500;
+  }
+  .side-menu .menu-item {
+    padding: 10px 16px 10px 24px; cursor: pointer;
+    color: var(--color-text-primary); font-size: 14px;
+    transition: all 0.15s; border-right: 3px solid transparent;
+  }
+  .side-menu .menu-item:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+  .side-menu .menu-item.active {
+    background: var(--color-primary-bg); color: var(--color-primary);
+    border-right-color: var(--color-primary); font-weight: 500;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main-content { margin-top: 48px; margin-left: 200px; padding: 24px; min-height: calc(100vh - 48px); }
+
+  /* ===== 面包屑 ===== */
+  .breadcrumb { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* ===== 页面标题区 ===== */
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 600; }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 32px; padding: 0 16px;
+    border: 1px solid transparent; border-radius: var(--radius-md);
+    font-size: 13px; cursor: pointer; transition: all 0.2s;
+    font-family: var(--font-family); white-space: nowrap; gap: 4px;
+  }
+  .btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default { background: var(--color-bg-surface); color: var(--color-text-primary); border-color: var(--color-border); }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-danger { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
+  .btn-danger:hover { background: #ff7875; }
+  .btn-sm { height: 28px; padding: 0 12px; font-size: 12px; }
+  .btn-link {
+    background: none; border: none; color: var(--color-primary);
+    padding: 0 8px; height: auto; font-size: 13px;
+    font-family: var(--font-family); cursor: pointer;
+  }
+
+  /* ===== 卡片 ===== */
+  .card { background: var(--color-bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px 24px; margin-bottom: 20px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* ===== 流转类型标签 ===== */
+  .flow-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .flow-tag.lingyong { background: #e6f7ff; color: #1890ff; }
+  .flow-tag.zhuanyi  { background: #f6ffed; color: #52c41a; }
+  .flow-tag.guihuan  { background: #fff7e6; color: #d46b08; }
+  .flow-tag.baofei   { background: #fff1f0; color: #ff4d4f; }
+
+  /* ===== 筛选栏 ===== */
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar select,
+  .filter-bar input {
+    height: 32px; padding: 0 10px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; color: var(--color-text-primary);
+    background: var(--color-bg-surface); font-family: var(--font-family);
+  }
+  .filter-bar select { cursor: pointer; }
+
+  /* ===== 表格 ===== */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th {
+    background: #fafafa; padding: 10px 12px; text-align: left;
+    font-weight: 500; color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .data-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-primary); vertical-align: top;
+  }
+  .data-table tbody tr:hover { background: var(--color-primary-bg); }
+
+  /* ===== 分页 ===== */
+  .pagination {
+    display: flex; justify-content: flex-end; align-items: center;
+    gap: 6px; margin-top: 16px; font-size: 13px; color: var(--color-text-secondary);
+  }
+  .pagination button {
+    height: 28px; min-width: 28px; padding: 0 8px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-bg-surface); cursor: pointer;
+    font-size: 13px; font-family: var(--font-family); color: var(--color-text-primary);
+  }
+  .pagination button:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .pagination button.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+  /* ===== 视图切换 ===== */
+  .view-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--color-border); }
+  .view-tab {
+    padding: 8px 20px; cursor: pointer; font-size: 14px;
+    color: var(--color-text-secondary); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s;
+  }
+  .view-tab:hover { color: var(--color-primary); }
+  .view-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 500; }
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  /* ===== 时间线 ===== */
+  .flow-timeline { position: relative; padding-left: 24px; }
+  .flow-timeline::before {
+    content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--color-border);
+  }
+  .flow-event { position: relative; padding-bottom: 20px; display: flex; gap: 16px; align-items: flex-start; }
+  .flow-event:last-child { padding-bottom: 0; }
+  .flow-dot {
+    position: absolute; left: -24px; top: 8px;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--color-primary); background: var(--color-bg-surface);
+    z-index: 1;
+  }
+  .flow-dot.lingyong { border-color: var(--color-primary); background: var(--color-primary); }
+  .flow-dot.zhuanyi  { border-color: var(--color-success); background: var(--color-success); }
+  .flow-dot.guihuan  { border-color: var(--color-warning); background: var(--color-warning); }
+  .flow-dot.baofei   { border-color: var(--color-danger);  background: var(--color-danger);  }
+  .flow-content { flex: 1; }
+  .flow-action { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .flow-meta { font-size: 12px; color: var(--color-text-secondary); }
+  .flow-card {
+    background: #fafafa; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: 12px 16px;
+    margin-top: 8px; font-size: 13px; line-height: 1.8;
+  }
+  .flow-card .label { color: var(--color-text-secondary); display: inline-block; width: 70px; }
+
+  /* ===== 弹窗 ===== */
+  .modal-mask {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-mask { display: none; }  /* 默认隐藏 */
+  .modal {
+    background: var(--color-bg-surface); border-radius: var(--radius-lg);
+    width: 560px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid var(--color-border);
+    font-size: 16px; font-weight: 600;
+  }
+  .modal-header .close-btn {
+    cursor: pointer; font-size: 18px; color: var(--color-text-secondary);
+    background: none; border: none; font-family: var(--font-family);
+  }
+  .modal-header .close-btn:hover { color: var(--color-text-primary); }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 12px;
+    padding: 16px 24px; border-top: 1px solid var(--color-border);
+  }
+
+  /* ===== 表单 ===== */
+  .form-item { margin-bottom: 18px; }
+  .form-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .form-label .required { color: var(--color-danger); margin-right: 4px; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; height: 36px; padding: 0 12px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 14px; color: var(--color-text-primary);
+    background: var(--color-bg-surface); font-family: var(--font-family);
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .form-textarea { height: 72px; padding: 8px 12px; resize: vertical; }
+  .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px; cursor: pointer;
+  }
+  .form-input[readonly] {
+    background: #f5f5f5; color: var(--color-text-secondary); cursor: not-allowed;
+  }
+  .form-hint { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+
+  /* ===== 资产搜索下拉 ===== */
+  .asset-search-wrap { position: relative; }
+  .asset-search-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--color-bg-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-height: 200px; overflow-y: auto; z-index: 10; display: none;
+  }
+  .asset-search-dropdown.show { display: block; }
+  .asset-search-item {
+    padding: 8px 12px; cursor: pointer; font-size: 13px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .asset-search-item:hover { background: var(--color-primary-bg); }
+  .asset-search-item .asset-code { font-family: monospace; color: var(--color-text-secondary); font-size: 12px; }
+  .asset-search-item .asset-status {
+    display: inline-block; padding: 0 6px; border-radius: 2px;
+    font-size: 11px; margin-left: 6px;
+  }
+  .asset-status.idle { background: #f5f5f5; color: var(--color-text-secondary); }
+  .asset-status.inuse { background: #f6ffed; color: var(--color-success); }
+
+  /* ===== 结果提示 ===== */
+  .result-tip {
+    padding: 12px 16px; border-radius: var(--radius-md);
+    font-size: 13px; margin-top: 16px; display: none;
+  }
+  .result-tip.success { background: #f6ffed; border: 1px solid #b7eb8f; color: var(--color-success); }
+  .result-tip.error  { background: #fff1f0; border: 1px solid #ffa39e; color: var(--color-danger); }
+
+  /* ===== 人员/部门搜索下拉 ===== */
+  .person-search-wrap { position: relative; }
+  .person-search-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); max-height: 240px;
+    overflow-y: auto; z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none;
+  }
+  .person-search-dropdown.show { display: block; }
+  .person-search-item {
+    padding: 9px 12px; cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.1s; font-size: 13px;
+  }
+  .person-search-item:last-child { border-bottom: none; }
+  .person-search-item:hover { background: var(--color-primary-bg); }
+  .person-search-item .person-name { font-weight: 500; color: var(--color-text-primary); }
+  .person-search-item .person-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 1px; }
+
+  .dept-search-wrap { position: relative; }
+  .dept-search-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); max-height: 200px;
+    overflow-y: auto; z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none;
+  }
+  .dept-search-dropdown.show { display: block; }
+  .dept-search-item {
+    padding: 8px 12px; cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.1s; font-size: 13px;
+  }
+  .dept-search-item:last-child { border-bottom: none; }
+  .dept-search-item:hover { background: var(--color-primary-bg); }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理</div>
+  <div class="nav-items">
+    <div class="nav-item">管理</div>
+    <div class="nav-item active">资产管理</div>
+    <div class="nav-item">媒资中心</div>
+    <div class="nav-item">数据中心</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item active" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>资产管理 / 资产流转
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">资产流转记录</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="openModal('lingyong')">📥 领用登记</button>
+      <button class="btn btn-default" onclick="openModal('zhuanyi')">↔ 转移登记</button>
+      <button class="btn btn-default" onclick="openModal('guihuan')">↩ 归还登记</button>
+      <button class="btn btn-danger"  onclick="openModal('baofei')">✕ 报废登记</button>
+    </div>
+  </div>
+
+  <!-- 视图切换 -->
+  <div class="view-tabs">
+    <div class="view-tab active" onclick="switchView(0)">📋 列表视图</div>
+    <div class="view-tab" onclick="switchView(1)">📊 按资产查看</div>
+  </div>
+
+  <!-- 筛选栏 -->
+  <div class="filter-bar">
+    <select><option>全部类型</option><option>领用</option><option>转移</option><option>归还</option><option>报废</option></select>
+    <select><option>全部状态</option><option>闲置</option><option>使用中</option><option>维修中</option><option>已报废</option></select>
+    <input type="date" value="2024-01-01" />
+    <span style="color:var(--color-text-secondary);">至</span>
+    <input type="date" value="2024-12-31" />
+    <button class="btn btn-default">查询</button>
+    <button class="btn btn-link">重置筛选</button>
+    <button class="btn btn-link" style="margin-left:auto;">📤 导出记录</button>
+  </div>
+
+  <!-- ===== 列表视图 ===== -->
+  <div class="view-panel active" id="listView">
+    <div class="card" style="padding:0;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>流转单号</th>
+            <th>资产名称</th>
+            <th>资产编码</th>
+            <th>流转类型</th>
+            <th>操作人</th>
+            <th>接收人 / 部门</th>
+            <th>操作日期</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--color-primary);cursor:pointer;">LX-2024-0089</td>
+            <td>台式电脑 Dell OptiPlex 7090</td>
+            <td><span style="font-family:monospace;">AC-2024-0156</span></td>
+            <td><span class="flow-tag lingyong">📥 领用</span></td>
+            <td>张三</td>
+            <td><strong>李四</strong><br><span style="font-size:12px;color:var(--color-text-secondary);">技术部</span></td>
+            <td>2024-12-10</td>
+            <td><span style="color:var(--color-success);">✅ 已完成</span></td>
+            <td><button class="btn btn-link btn-sm" onclick="switchView(1)">查看详情</button></td>
+          </tr>
+          <tr>
+            <td style="color:var(--color-primary);cursor:pointer;">ZY-2024-0045</td>
+            <td>笔记本电脑 ThinkPad X1</td>
+            <td><span style="font-family:monospace;">AC-2024-0089</span></td>
+            <td><span class="flow-tag zhuanyi">↔ 转移</span></td>
+            <td>李四</td>
+            <td><strong>王五</strong><br><span style="font-size:12px;color:var(--color-text-secondary);">采编部</span></td>
+            <td>2024-12-08</td>
+            <td><span style="color:var(--color-success);">✅ 已完成</span></td>
+            <td><button class="btn btn-link btn-sm" onclick="switchView(1)">查看详情</button></td>
+          </tr>
+          <tr>
+            <td style="color:var(--color-primary);cursor:pointer;">GH-2024-0023</td>
+            <td>台式电脑 组装机</td>
+            <td><span style="font-family:monospace;">AC-2024-0045</span></td>
+            <td><span class="flow-tag guihuan">↩ 归还</span></td>
+            <td>赵六</td>
+            <td><span style="font-size:12px;color:var(--color-text-secondary);">—（归还库房）</span></td>
+            <td>2024-12-05</td>
+            <td><span style="color:var(--color-success);">✅ 已完成</span></td>
+            <td><button class="btn btn-link btn-sm" onclick="switchView(1)">查看详情</button></td>
+          </tr>
+          <tr>
+            <td style="color:var(--color-primary);cursor:pointer;">BF-2024-0012</td>
+            <td>会议室投影仪</td>
+            <td><span style="font-family:monospace;">AC-2024-0312</span></td>
+            <td><span class="flow-tag baofei">✕ 报废</span></td>
+            <td>孙七</td>
+            <td>—</td>
+            <td>2024-11-28</td>
+            <td><span style="color:var(--color-text-secondary);">已归档</span></td>
+            <td><button class="btn btn-link btn-sm" onclick="switchView(1)">查看详情</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>共 156 条</span>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>…</button>
+        <button>16</button>
+        <button>›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 按资产查看（时间线）===== -->
+  <div class="view-panel" id="assetView">
+    <div class="card">
+      <div class="card-title">
+        📊 台式电脑 Dell OptiPlex 7090（AC-2024-0156）— 流转历史
+        <button class="btn btn-default btn-sm" onclick="switchView(0)">← 返回列表</button>
+      </div>
+      <div class="flow-timeline">
+        <!-- 归还 -->
+        <div class="flow-event">
+          <div class="flow-dot guihuan"></div>
+          <div class="flow-content">
+            <div class="flow-action">↩ 归还登记</div>
+            <div class="flow-meta">操作人：李四 · 2024-12-15 14:30</div>
+            <div class="flow-card">
+              <div><span class="label">归还人：</span>李四（技术部）</div>
+              <div><span class="label">归还至：</span>资产管理处（闲置库房）</div>
+              <div><span class="label">设备状态：</span>正常</div>
+              <div><span class="label">备注：</span>设备运行正常，归还至资产库房，状态变更为「闲置」</div>
+            </div>
+          </div>
+        </div>
+        <!-- 转移 -->
+        <div class="flow-event">
+          <div class="flow-dot zhuanyi"></div>
+          <div class="flow-content">
+            <div class="flow-action">↔ 转移登记</div>
+            <div class="flow-meta">操作人：张三 · 2024-12-10 09:15</div>
+            <div class="flow-card">
+              <div><span class="label">转移自：</span>张三（技术部）</div>
+              <div><span class="label">转移至：</span>李四（技术部）</div>
+              <div><span class="label">转移原因：</span>工作调整，设备随人转移</div>
+              <div><span class="label">审批记录：</span>线下已审批（审批单号：SP-2024-056）</div>
+            </div>
+          </div>
+        </div>
+        <!-- 领用 -->
+        <div class="flow-event">
+          <div class="flow-dot lingyong"></div>
+          <div class="flow-content">
+            <div class="flow-action">📥 领用登记</div>
+            <div class="flow-meta">操作人：张三 · 2024-03-01 10:00</div>
+            <div class="flow-card">
+              <div><span class="label">领用人：</span>张三（技术部）</div>
+              <div><span class="label">领用日期：</span>2024-03-01</div>
+              <div><span class="label">预计归还：</span>长期领用</div>
+              <div><span class="label">审批记录：</span>线下已审批（审批单号：SP-2024-012）</div>
+              <div><span class="label">说明：</span>资产状态由「闲置」变更为「使用中」，当前使用人：张三，所属部门：技术部</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- ===== 领用登记弹窗 ===== -->
+<!-- ======================================== -->
+<div class="modal-mask" id="modal-lingyong">
+  <div class="modal">
+    <div class="modal-header">
+      📥 领用登记
+      <button class="close-btn" onclick="closeModal('lingyong')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>选择资产</label>
+        <div class="asset-search-wrap">
+          <input class="form-input" id="lyAssetInput" placeholder="输入资产编码或名称搜索（仅显示「闲置」状态资产）" oninput="filterAssets('lyAssetInput','lyAssetDropdown')" />
+          <div class="asset-search-dropdown" id="lyAssetDropdown">
+            <div class="asset-search-item" onclick="selectAsset('lyAssetInput','AC-2024-0201｜台式电脑 Dell OptiPlex 7090','lyAssetDropdown')">
+              <div>AC-2024-0201 — 台式电脑 Dell OptiPlex 7090</div>
+              <div><span class="asset-code">闲置</span><span class="asset-status idle">⚪ 闲置</span></div>
+            </div>
+            <div class="asset-search-item" onclick="selectAsset('lyAssetInput','AC-2024-0188｜笔记本电脑 ThinkPad X1 Carbon','lyAssetDropdown')">
+              <div>AC-2024-0188 — 笔记本电脑 ThinkPad X1 Carbon</div>
+              <div><span class="asset-code">闲置</span><span class="asset-status idle">⚪ 闲置</span></div>
+            </div>
+            <div class="asset-search-item" onclick="selectAsset('lyAssetInput','AC-2024-0315｜打印机 HP LaserJet Pro','lyAssetDropdown')">
+              <div>AC-2024-0315 — 打印机 HP LaserJet Pro</div>
+              <div><span class="asset-code">闲置</span><span class="asset-status idle">⚪ 闲置</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-hint">💡 仅「闲置」状态的资产可被领用；也可扫描资产二维码快速选定</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>领用部门</label>
+        <div class="dept-search-wrap" style="position:relative;">
+          <input class="form-input" id="lyDeptInput" placeholder="搜索并选择部门..." oninput="filterDepts('lyDeptInput','lyDeptDropdown')" onfocus="showDeptList('lyDeptDropdown')" />
+          <div class="dept-search-dropdown" id="lyDeptDropdown" style="display:none;"></div>
+        </div>
+        <div id="selectedLyDept" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+          ✓ <span id="selectedLyDeptName"></span>
+          <span onclick="clearLyDept()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>领用人</label>
+        <div class="person-search-wrap" style="position:relative;">
+          <input class="form-input" id="lyPersonInput" placeholder="搜索并选择领用人..." oninput="filterPersons('lyPersonInput','lyPersonDropdown')" onfocus="showPersonList('lyPersonDropdown')" />
+          <div class="person-search-dropdown" id="lyPersonDropdown" style="display:none;"></div>
+        </div>
+        <div id="selectedLyPerson" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+          ✓ <span id="selectedLyPersonName"></span>
+          <span onclick="clearLyPerson()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+        </div>
+        <div class="form-hint">💡 选择领用人后，领用部门将自动填充</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>领用日期</label>
+        <input class="form-input" type="date" id="lyDateInput" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">预计归还</label>
+        <select class="form-select">
+          <option value="">请选择</option>
+          <option>长期领用（不归还）</option>
+          <option>1个月</option>
+          <option>3个月</option>
+          <option>6个月</option>
+          <option>1年</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" placeholder="可输入领用相关说明"></textarea>
+      </div>
+      <div class="result-tip success" id="lySuccess">
+        ✅ 领用登记成功！资产状态已变更为「使用中」，当前使用人和所属部门已更新。
+      </div>
+      <div class="result-tip error" id="lyError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('lingyong')">取消</button>
+      <button class="btn btn-primary" onclick="submitLingyong()">确认领用</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- ===== 转移登记弹窗 ===== -->
+<!-- ======================================== -->
+<div class="modal-mask" id="modal-zhuanyi">
+  <div class="modal">
+    <div class="modal-header">
+      ↔ 转移登记
+      <button class="close-btn" onclick="closeModal('zhuanyi')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>选择资产</label>
+        <div class="asset-search-wrap">
+          <input class="form-input" id="zyAssetInput" placeholder="输入资产编码或名称搜索（仅显示「使用中」状态资产）" oninput="filterAssets('zyAssetInput','zyAssetDropdown')" />
+          <div class="asset-search-dropdown" id="zyAssetDropdown">
+            <div class="asset-search-item" onclick="selectAsset('zyAssetInput','AC-2024-0156｜台式电脑 Dell OptiPlex 7090｜张三（技术部）','zyAssetDropdown')">
+              <div>AC-2024-0156 — 台式电脑 Dell OptiPlex 7090</div>
+              <div><span class="asset-code">使用中</span><span class="asset-status inuse">🟢 使用中</span> <span style="font-size:12px;color:var(--color-text-secondary);">当前：张三（技术部）</span></div>
+            </div>
+            <div class="asset-search-item" onclick="selectAsset('zyAssetInput','AC-2024-0089｜笔记本电脑 ThinkPad X1 Carbon｜李四（技术部）','zyAssetDropdown')">
+              <div>AC-2024-0089 — 笔记本电脑 ThinkPad X1 Carbon</div>
+              <div><span class="asset-code">使用中</span><span class="asset-status inuse">🟢 使用中</span> <span style="font-size:12px;color:var(--color-text-secondary);">当前：李四（技术部）</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-hint">💡 仅「使用中」状态的资产可被转移</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">当前使用人 / 部门</label>
+        <input class="form-input" value="张三（技术部）" readonly />
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>转移至（部门）</label>
+        <div class="dept-search-wrap" style="position:relative;">
+          <input class="form-input" id="zyToDeptInput" placeholder="搜索并选择部门..." oninput="filterDepts('zyToDeptInput','zyToDeptDropdown')" onfocus="showDeptList('zyToDeptDropdown')" />
+          <div class="dept-search-dropdown" id="zyToDeptDropdown" style="display:none;"></div>
+        </div>
+        <div id="selectedZyToDept" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+          ✓ <span id="selectedZyToDeptName"></span>
+          <span onclick="clearZyToDept()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>转移至（使用人）</label>
+        <div class="person-search-wrap" style="position:relative;">
+          <input class="form-input" id="zyToPersonInput" placeholder="搜索并选择接收人..." oninput="filterPersons('zyToPersonInput','zyToPersonDropdown')" onfocus="showPersonList('zyToPersonDropdown')" />
+          <div class="person-search-dropdown" id="zyToPersonDropdown" style="display:none;"></div>
+        </div>
+        <div id="selectedZyToPerson" style="display:none;margin-top:6px;font-size:13px;color:var(--color-primary);">
+          ✓ <span id="selectedZyToPersonName"></span>
+          <span onclick="clearZyToPerson()" style="cursor:pointer;color:var(--color-text-placeholder);margin-left:6px;">✕</span>
+        </div>
+        <div class="form-hint">💡 选择接收人后，接收部门将自动填充</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">转移原因</label>
+        <input class="form-input" placeholder="如：工作调整、部门调动、项目变更" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" placeholder="可输入转移相关说明"></textarea>
+      </div>
+      <div class="result-tip success" id="zySuccess">
+        ✅ 转移登记成功！资产当前使用人及所属部门已更新。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('zhuanyi')">取消</button>
+      <button class="btn btn-primary" onclick="submitZhuanyi()">确认转移</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- ===== 归还登记弹窗 ===== -->
+<!-- ======================================== -->
+<div class="modal-mask" id="modal-guihuan">
+  <div class="modal">
+    <div class="modal-header">
+      ↩ 归还登记
+      <button class="close-btn" onclick="closeModal('guihuan')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>选择资产</label>
+        <div class="asset-search-wrap">
+          <input class="form-input" id="ghAssetInput" placeholder="输入资产编码或名称搜索（仅显示「使用中」状态资产）" oninput="filterAssets('ghAssetInput','ghAssetDropdown')" />
+          <div class="asset-search-dropdown" id="ghAssetDropdown">
+            <div class="asset-search-item" onclick="selectAsset('ghAssetInput','AC-2024-0156｜台式电脑 Dell OptiPlex 7090｜李四（技术部）','ghAssetDropdown')">
+              <div>AC-2024-0156 — 台式电脑 Dell OptiPlex 7090</div>
+              <div><span class="asset-code">使用中</span><span class="asset-status inuse">🟢 使用中</span> <span style="font-size:12px;color:var(--color-text-secondary);">当前：李四（技术部）</span></div>
+            </div>
+            <div class="asset-search-item" onclick="selectAsset('ghAssetInput','AC-2024-0089｜笔记本电脑 ThinkPad X1 Carbon｜王五（采编部）','ghAssetDropdown')">
+              <div>AC-2024-0089 — 笔记本电脑 ThinkPad X1 Carbon</div>
+              <div><span class="asset-code">使用中</span><span class="asset-status inuse">🟢 使用中</span> <span style="font-size:12px;color:var(--color-text-secondary);">当前：王五（采编部）</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-hint">💡 仅「使用中」状态的资产可被归还</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">当前使用人 / 部门</label>
+        <input class="form-input" value="李四（技术部）" readonly />
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>归还至</label>
+        <select class="form-select">
+          <option value="">请选择归还位置</option>
+          <option>资产管理处（闲置库房）</option>
+          <option>技术部设备间</option>
+          <option>采编部设备间</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>设备状态</label>
+        <select class="form-select">
+          <option value="">请选择设备状态</option>
+          <option>正常（可继续领用）</option>
+          <option>故障（需维修）</option>
+          <option>损坏（无法修复）</option>
+        </select>
+        <div class="form-hint">⚠️ 若选择"故障"或"损坏"，归还后资产状态将变更为「维修中」，需另行登记维修记录</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">归还日期</label>
+        <input class="form-input" type="date" id="ghDateInput" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" placeholder="可输入归还相关说明"></textarea>
+      </div>
+      <div class="result-tip success" id="ghSuccess">
+        ✅ 归还登记成功！资产状态已变更为「闲置」，当前使用人和所属部门已清空。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('guihuan')">取消</button>
+      <button class="btn btn-primary" onclick="submitGuihuan()">确认归还</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- ===== 报废登记弹窗 ===== -->
+<!-- ======================================== -->
+<div class="modal-mask" id="modal-baofei">
+  <div class="modal">
+    <div class="modal-header">
+      ✕ 报废登记
+      <button class="close-btn" onclick="closeModal('baofei')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>选择资产</label>
+        <div class="asset-search-wrap">
+          <input class="form-input" id="bfAssetInput" placeholder="输入资产编码或名称搜索" oninput="filterAssets('bfAssetInput','bfAssetDropdown')" />
+          <div class="asset-search-dropdown" id="bfAssetDropdown">
+            <div class="asset-search-item" onclick="selectAsset('bfAssetInput','AC-2024-0312｜会议室投影仪','bfAssetDropdown')">
+              <div>AC-2024-0312 — 会议室投影仪</div>
+              <div><span class="asset-code">使用中</span><span class="asset-status inuse">🟢 使用中</span></div>
+            </div>
+            <div class="asset-search-item" onclick="selectAsset('bfAssetInput','AC-2024-0045｜台式电脑 组装机','bfAssetDropdown')">
+              <div>AC-2024-0045 — 台式电脑 组装机</div>
+              <div><span class="asset-code">闲置</span><span class="asset-status idle">⚪ 闲置</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-hint">💡 报废后资产状态变更为「已报废」，不再参与领用/流转</div>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>报废原因</label>
+        <select class="form-select">
+          <option value="">请选择报废原因</option>
+          <option>达到使用年限，正常报废</option>
+          <option>设备损坏，无法修复</option>
+          <option>技术淘汰，不再适用</option>
+          <option>其他</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>报废处理方式</label>
+        <select class="form-select">
+          <option value="">请选择</option>
+          <option>变卖处置</option>
+          <option>报废回收</option>
+          <option>捐赠</option>
+          <option>其他</option>
+        </select>
+      </div>
+        <textarea class="form-textarea" placeholder="可输入报废相关说明"></textarea>
+      </div>
+      <div class="result-tip success" id="bfSuccess">
+        ✅ 报废登记成功！资产状态已变更为「已报废」，流转记录已归档。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('baofei')">取消</button>
+      <button class="btn btn-danger" onclick="submitBaofei()">确认报废</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 视图切换 =====
+  function switchView(idx) {
+    document.querySelectorAll('.view-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+    document.querySelectorAll('.view-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+  }
+
+  // ===== 弹窗控制 =====
+  function openModal(type) {
+    document.getElementById('modal-' + type).style.display = 'flex';
+  }
+  function closeModal(type) {
+    document.getElementById('modal-' + type).style.display = 'none';
+    // 隐藏所有结果提示
+    ['lySuccess','lyError','zySuccess','ghSuccess','bfSuccess'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.display = 'none';
+    });
+  }
+
+  // ===== 资产搜索下拉 =====
+  function filterAssets(inputId, dropdownId) {
+    const val = document.getElementById(inputId).value.trim();
+    const dd = document.getElementById(dropdownId);
+    if(val.length > 0) {
+      dd.classList.add('show');
+    } else {
+      dd.classList.remove('show');
+    }
+  }
+  function selectAsset(inputId, text, dropdownId) {
+    document.getElementById(inputId).value = text;
+    document.getElementById(dropdownId).classList.remove('show');
+  }
+
+  // ===== 领用登记提交 =====
+  function submitLingyong() {
+    const tip = document.getElementById('lySuccess');
+    tip.style.display = 'block';
+    // 模拟：2秒后自动关闭
+    setTimeout(() => closeModal('lingyong'), 2000);
+  }
+
+  // ===== 转移登记提交 =====
+  function submitZhuanyi() {
+    const tip = document.getElementById('zySuccess');
+    tip.style.display = 'block';
+    setTimeout(() => closeModal('zhuanyi'), 2000);
+  }
+
+  // ===== 归还登记提交 =====
+  function submitGuihuan() {
+    const tip = document.getElementById('ghSuccess');
+    tip.style.display = 'block';
+    setTimeout(() => closeModal('guihuan'), 2000);
+  }
+
+  // ===== 报废登记提交 =====
+  function submitBaofei() {
+    const tip = document.getElementById('bfSuccess');
+    tip.style.display = 'block';
+    setTimeout(() => closeModal('baofei'), 2000);
+  }
+
+  // 点击遮罩关闭弹窗
+  document.querySelectorAll('.modal-mask').forEach(mask => {
+    mask.addEventListener('click', e => {
+      if(e.target === mask) {
+        mask.style.display = 'none';
+      }
+    });
+  });
+
+  /* ===== 组织架构数据（示意，实际从系统读取）===== */
+  const USER_ORG = [
+    { id:1, name:'张三', dept:'技术部' },
+    { id:2, name:'李四', dept:'技术部' },
+    { id:3, name:'王五', dept:'采编部' },
+    { id:4, name:'赵六', dept:'行政管理部' },
+    { id:5, name:'孙七', dept:'采编部' },
+    { id:6, name:'周八', dept:'技术部' },
+    { id:7, name:'吴九', dept:'财务部' },
+    { id:8, name:'郑十', dept:'行政管理部' },
+  ];
+  const DEPTS = ['技术部','采编部','行政管理部','财务部'];
+
+  /* ===== 领用登记：部门搜索 ===== */
+  function filterDepts(inputId, dropdownId) {
+    const kw = document.getElementById(inputId).value.trim().toLowerCase();
+    const dd = document.getElementById(dropdownId);
+    if(!kw) { dd.classList.remove('show'); return; }
+    const filtered = DEPTS.filter(d => d.indexOf(kw) !== -1);
+    if(!filtered.length) {
+      dd.innerHTML = '<div class="dept-search-item">未找到匹配的部门</div>';
+      dd.classList.add('show');
+      return;
+    }
+    dd.innerHTML = filtered.map(d =>
+      '<div class="dept-search-item" onclick="selectDept(\'' + inputId + '\',\'' + d + '\',\'' + dropdownId + '\')">' + d + '</div>'
+    ).join('');
+    dd.classList.add('show');
+  }
+  function showDeptList(dropdownId) {
+    const dd = document.getElementById(dropdownId);
+    dd.innerHTML = DEPTS.map(d =>
+      '<div class="dept-search-item" onclick="selectDept(\'' + document.getElementById(dropdownId).previousElementSibling.id + '\',\'' + d + '\',\'' + dropdownId + '\')">' + d + '</div>'
+    ).join('');
+    dd.classList.add('show');
+  }
+  function selectDept(inputId, dept, dropdownId) {
+    document.getElementById(inputId).value = dept;
+    document.getElementById(dropdownId).classList.remove('show');
+  }
+
+  /* ===== 领用登记：人员搜索 ===== */
+  function filterPersons(inputId, dropdownId) {
+    const kw = document.getElementById(inputId).value.trim().toLowerCase();
+    const dd = document.getElementById(dropdownId);
+    if(!kw) { dd.classList.remove('show'); return; }
+    const filtered = USER_ORG.filter(u => u.name.toLowerCase().indexOf(kw) !== -1 || u.dept.indexOf(kw) !== -1);
+    if(!filtered.length) {
+      dd.innerHTML = '<div class="person-search-item">未找到匹配的人员</div>';
+      dd.classList.add('show');
+      return;
+    }
+    dd.innerHTML = filtered.map(u =>
+      '<div class="person-search-item" onclick="selectPerson(\'' + inputId + '\',' + u.id + ',\'' + u.name + '\',\'' + u.dept + '\',\'' + dropdownId + '\')"><span class="person-name">' + u.name + '</span> <span class="person-meta">' + u.dept + '</span></div>'
+    ).join('');
+    dd.classList.add('show');
+  }
+  function showPersonList(dropdownId) {
+    const dd = document.getElementById(dropdownId);
+    dd.innerHTML = USER_ORG.map(u =>
+      '<div class="person-search-item" onclick="selectPerson(\'' + document.getElementById(dropdownId).previousElementSibling.id + '\',' + u.id + ',\'' + u.name + '\',\'' + u.dept + '\',\'' + dropdownId + '\')"><span class="person-name">' + u.name + '</span> <span class="person-meta">' + u.dept + '</span></div>'
+    ).join('');
+    dd.classList.add('show');
+  }
+  function selectPerson(inputId, id, name, dept, dropdownId) {
+    document.getElementById(inputId).value = name + '（' + dept + '）';
+    document.getElementById(dropdownId).classList.remove('show');
+    // 自动填充对应部门（根据 inputId 推导部门输入框 ID）
+    var deptInputId = inputId.replace('PersonInput', 'DeptInput');
+    var deptInput = document.getElementById(deptInputId);
+    if(deptInput) deptInput.value = dept;
+  }
+
+  /* ===== 清空搜索选择 ===== */
+  function clearLyDept() {
+    document.getElementById('lyDeptInput').value = '';
+    document.getElementById('selectedLyDept').style.display = 'none';
+  }
+  function clearLyPerson() {
+    document.getElementById('lyPersonInput').value = '';
+    document.getElementById('selectedLyPerson').style.display = 'none';
+  }
+  function clearZyToDept() {
+    document.getElementById('zyToDeptInput').value = '';
+    document.getElementById('selectedZyToDept').style.display = 'none';
+  }
+  function clearZyToPerson() {
+    document.getElementById('zyToPersonInput').value = '';
+    document.getElementById('selectedZyToPerson').style.display = 'none';
+  }
+
+  /* ===== 点击页面空白区域，关闭所有搜索下拉 ===== */
+  document.addEventListener('click', function(e) {
+    document.querySelectorAll('.person-search-dropdown.show, .dept-search-dropdown.show, .asset-search-dropdown.show').forEach(function(dd) {
+      if(!dd.contains(e.target)) dd.classList.remove('show');
+    });
+  });
+
+  /* ===== 归还登记：默认日期 ===== */
+  window.addEventListener('DOMContentLoaded', function() {
+    var d = new Date(), y = d.getFullYear(), m = d.getMonth()+1, dd = d.getDate();
+    if(m < 10) m = '0' + m;
+    if(dd < 10) dd = '0' + dd;
+    var today = y + '-' + m + '-' + dd;
+    var lyDate = document.getElementById('lyDateInput');
+    if(lyDate) lyDate.value = today;
+    var ghDate = document.getElementById('ghDateInput');
+    if(ghDate) ghDate.value = today;
+  });
+</script>
+
+</body>
+</html>
