@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>自动化 - 广播AI内容生产平台</title>
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; }
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
+
+    /* 顶部导航栏 */
+    .topbar {
+      height: 56px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex; align-items: center; padding: 0 24px; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0;
+    }
+    .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-right: 40px; white-space: nowrap; }
+    .topbar .logo span { color: #00d4ff; }
+    .top-menu { display: flex; gap: 4px; }
+    .top-menu-item {
+      padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+      color: rgba(255,255,255,0.7); transition: all 0.2s; white-space: nowrap;
+      text-decoration: none; display: inline-block;
+    }
+    .top-menu-item:hover { background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; }
+    .top-menu-item.active { background: rgba(0,212,255,0.2); color: #00d4ff; }
+    .topbar .right-area { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .topbar .notification { position: relative; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+    .topbar .notification .badge {
+      position: absolute; top: -6px; right: -8px; background: #ff4d4f; color: #fff;
+      font-size: 10px; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center;
+    }
+    .topbar .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00d4ff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+    /* 主体布局 */
+    .main-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* 左侧菜单 */
+    .sidebar {
+      width: 220px; min-width: 220px; background: #fff; border-right: 1px solid #e8e8e8;
+      display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar-group { margin-bottom: 8px; }
+    .sidebar-group-title {
+      padding: 16px 16px 8px; font-size: 11px; color: #999; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sidebar-item {
+      display: block; padding: 10px 16px 10px 20px; font-size: 13px; color: #666;
+      cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover { background: #f5f5f5; color: #333; text-decoration: none; }
+    .sidebar-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+
+    /* 主内容区 */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content-header {
+      padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .content-header h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+    .content-header .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .btn:hover { border-color: #1890ff; color: #1890ff; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-success:hover { background: #73d13d; }
+    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-danger:hover { background: #ff7875; }
+
+    /* 筛选栏 */
+    .filter-bar {
+      padding: 12px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-bar .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .filter-bar select {
+      padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; background: #fff; cursor: pointer;
+    }
+    .filter-bar select:focus { border-color: #1890ff; }
+    .filter-bar .search-input {
+      flex: 1; min-width: 180px; padding: 6px 12px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; max-width: 280px;
+    }
+    .filter-bar .search-input:focus { border-color: #1890ff; }
+
+    /* 自动化列表 */
+    .auto-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .auto-card {
+      background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;
+      transition: all 0.2s;
+    }
+    .auto-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #91d5ff; }
+    .auto-card.disabled { opacity: 0.55; border-style: dashed; }
+    .auto-card .ac-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .auto-card .ac-name { font-size: 15px; font-weight: 500; color: #1a1a2e; flex: 1; }
+    .auto-card .ac-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 12px; }
+    .ac-status.enabled { background: #f6ffed; color: #52c41a; }
+    .ac-status.disabled { background: #f5f5f5; color: #999; }
+    .auto-card .ac-rules { font-size: 12px; color: #666; line-height: 1.8; margin-bottom: 10px; }
+    .auto-card .ac-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .auto-card .ac-meta { font-size: 12px; color: #999; display: flex; gap: 16px; margin-bottom: 10px; }
+    .auto-card .ac-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* 开关 */
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .4s; border-radius: 22px;
+    }
+    .switch .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #1890ff; }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-text { font-size: 15px; margin-bottom: 8px; }
+    .empty-hint { font-size: 12px; }
+
+    /* 提示弹窗 */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 12px; width: 520px; max-height: 80vh;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.2); overflow-y: auto;
+    }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+    .close-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: #999; display: flex; align-items: center; justify-content: center; }
+    .close-btn:hover { background: #f5f5f5; color: #333; }
+    .modal-body { padding: 20px; font-size: 13px; color: #666; line-height: 1.8; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* 状态筛选按钮组 */
+    .status-filter { display: flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; }
+    .status-filter .sf-btn {
+      padding: 5px 14px; font-size: 13px; cursor: pointer; border: none; background: #fff;
+      color: #666; transition: all 0.2s; border-right: 1px solid #d9d9d9;
+    }
+    .status-filter .sf-btn:last-child { border-right: none; }
+    .status-filter .sf-btn:hover { background: #f5f5f5; color: #333; }
+    .status-filter .sf-btn.active { background: #1890ff; color: #fff; }
+
+    /* 新增任务弹窗 */
+    .auto-form { display: flex; flex-direction: column; gap: 14px; }
+    .auto-field { display: flex; flex-direction: column; gap: 5px; }
+    .auto-field label { font-size: 13px; font-weight: 500; color: #333; }
+    .auto-field label .required { color: #ff4d4f; margin-left: 2px; }
+    .auto-field input[type="text"],
+    .auto-field select,
+    .auto-field textarea {
+      padding: 7px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .auto-field input[type="text"]:focus,
+    .auto-field select:focus,
+    .auto-field textarea:focus { border-color: #1890ff; }
+    .auto-field textarea { resize: vertical; min-height: 50px; }
+    .auto-field .hint { font-size: 11px; color: #999; }
+    .rule-checkboxes { display: flex; flex-direction: column; gap: 6px; }
+    .rule-checkboxes label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; }
+    .rule-checkboxes input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+
+    /* 底部系统日志 */
+    .sys-footer { background: #1a1a2e; color: #aaa; font-size: 11px; padding: 6px 24px; display: flex; gap: 24px; overflow-x: auto; white-space: nowrap; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="logo"><span>AI</span>广播内容生产平台</div>
+  <div class="top-menu">
+    <a class="top-menu-item" href="collect.html">内容生产</a>
+    <a class="top-menu-item active" href="automation.html">自动化</a>
+    <a class="top-menu-item" href="system.html">系统管理</a>
+  </div>
+  <div class="right-area">
+    <div class="notification" onclick="customAlert('暂无新通知')">通知<span class="badge">3</span></div>
+    <div class="user-info"><div class="avatar">王</div><span style="font-size:13px">王总监</span></div>
+  </div>
+</div>
+
+<!-- 主体布局 -->
+<div class="main-body">
+
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">自动化</div>
+      <a class="sidebar-item active" href="automation.html">任务管理</a>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main-content">
+
+    <!-- 内容头部 -->
+    <div class="content-header">
+      <h2>自动化任务管理</h2>
+      <div class="header-right">
+        <button class="btn" onclick="refreshList()">刷新</button>
+        <button class="btn btn-primary" onclick="addTask()">新增任务</button>
+      </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <span class="filter-label">状态</span>
+      <div class="status-filter" id="filter-status">
+        <button class="sf-btn active" data-value="all" onclick="setAutoStatusFilter('all', this)">全部</button>
+        <button class="sf-btn" data-value="enabled" onclick="setAutoStatusFilter('enabled', this)">已启用</button>
+        <button class="sf-btn" data-value="disabled" onclick="setAutoStatusFilter('disabled', this)">已禁用</button>
+      </div>
+      <span class="filter-label">任务搜索</span>
+      <input type="text" class="search-input" id="filter-name" placeholder="输入任务名称..." oninput="applyAutoFilter()">
+    </div>
+
+    <!-- 自动化列表 -->
+    <div class="auto-list" id="auto-list">
+      <!-- 空状态（默认显示，有数据时隐藏） -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-text">暂无自动化任务</div>
+        <div class="empty-hint">点击"新增任务"按钮创建自动化任务。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 新增任务弹窗 -->
+<div class="modal-overlay" id="add-task-modal">
+  <div class="modal" style="width:540px">
+    <div class="modal-header">
+      <h3>新增自动化任务</h3>
+      <button class="close-btn" onclick="closeAddTaskModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="auto-form">
+        <div class="auto-field">
+          <label>任务名称 <span class="required">*</span></label>
+          <input type="text" id="task-name" placeholder="请输入任务名称">
+        </div>
+        <div class="auto-field">
+          <label>执行频率 <span class="required">*</span></label>
+          <select id="task-frequency" onchange="onTaskFreqChange()">
+            <option value="">请选择</option>
+            <option value="周期执行">周期执行</option>
+            <option value="间隔执行">间隔执行</option>
+            <option value="单次执行">单次执行</option>
+          </select>
+        </div>
+        <div class="auto-field" id="task-interval-field">
+          <label>执行间隔 <span class="required">*</span></label>
+          <select id="task-interval">
+            <option value="">请选择</option>
+            <option value="每日 08:00">每日 08:00</option>
+            <option value="每6小时">每6小时</option>
+            <option value="每12小时">每12小时</option>
+            <option value="每周一 09:00">每周一 09:00</option>
+            <option value="custom">自定义...</option>
+          </select>
+          <input type="text" id="task-interval-custom" placeholder="输入自定义间隔" style="display:none;margin-top:6px;">
+        </div>
+        <div class="auto-field">
+          <label>执行规则 <span class="required">*</span></label>
+          <div class="rule-checkboxes">
+            <label><input type="checkbox" value="自动编校"> 自动编校</label>
+            <label><input type="checkbox" value="自动确认"> 自动确认</label>
+            <label><input type="checkbox" value="自动技审"> 自动技审</label>
+            <label><input type="checkbox" value="自动通过"> 自动通过</label>
+            <label><input type="checkbox" value="自动生成音频"> 自动生成音频</label>
+            <label><input type="checkbox" value="自动提交播出单"> 自动提交播出单</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddTaskModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmAddTask()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 底部系统日志 -->
+<div class="sys-footer">
+  <span>系统日志：</span>
+  <span><span style="color:#52c41a">[08:00]</span> 定时采集启动（央级媒体）</span>
+  <span><span style="color:#52c41a">[08:05]</span> 采集成功：215 条入库</span>
+  <span><span style="color:#fa8c16">[10:30]</span> 警告：商业媒体连接限流</span>
+  <span><span style="color:#1890ff">[10:35]</span> 热点识别完成：47 条热点</span>
+</div>
+
+<script>
+// ========== 通用自定义弹窗（替代 confirm/alert，兼容内置浏览器） ==========
+function customConfirm(message, onConfirm, onCancel) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<div class="modal-header-top">' +
+          '<h3>确认</h3>' +
+          '<button class="close-btn" onclick="this.closest(\'.modal-overlay\').remove()">X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn" id="cc-cancel">取消</button>' +
+        '<button class="btn btn-primary" id="cc-confirm">确认</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('cc-cancel').onclick = function() {
+    overlay.remove();
+    if (typeof onCancel === 'function') onCancel();
+  };
+  document.getElementById('cc-confirm').onclick = function() {
+    overlay.remove();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+function customAlert(message, onOk) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<div class="modal-header-top">' +
+          '<h3>提示</h3>' +
+          '<button class="close-btn" onclick="this.closest(\'.modal-overlay\').remove()">X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn btn-primary" id="ca-ok">确定</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('ca-ok').onclick = function() {
+    overlay.remove();
+    if (typeof onOk === 'function') onOk();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+// 全局状态
+let autoTasks = [];
+
+// 页面初始化
+(function() {
+  const page = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.top-menu-item').forEach(t => {
+    t.classList.remove('active');
+    if(t.getAttribute('href') === page) t.classList.add('active');
+  });
+  loadAutoTasks();
+  applyAutoFilter();
+})();
+
+// 加载自动化任务
+function loadAutoTasks() {
+  autoTasks = JSON.parse(localStorage.getItem('auto_tasks') || '[]');
+  // 如果没有数据，创建一些示例数据
+  if (autoTasks.length === 0) {
+    autoTasks = [
+      {
+        id: 'auto-001',
+        name: '自动编校 + 自动确认',
+        enabled: true,
+        frequency: '周期执行',
+        interval: '每日 08:00',
+        rules: ['自动编校', '自动确认'],
+        createdAt: '2026-05-20T08:00'
+      },
+      {
+        id: 'auto-002',
+        name: '自动技审 + 自动通过',
+        enabled: true,
+        frequency: '周期执行',
+        interval: '每6小时',
+        rules: ['自动技审', '自动通过'],
+        createdAt: '2026-05-20T10:00'
+      },
+      {
+        id: 'auto-003',
+        name: '自动生成音频 + 自动提交',
+        enabled: false,
+        frequency: '单次执行',
+        interval: '2026-05-22 10:00',
+        rules: ['自动生成音频', '自动提交播出单'],
+        createdAt: '2026-05-21T09:00'
+      }
+    ];
+    localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  }
+  renderAutoTasks();
+}
+
+// 渲染自动化任务列表
+function renderAutoTasks() {
+  const list = document.getElementById('auto-list');
+  const emptyState = document.getElementById('empty-state');
+  const filtered = getFilteredAutoTasks();
+  
+  if (filtered.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  } else {
+    emptyState.style.display = 'none';
+  }
+  
+  // 清除现有卡片（保留空状态）
+  list.querySelectorAll('.auto-card').forEach(card => card.remove());
+  
+  filtered.forEach(task => {
+    const card = createAutoCard(task);
+    list.appendChild(card);
+  });
+}
+
+// 设置状态筛选
+function setAutoStatusFilter(value, btn) {
+  document.querySelectorAll('#filter-status .sf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyAutoFilter();
+}
+
+// 获取筛选后的任务
+function getFilteredAutoTasks() {
+  const activeBtn = document.querySelector('#filter-status .sf-btn.active');
+  const status = activeBtn ? activeBtn.dataset.value : 'all';
+  const name = document.getElementById('filter-name').value.trim().toLowerCase();
+  
+  return autoTasks.filter(task => {
+    let show = true;
+    if (status === 'enabled' && !task.enabled) show = false;
+    if (status === 'disabled' && task.enabled) show = false;
+    if (name && task.name.toLowerCase().indexOf(name) === -1) show = false;
+    return show;
+  });
+}
+
+// 应用筛选
+function applyAutoFilter() {
+  renderAutoTasks();
+}
+
+// 创建自动化任务卡片
+function createAutoCard(task) {
+  const card = document.createElement('div');
+  card.className = 'auto-card' + (task.enabled ? '' : ' disabled');
+  card.dataset.id = task.id;
+  
+  const statusText = task.enabled ? '已启用' : '已禁用';
+  const statusClass = task.enabled ? 'enabled' : 'disabled';
+  
+  let rulesHtml = '';
+  (task.rules || []).forEach(rule => {
+    rulesHtml += '<div class="ac-rule-item"><span style="color:#52c41a">✓</span> ' + escapeHtml(rule) + '</div>';
+  });
+  
+  card.innerHTML =
+    '<div class="ac-header">' +
+      '<div class="ac-name">' + escapeHtml(task.name) + '</div>' +
+      '<div class="ac-status ' + statusClass + '">' + statusText + '</div>' +
+    '</div>' +
+    '<div class="ac-rules">' + rulesHtml + '</div>' +
+    '<div class="ac-meta">' +
+      '<span>频率：' + (task.frequency || '未知') + '</span>' +
+      '<span>间隔：' + (task.interval || '未知') + '</span>' +
+      '<span>创建时间：' + (task.createdAt || '未知') + '</span>' +
+    '</div>' +
+    '<div class="ac-actions">' +
+      '<button class="btn btn-sm" onclick="toggleTask(\'' + task.id + '\')">' + (task.enabled ? '禁用' : '启用') + '</button>' +
+      '<button class="btn btn-sm" onclick="editTask(\'' + task.id + '\')">编辑</button>' +
+      '<button class="btn btn-sm btn-danger" onclick="deleteTask(\'' + task.id + '\')">删除</button>' +
+    '</div>';
+  
+  return card;
+}
+
+// 切换任务状态
+function toggleTask(id) {
+  const task = autoTasks.find(t => t.id === id);
+  if (!task) return;
+  
+  task.enabled = !task.enabled;
+  localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  renderAutoTasks();
+}
+
+// 编辑任务
+function editTask(id) {
+  customAlert('编辑任务：' + id + '\n\n（实际项目中弹窗编辑任务）');
+}
+
+// 删除任务
+function deleteTask(id) {
+  customConfirm('确定要删除该自动化任务吗？', function() {
+    autoTasks = autoTasks.filter(t => t.id !== id);
+    localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+    renderAutoTasks();
+  });
+}
+
+// 新增任务
+function addTask() {
+  document.getElementById('task-name').value = '';
+  document.getElementById('task-frequency').value = '';
+  document.getElementById('task-interval').value = '';
+  document.getElementById('task-interval-custom').value = '';
+  document.getElementById('task-interval-custom').style.display = 'none';
+  document.querySelectorAll('#add-task-modal .rule-checkboxes input').forEach(cb => cb.checked = false);
+  document.getElementById('add-task-modal').classList.add('show');
+}
+
+function closeAddTaskModal() {
+  document.getElementById('add-task-modal').classList.remove('show');
+}
+
+function onTaskFreqChange() {
+  const freq = document.getElementById('task-frequency').value;
+  const field = document.getElementById('task-interval-field');
+  if (freq === '单次执行') {
+    field.style.display = 'none';
+  } else {
+    field.style.display = '';
+  }
+}
+
+function confirmAddTask() {
+  const name = document.getElementById('task-name').value.trim();
+  const frequency = document.getElementById('task-frequency').value;
+  if (!name) { customAlert('请输入任务名称'); return; }
+  if (!frequency) { customAlert('请选择执行频率'); return; }
+  
+  let interval = '';
+  if (frequency !== '单次执行') {
+    interval = document.getElementById('task-interval').value;
+    if (interval === 'custom') {
+      interval = document.getElementById('task-interval-custom').value.trim();
+      if (!interval) { customAlert('请输入自定义间隔'); return; }
+    }
+    if (!interval) { customAlert('请选择执行间隔'); return; }
+  }
+  
+  const rules = [];
+  document.querySelectorAll('#add-task-modal .rule-checkboxes input:checked').forEach(cb => {
+    rules.push(cb.value);
+  });
+  if (rules.length === 0) { customAlert('请至少选择一个执行规则'); return; }
+  
+  const newTask = {
+    id: 'auto-' + Date.now(),
+    name: name,
+    enabled: true,
+    frequency: frequency,
+    interval: interval,
+    rules: rules,
+    createdAt: new Date().toISOString().slice(0,16).replace('T',' ')
+  };
+  
+  autoTasks.push(newTask);
+  localStorage.setItem('auto_tasks', JSON.stringify(autoTasks));
+  closeAddTaskModal();
+  renderAutoTasks();
+  customAlert('任务创建成功！');
+}
+
+// 刷新列表
+function refreshList() {
+  loadAutoTasks();
+  customAlert('刷新成功！');
+}
+
+// 工具函数
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
