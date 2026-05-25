@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>音频管理 - 广播AI内容生产平台</title>
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; }
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
+
+    /* 顶部导航栏 */
+    .topbar {
+      height: 56px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex; align-items: center; padding: 0 24px; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0;
+    }
+    .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-right: 40px; white-space: nowrap; }
+    .topbar .logo span { color: #00d4ff; }
+    .top-menu { display: flex; gap: 4px; }
+    .top-menu-item {
+      padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+      color: rgba(255,255,255,0.7); transition: all 0.2s; white-space: nowrap;
+      text-decoration: none; display: inline-block;
+    }
+    .top-menu-item:hover { background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; }
+    .top-menu-item.active { background: rgba(0,212,255,0.2); color: #00d4ff; }
+    .topbar .right-area { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .topbar .notification { position: relative; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+    .topbar .notification .badge {
+      position: absolute; top: -6px; right: -8px; background: #ff4d4f; color: #fff;
+      font-size: 10px; border-radius: 10px; padding: 1px 5px; min-width: 16px; text-align: center;
+    }
+    .topbar .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00d4ff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+    /* 主体布局 */
+    .main-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* 左侧菜单 */
+    .sidebar {
+      width: 220px; min-width: 220px; background: #fff; border-right: 1px solid #e8e8e8;
+      display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar-group { margin-bottom: 8px; }
+    .sidebar-group-title {
+      padding: 16px 16px 8px; font-size: 11px; color: #999; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sidebar-item {
+      display: block; padding: 10px 16px 10px 20px; font-size: 13px; color: #666;
+      cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover { background: #f5f5f5; color: #333; text-decoration: none; }
+    .sidebar-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+
+    /* 主内容区 */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content-header {
+      padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .content-header h2 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+    .content-header .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* 筛选栏 */
+    .filter-bar {
+      padding: 12px 24px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-bar .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .filter-bar .search-input {
+      flex: 1; min-width: 180px; padding: 6px 12px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; max-width: 280px;
+    }
+    .filter-bar .search-input:focus { border-color: #1890ff; }
+    .filter-bar input[type="date"] { padding: 5px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer; }
+    .filter-bar input[type="date"]:focus { border-color: #1890ff; }
+
+    /* 状态筛选按钮组（与 draft.html 一致） */
+    .status-tabs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .status-tab {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #e8e8e8; background: #fff; color: #666; transition: all 0.2s; white-space: nowrap;
+    }
+    .status-tab:hover { border-color: #91d5ff; color: #333; }
+    .status-tab.active { background: #1890ff; color: #fff; border-color: #1890ff; font-weight: 500; }
+    .status-tab .st-count { font-size: 11px; margin-left: 4px; opacity: 0.8; }
+    .btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .btn:hover { border-color: #1890ff; color: #1890ff; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-success:hover { background: #73d13d; }
+    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-danger:hover { background: #ff7875; }
+
+    /* 音频列表 */
+    .audio-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .audio-card {
+      background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;
+      transition: all 0.2s;
+    }
+    .audio-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #91d5ff; }
+    .audio-card .ac-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .audio-card .ac-title { font-size: 15px; font-weight: 500; color: #1a1a2e; flex: 1; }
+    .audio-card .ac-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 12px; }
+    .ac-status.running { background: #e6f7ff; color: #1890ff; }
+    .ac-status.confirmed { background: #f6ffed; color: #52c41a; }
+    .ac-status.reviewing { background: #e6f7ff; color: #1890ff; }
+    .ac-status.pending { background: #fff7e6; color: #fa8c16; }
+    .ac-status.stopped { background: #f5f5f5; color: #999; }
+    .audio-card .ac-meta { font-size: 12px; color: #999; display: flex; gap: 16px; flex-wrap: wrap; }
+    .audio-card .ac-actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* 音频播放器 */
+    .audio-player {
+      margin-top: 12px; padding: 12px; background: #f7f9fc; border-radius: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .audio-player audio { flex: 1; }
+    .audio-player .play-btn {
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333; transition: all 0.2s;
+    }
+    .audio-player .play-btn:hover { border-color: #1890ff; color: #1890ff; }
+
+    /* 右侧面板：融媒AI助手 */
+    .right-panel { width: 300px; min-width: 300px; background: #fff; border-left: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
+    .right-panel .panel-header { padding: 14px 16px; font-size: 14px; font-weight: 600; color: #1a1a2e; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+    .right-panel .panel-header .ai-badge { background: linear-gradient(135deg, #1890ff, #00d4ff); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 8px; }
+    .quick-actions { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; }
+    .quick-actions .qa-title { font-size: 11px; color: #999; font-weight: 500; margin-bottom: 2px; }
+    .quick-actions .qa-btn { display: block; width: 100%; padding: 8px 12px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fafafa; font-size: 12px; color: #333; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .quick-actions .qa-btn:hover { border-color: #1890ff; background: #e6f7ff; color: #1890ff; }
+    .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .ai-msg { padding: 8px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; max-width: 90%; }
+    .ai-msg.ai { background: #f0f7ff; color: #333; align-self: flex-start; }
+    .ai-msg.ai .msg-label { color: #1890ff; font-weight: 600; margin-bottom: 4px; font-size: 11px; }
+    .ai-msg.notification { background: #fffbe6; border-left: 3px solid #faad14; }
+    .ai-msg.notification .msg-label { color: #fa8c16; }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-text { font-size: 15px; margin-bottom: 8px; }
+    .empty-hint { font-size: 12px; }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45); z-index: 1000;
+      display: none; justify-content: center; align-items: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 12px; width: 520px; max-height: 85vh;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+    .close-btn {
+      width: 28px; height: 28px; border-radius: 6px; border: none;
+      background: transparent; color: #999; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover { background: #f5f5f5; color: #333; }
+    .modal-body { padding: 20px; font-size: 13px; color: #666; line-height: 1.8; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 12px 20px; border-top: 1px solid #f0f0f0;
+      display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="logo"><span>AI</span>广播内容生产平台</div>
+  <div class="top-menu">
+    <a class="top-menu-item active" href="collect.html">内容生产</a>
+    <a class="top-menu-item" href="automation.html">自动化</a>
+    <a class="top-menu-item" href="system.html">系统管理</a>
+  </div>
+  <div class="right-area">
+    <div class="notification" onclick="customAlert('暂无新通知')">通知<span class="badge">3</span></div>
+    <div class="user-info"><div class="avatar">王</div><span style="font-size:13px">王总监</span></div>
+  </div>
+</div>
+
+<!-- 主体布局 -->
+<div class="main-body">
+
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">内容生产</div>
+      <a class="sidebar-item" href="collect.html">数据中心</a>
+      <a class="sidebar-item" href="draft.html">稿件管理</a>
+      <a class="sidebar-item active" href="audio.html">音频管理</a>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;margin-top:auto">
+      <button class="btn" style="width:100%;font-size:12px;color:#999" onclick="clearCache()">清除缓存 / 重置数据</button>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main-content">
+
+    <!-- 内容头部 -->
+    <div class="content-header">
+      <h2>音频管理</h2>
+      <div class="header-right">
+        <button class="btn" onclick="refreshList()">刷新</button>
+      </div>
+    </div>
+
+    <!-- 筛选栏（日期 + 状态按钮组 + 搜索） -->
+    <div class="filter-bar">
+      <span class="filter-label">日期</span>
+      <input type="date" id="filter-date" onchange="renderAudios()">
+      <span class="filter-label">状态</span>
+      <div class="status-tabs" id="status-tabs">
+        <button class="status-tab active" data-status="all" onclick="filterByStatus('all', this)">全部 <span class="st-count" id="count-all">0</span></button>
+        <button class="status-tab" data-status="running" onclick="filterByStatus('running', this)">生成中 <span class="st-count" id="count-running">0</span></button>
+        <button class="status-tab" data-status="reviewing" onclick="filterByStatus('reviewing', this)">技审中 <span class="st-count" id="count-reviewing">0</span></button>
+        <button class="status-tab" data-status="pending" onclick="filterByStatus('pending', this)">待确认 <span class="st-count" id="count-pending">0</span></button>
+        <button class="status-tab" data-status="confirmed" onclick="filterByStatus('confirmed', this)">已确认 <span class="st-count" id="count-confirmed">0</span></button>
+        <button class="status-tab" data-status="stopped" onclick="filterByStatus('stopped', this)">已停止 <span class="st-count" id="count-stopped">0</span></button>
+      </div>
+      <span class="filter-label">标题搜索</span>
+      <input type="text" class="search-input" id="filter-title" placeholder="输入音频标题关键词..." oninput="applyAudioFilter()">
+    </div>
+
+    <!-- 音频列表 -->
+    <div class="audio-list" id="audio-list">
+      <!-- 空状态（默认显示，有数据时隐藏） -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-text">暂无音频</div>
+        <div class="empty-hint">请在"稿件管理"中确认通过稿件，然后提交生成音频。</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧：融媒AI助手 -->
+  <div class="right-panel">
+    <div class="panel-header">
+      <span>融媒AI助手</span>
+      <span class="ai-badge">AI</span>
+    </div>
+    <div class="quick-actions">
+      <div class="qa-title">快捷操作</div>
+      <button class="qa-btn" onclick="quickAction('view-generating')">查看生成中音频</button>
+      <button class="qa-btn" onclick="quickAction('batch-download')">批量下载已确认</button>
+      <button class="qa-btn" onclick="quickAction('gen-playlist')">生成播出单</button>
+      <button class="qa-btn" onclick="quickAction('view-reviewing')">查看技审记录</button>
+    </div>
+    <div class="ai-messages" id="ai-messages">
+      <div class="ai-msg ai">
+        <div class="msg-label">融媒AI</div>
+        您好，我是您的融媒AI助手。音频管理页面可以查看生成进度、技审结果，技审完成后自动进入待确认状态，试听后可确认通过或驳回重生成。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 工具函数 ==========
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ========== 全局状态 ==========
+var currentAudioStatusFilter = 'all';
+
+// ========== 通用自定义弹窗（与停止任务弹窗样式统一） ==========
+function customConfirm(message, onConfirm, onCancel) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>确认</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn" id="cc-cancel">取消</button>' +
+        '<button class="btn btn-primary" id="cc-confirm">确认</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doCancel() {
+    overlay.remove();
+    if (typeof onCancel === 'function') onCancel();
+  }
+  overlay.querySelector('.close-btn').onclick = doCancel;
+  document.getElementById('cc-cancel').onclick = doCancel;
+  document.getElementById('cc-confirm').onclick = function() {
+    overlay.remove();
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) doCancel(); };
+}
+
+function customAlert(message, onOk) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML =
+    '<div class="modal" style="width:420px">' +
+      '<div class="modal-header">' +
+        '<h3>提示</h3>' +
+        '<button class="close-btn">X</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">' + escapeHtml(message) + '</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn btn-primary" id="ca-ok">确定</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+  function doOk() {
+    overlay.remove();
+    if (typeof onOk === 'function') onOk();
+  }
+  overlay.querySelector('.close-btn').onclick = doOk;
+  document.getElementById('ca-ok').onclick = doOk;
+  overlay.onclick = function(e) { if (e.target === overlay) doOk(); };
+}
+
+// 全局状态
+let audios = [];
+
+// 页面初始化
+(function() {
+  const page = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.top-menu-item').forEach(t => {
+    t.classList.remove('active');
+    const href = t.getAttribute('href');
+    if(href === page) t.classList.add('active');
+    else if(href === 'collect.html' && (page === 'draft.html' || page === 'audio.html' || page === 'manual-collect.html')) t.classList.add('active');
+  });
+  loadAudios();
+  applyAudioFilter();
+})();
+
+// 加载音频数据
+function loadAudios() {
+  try {
+    var stored = localStorage.getItem('audios');
+    audios = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(audios)) audios = [];
+  } catch(e) {
+    audios = [];
+  }
+  // 如果没有数据，创建一些示例数据
+  if (audios.length === 0) {
+    audios = [
+      // 已确认
+      {
+        id: 'audio-001',
+        title: 'AI技术突破引发全球关注，多国加速布局',
+        status: 'confirmed',
+        createdAt: '2026-05-21T10:00',
+        duration: '3:24',
+        anchor: '男声主播',
+        voice: '标准'
+      },
+      {
+        id: 'audio-002',
+        title: '全国政协十四届三次会议新闻发布会今日举行',
+        status: 'confirmed',
+        createdAt: '2026-05-22T08:30',
+        duration: '4:12',
+        anchor: '女声主播',
+        voice: '庄重'
+      },
+      // 生成中
+      {
+        id: 'audio-003',
+        title: '新能源汽车销量创新高，市场渗透率突破50%',
+        status: 'running',
+        createdAt: '2026-05-25T14:00',
+        duration: '',
+        anchor: '女声主播',
+        voice: '温暖'
+      },
+      {
+        id: 'audio-004',
+        title: '端午假期旅游市场回暖，民俗活动精彩纷呈',
+        status: 'running',
+        createdAt: '2026-05-25T15:20',
+        duration: '',
+        anchor: '男声青年',
+        voice: '活泼'
+      },
+      // 技审中（有错误，留在技审中状态）
+      {
+        id: 'audio-005',
+        title: '国际市场油价波动，大宗商品价格普遍上涨',
+        status: 'reviewing',
+        createdAt: '2026-05-25T09:00',
+        duration: '4:20',
+        anchor: '男声主播',
+        voice: '标准',
+        reviewErrors: [
+          { type: 'error', msg: '音频片段0:32处存在爆音，峰值电平超过-2dBFS' },
+          { type: 'error', msg: '音频片段1:15-1:18处有持续底噪，信噪比不达标' },
+          { type: 'warn', msg: '整体响度-18.2 LUFS，略低于标准值-16 LUFS' }
+        ]
+      },
+      // 技审中（仅警告，无错误，自动变待确认）
+      {
+        id: 'audio-006',
+        title: '玉溪市融媒体中心技术平台建设稳步推进',
+        status: 'reviewing',
+        createdAt: '2026-05-25T10:30',
+        duration: '4:45',
+        anchor: '男声主播',
+        voice: '标准',
+        reviewErrors: [
+          { type: 'warn', msg: '音量一致性偏差：左右声道差值1.8dB' }
+        ]
+      },
+      // 技审中（无错误，自动变待确认）
+      {
+        id: 'audio-007',
+        title: '全国夏粮收购全面展开，收购进度快于往年',
+        status: 'reviewing',
+        createdAt: '2026-05-25T11:00',
+        duration: '3:58',
+        anchor: '女声主播',
+        voice: '温暖',
+        reviewErrors: []
+      },
+      // 待确认
+      {
+        id: 'audio-008',
+        title: '极端天气预警：南方多地将迎来强降雨',
+        status: 'pending',
+        createdAt: '2026-05-25T12:00',
+        duration: '5:12',
+        anchor: '男声青年',
+        voice: '活泼'
+      }
+    ];
+    localStorage.setItem('audios', JSON.stringify(audios));
+  }
+  renderAudios();
+  updateAudioCounts();
+}
+
+// 自动技审：reviewing 且技审结果已返回（无 error 类型）时自动变 pending
+// reviewErrors 为 null 表示三方接口尚未返回，不自动流转
+// 注意：技审结果保留到 pending 状态展示，不在此处清空
+function autoTechReview() {
+  var changed = false;
+  audios.forEach(function(a) {
+    if (a.status === 'stopped') return;
+    if (a.status === 'reviewing' && Array.isArray(a.reviewErrors)) {
+      var hasError = a.reviewErrors.some(function(e) { return e.type === 'error'; });
+      if (!hasError) {
+        a.status = 'pending';
+        // 不清除 reviewErrors，保留到待确认状态展示
+        changed = true;
+      }
+    }
+  });
+  if (changed) {
+    localStorage.setItem('audios', JSON.stringify(audios));
+  }
+}
+
+// 渲染音频列表
+function renderAudios() {
+  autoTechReview();
+  const list = document.getElementById('audio-list');
+  const emptyState = document.getElementById('empty-state');
+  const filtered = getFilteredAudios();
+  
+  if (filtered.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  } else {
+    emptyState.style.display = 'none';
+  }
+  
+  // 清除现有卡片（保留空状态）
+  list.querySelectorAll('.audio-card').forEach(card => card.remove());
+
+  filtered.forEach(audio => {
+    const card = createAudioCard(audio);
+    list.appendChild(card);
+  });
+
+  updateAudioCounts();
+}
+
+// ========= 筛选 =========
+function filterByStatus(status, el) {
+  currentAudioStatusFilter = status;
+  document.querySelectorAll('.status-tab').forEach(function(si) { si.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderAudios();
+}
+
+function updateAudioCounts() {
+  var counts = { all: audios.length, running: 0, pending: 0, reviewing: 0, confirmed: 0, stopped: 0 };
+  audios.forEach(function(a) { if (counts[a.status] !== undefined) counts[a.status]++; });
+  var map = { all: 'count-all', running: 'count-running', pending: 'count-pending', reviewing: 'count-reviewing', confirmed: 'count-confirmed', stopped: 'count-stopped' };
+  for (var key in map) {
+    var el = document.getElementById(map[key]);
+    if (el) el.textContent = counts[key] || 0;
+  }
+}
+
+// 获取筛选后的音频
+function getFilteredAudios() {
+  var activeTab = document.querySelector('.status-tab.active');
+  var status = activeTab ? activeTab.dataset.status : 'all';
+  var dateVal = document.getElementById('filter-date')?.value || '';
+  var title = (document.getElementById('filter-title')?.value || '').toLowerCase();
+
+  return audios.filter(function(item) {
+    if (status !== 'all' && item.status !== status) return false;
+    if (dateVal) {
+      var itemDate = (item.createdAt || '').split('T')[0].split(' ')[0];
+      if (itemDate !== dateVal) return false;
+    }
+    if (title && item.title.toLowerCase().indexOf(title) === -1) return false;
+    return true;
+  });
+}
+
+// 应用筛选
+function applyAudioFilter() {
+  renderAudios();
+}
+
+// 创建音频卡片
+function createAudioCard(item) {
+  const card = document.createElement('div');
+  card.className = 'audio-card';
+  card.dataset.id = item.id;
+
+  var statusMap = { 'running': '生成中', 'pending': '待确认', 'reviewing': '技审中', 'confirmed': '已确认', 'stopped': '已停止' };
+  var statusText = statusMap[item.status] || item.status;
+  var statusClass = item.status;
+
+  // 技审错误/警告 HTML（reviewing 和 pending 都展示）
+  var reviewHTML = '';
+  if ((item.status === 'reviewing' || item.status === 'pending') && item.reviewErrors && item.reviewErrors.length > 0) {
+    var errorCount = 0, warnCount = 0;
+    item.reviewErrors.forEach(function(e) { e.type === 'error' ? errorCount++ : warnCount++; });
+    reviewHTML = '<div class="review-errors" style="margin-top:8px;padding:8px 12px;background:#fff2f0;border-left:3px solid #ff4d4f;border-radius:4px;font-size:12px">';
+    reviewHTML += '<div style="font-weight:600;color:#cf1322;margin-bottom:4px">技审发现 ' + errorCount + ' 个错误，' + warnCount + ' 个警告</div>';
+    item.reviewErrors.forEach(function(e) {
+      var icon = e.type === 'error' ? '✕' : '⚠';
+      var bg = e.type === 'error' ? '#fff1f0' : '#fffbe6';
+      var bd = e.type === 'error' ? '#ffa39e' : '#ffe58f';
+      var clr = e.type === 'error' ? '#cf1322' : '#d48806';
+      reviewHTML += '<div style="padding:4px 8px;margin:2px 0;background:' + bg + ';border-radius:3px;color:' + clr + '"><span style="font-weight:600">' + icon + '</span> ' + escapeHtml(e.msg) + '</div>';
+    });
+    reviewHTML += '</div>';
+  }
+
+  card.innerHTML =
+    '<div class="ac-header">' +
+      '<div class="ac-title">' + escapeHtml(item.title) + '</div>' +
+      '<div class="ac-status ' + statusClass + '">' + statusText + '</div>' +
+    '</div>' +
+    '<div class="ac-meta">' +
+      '<span>创建时间：' + (item.createdAt || '未知') + '</span>' +
+      '<span>时长：' + (item.duration || '生成中...') + '</span>' +
+      '<span>主播：' + (item.anchor || '未知') + '</span>' +
+      '<span>音色：' + (item.voice || '未知') + '</span>' +
+    '</div>' +
+    reviewHTML +
+    (item.status === 'confirmed' || item.status === 'pending' ?
+      '<div class="audio-player">' +
+        '<audio controls src="placeholder.mp3"></audio>' +
+        (item.status === 'confirmed' ? '<button class="play-btn" onclick="downloadAudio(\'' + item.id + '\')">下载</button>' : '') +
+      '</div>' : '') +
+    '<div class="ac-actions">' +
+      (item.status === 'running' ?
+        '<button class="btn btn-sm btn-danger" onclick="stopAudio(\'' + item.id + '\')">停止任务</button>' : '') +
+      (item.status === 'reviewing' ?
+        '<button class="btn btn-sm btn-danger" onclick="stopAudio(\'' + item.id + '\')">停止任务</button>' : '') +
+      (item.status === 'pending' ?
+        '<button class="btn btn-sm btn-success" onclick="confirmAudio(\'' + item.id + '\')">确认通过</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="rejectAudio(\'' + item.id + '\')">驳回重生成</button>' : '') +
+      (item.status === 'confirmed' ?
+        '<button class="btn btn-sm" onclick="playAudio(\'' + item.id + '\')">播放</button>' +
+        '<button class="btn btn-sm btn-primary" onclick="submitBroadcast(\'' + item.id + '\')">提交播出单</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteAudio(\'' + item.id + '\')">删除</button>' : '') +
+      (item.status === 'stopped' ?
+        '<button class="btn btn-sm btn-danger" onclick="deleteAudio(\'' + item.id + '\')">删除</button>' : '') +
+    '</div>';
+
+  return card;
+}
+
+// 停止生成
+function stopAudio(id) {
+  customConfirm('确定要停止当前音频生成任务吗？', function() {
+    var audio = audios.find(function(a) { return a.id === id; });
+    if (audio) {
+      audio.status = 'stopped';
+      localStorage.setItem('audios', JSON.stringify(audios));
+      renderAudios();
+    }
+  });
+}
+
+// 播放
+function playAudio(id) {
+  customAlert('播放音频：' + id + '\n\n（实际项目中调用音频播放器）');
+}
+
+// 下载
+function downloadAudio(id) {
+  customAlert('下载音频：' + id + '\n\n（实际项目中下载音频文件）');
+}
+
+// 提交播出单
+function submitBroadcast(id) {
+  customConfirm('确定要提交播出单吗？\n\n提交后音频将进入播出队列。', function() {
+    customAlert('播出单已提交！');
+  });
+}
+
+// 确认通过（待确认→已确认）
+function confirmAudio(id) {
+  var audio = audios.find(function(a) { return a.id === id; });
+  if (!audio) return;
+  if (audio.status === 'pending') {
+    audio.status = 'confirmed';
+    audio.reviewErrors = null; // 技审结果已处理，清除
+    localStorage.setItem('audios', JSON.stringify(audios));
+    renderAudios();
+    customAlert('音频已确认通过！');
+  }
+}
+
+// 驳回重生成
+function rejectAudio(id) {
+  customConfirm('确定要驳回该音频并重新生成吗？', function() {
+    var audio = audios.find(function(a) { return a.id === id; });
+    if (audio) {
+      audio.status = 'running';
+      audio.duration = '';
+      audio.reviewErrors = null;
+      localStorage.setItem('audios', JSON.stringify(audios));
+      renderAudios();
+      customAlert('已驳回，重新提交生成任务！');
+    }
+  });
+}
+
+// 删除
+function deleteAudio(id) {
+  customConfirm('确定要删除该音频吗？', function() {
+    audios = audios.filter(function(a) { return a.id !== id; });
+    localStorage.setItem('audios', JSON.stringify(audios));
+    renderAudios();
+  });
+}
+
+// 清除缓存 / 重置数据
+function clearCache() {
+  customConfirm('确定要清除所有音频数据并重置为示例数据吗？', function() {
+    localStorage.removeItem('audios');
+    location.reload();
+  });
+}
+
+// 刷新列表
+function refreshList() {
+  loadAudios();
+  customAlert('刷新成功！');
+}
+
+// ========= 融媒AI快捷操作 =========
+function quickAction(action) {
+  switch(action) {
+    case 'view-generating':
+      var tab = document.querySelector('.status-tab[data-status="running"]');
+      if (tab) filterByStatus('running', tab);
+      appendAIMsg('<div class="msg-label">融媒AI</div>已筛选显示生成中的音频。');
+      break;
+    case 'batch-download':
+      appendAIMsg('<div class="msg-label">融媒AI</div>正在准备批量下载...');
+      setTimeout(function() { appendAIMsg('<div class="msg-label">融媒AI</div>已打包 <strong>3 个</strong>已确认音频，下载链接有效期为 24 小时。'); }, 1500);
+      break;
+    case 'gen-playlist':
+      appendAIMsg('<div class="msg-label">融媒AI</div>正在根据已确认音频生成播出单...');
+      setTimeout(function() { appendAIMsg('<div class="msg-label">融媒AI</div>播出单已生成，包含 <strong>5 条</strong>音频，总时长 <strong>28分30秒</strong>。'); }, 2000);
+      break;
+    case 'view-reviewing':
+      var tab = document.querySelector('.status-tab[data-status="reviewing"]');
+      if (tab) filterByStatus('reviewing', tab);
+      appendAIMsg('<div class="msg-label">融媒AI</div>已筛选显示技审中的音频，请检查技审结果。');
+      break;
+  }
+}
+
+// ========= 融媒AI助手消息 =========
+function appendAIMsg(html) {
+  var container = document.getElementById('ai-messages');
+  if (!container) return;
+  var div = document.createElement('div');
+  div.className = 'ai-msg ai notification';
+  div.innerHTML = html;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+</script>
+
+</body>
+</html>
