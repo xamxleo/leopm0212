@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>添加供应商 - KMCC资产管理系统</title>
+<style>
+  :root {
+    --color-primary: #1890ff;
+    --color-primary-hover: #40a9ff;
+    --color-primary-active: #096dd9;
+    --color-primary-bg: #e6f7ff;
+    --color-bg-page: #f0f2f5;
+    --color-bg-surface: #ffffff;
+    --color-border: #e8e8e8;
+    --color-text-primary: #262626;
+    --color-text-secondary: #8c8c8c;
+    --color-text-placeholder: #bfbfbf;
+    --color-success: #52c41a;
+    --color-warning: #faad14;
+    --color-danger: #ff4d4f;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .top-nav {
+    height: 48px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    color: #fff;
+    font-size: 14px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .top-nav .logo {
+    font-size: 16px;
+    font-weight: 600;
+    margin-right: 40px;
+    letter-spacing: 1px;
+  }
+  .top-nav .nav-items { display: flex; gap: 4px; }
+  .top-nav .nav-item {
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .top-nav .nav-item:hover,
+  .top-nav .nav-item.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ===== 左侧菜单 ===== */
+  .side-menu {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    width: 200px;
+    bottom: 0;
+    background: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 8px 0;
+    overflow-y: auto;
+    z-index: 90;
+  }
+  .side-menu .menu-group-title {
+    padding: 12px 16px 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+  .side-menu .menu-item {
+    padding: 10px 16px 10px 24px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    transition: all 0.15s;
+    border-right: 3px solid transparent;
+  }
+  .side-menu .menu-item:hover {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+  }
+  .side-menu .menu-item.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    border-right-color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main-content {
+    margin-top: 48px;
+    margin-left: 200px;
+    padding: 24px;
+    min-height: calc(100vh - 48px);
+  }
+
+  /* ===== 面包屑 ===== */
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+  }
+  .breadcrumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* ===== 页面标题区 ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* ===== 表单 ===== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+  }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-item {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .form-label .required { color: var(--color-danger); margin-right: 4px; }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    transition: border-color 0.2s;
+    font-family: var(--font-family);
+  }
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+  }
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: var(--color-text-placeholder);
+  }
+  .form-textarea {
+    height: 80px;
+    padding: 8px 12px;
+    resize: vertical;
+  }
+  .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238c8c8c' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  /* ===== Tag多选 ===== */
+  .tag-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .tag-option {
+    padding: 4px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    user-select: none;
+  }
+  .tag-option:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .tag-option.selected {
+    background: var(--color-primary-bg);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 多联系人管理 ===== */
+  .contact-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #fafafa;
+    position: relative;
+  }
+  .contact-card .remove-contact {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    cursor: pointer;
+    color: var(--color-text-placeholder);
+    font-size: 16px;
+    transition: color 0.15s;
+  }
+  .contact-card .remove-contact:hover { color: var(--color-danger); }
+
+  .contact-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== 电话输入行 ===== */
+  .phone-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .phone-row:last-child { margin-bottom: 0; }
+  .phone-input {
+    flex: 1;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--color-text-primary);
+    font-family: monospace;
+    transition: border-color 0.2s;
+  }
+  .phone-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.1);
+  }
+  .phone-input::placeholder { color: var(--color-text-placeholder); font-family: var(--font-family); }
+  .phone-remove {
+    cursor: pointer;
+    color: var(--color-text-placeholder);
+    font-size: 14px;
+    padding: 4px;
+    transition: color 0.15s;
+  }
+  .phone-remove:hover { color: var(--color-danger); }
+
+  .add-phone-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-primary);
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: color 0.15s;
+  }
+  .add-phone-btn:hover { color: var(--color-primary-hover); }
+
+  /* ===== 提示信息条 ===== */
+  .tip-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--color-primary-bg);
+    border: 1px solid rgba(24,144,255,0.15);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-family);
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-default {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
+  .btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    padding: 0 8px;
+    height: auto;
+  }
+  .btn-link:hover { color: var(--color-primary-hover); }
+  .btn-danger { color: var(--color-danger); }
+
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 24px;
+  }
+
+  /* ===== 分割线 ===== */
+  .divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 20px 0;
+  }
+
+  /* ===== 状态开关 ===== */
+  .status-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .switch {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: #ccc;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .switch.active { background: var(--color-primary); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.2s;
+  }
+  .switch.active::after { left: 20px; }
+  .status-label { font-size: 13px; color: var(--color-text-secondary); }
+  .status-label.active { color: var(--color-success); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="logo">KMCC资产管理</div>
+  <div class="nav-items">
+    <div class="nav-item">管理</div>
+    <div class="nav-item">工作台</div>
+    <div class="nav-item active">指挥调度</div>
+    <div class="nav-item">公共标签</div>
+    <div class="nav-item">采编管理</div>
+    <div class="nav-item">媒资中心</div>
+    <div class="nav-item">数据中心</div>
+  </div>
+</div>
+
+<!-- 左侧菜单 -->
+<div class="side-menu">
+  <div class="menu-group-title">资产管理</div>
+  <div class="menu-item" onclick="location.href='asset-list.html'">资产列表</div>
+  <div class="menu-item" onclick="location.href='transfer.html'">资产流转</div>
+  <div class="menu-item" onclick="location.href='maintenance.html'">维修管理</div>
+  <div class="menu-item">资产码管理</div>
+  <div class="menu-group-title">基础配置</div>
+  <div class="menu-item" onclick="location.href='dictionary.html'">数据字典</div>
+  <div class="menu-item active" onclick="location.href='supplier.html'">供应商管理</div>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <div class="breadcrumb">
+    <a href="asset-list.html">首页</a><span class="sep">/</span>
+    <a href="supplier.html">供应商管理</a><span class="sep">/</span>
+    <span id="pageAction">添加供应商</span>
+  </div>
+
+  <div class="page-header">
+    <div class="page-title" id="pageTitle">添加供应商</div>
+    <button class="btn btn-link" onclick="location.href='supplier.html'">← 返回列表</button>
+  </div>
+
+  <div class="tip-bar">
+    <span style="margin-top:2px;">💡</span>
+    <span>一个供应商可添加多个联系人，每个联系人可填写多个联系电话（固定电话、手机均可）。</span>
+  </div>
+
+  <!-- 基础信息 -->
+  <div class="card">
+    <div class="card-title">基础信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label class="form-label"><span class="required">*</span>供应商名称</label>
+        <input class="form-input" id="supplierName" placeholder="请输入供应商全称" />
+      </div>
+      <div class="form-item">
+        <label class="form-label">联系邮箱</label>
+        <input class="form-input" id="supplierEmail" type="email" placeholder="如：contact@example.com" />
+      </div>
+      <div class="form-item" style="grid-column: 1 / -1;">
+        <label class="form-label">地址</label>
+        <input class="form-input" id="supplierAddress" placeholder="请输入供应商地址（选填）" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 供应类别 -->
+  <div class="card">
+    <div class="card-title">供应类别 <span style="font-size:13px;font-weight:400;color:var(--color-text-secondary);">（可多选）</span></div>
+    <div class="tag-selector" id="categorySelector">
+      <div class="tag-option" onclick="toggleTag(this, 'category')">台式电脑</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">笔记本电脑</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">服务器</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">打印机</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">网络设备</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">照相机</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">摄像机</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">安全设备</div>
+      <div class="tag-option" onclick="toggleTag(this, 'category')">其他设备</div>
+    </div>
+  </div>
+
+  <!-- 联系人信息 -->
+  <div class="card">
+    <div class="card-title">
+      联系人信息
+      <span style="font-size:13px;font-weight:400;color:var(--color-text-secondary);">（可添加多个联系人）</span>
+    </div>
+
+    <div id="contactsContainer">
+      <!-- 动态添加联系人卡片 -->
+    </div>
+
+    <button class="btn btn-default btn-sm" onclick="addContactCard()" style="margin-top:4px;">+ 添加联系人</button>
+  </div>
+
+  <!-- 其他信息 -->
+  <div class="card">
+    <div class="card-title">其他信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label class="form-label">合作状态</label>
+        <div class="status-switch" style="margin-top:6px;">
+          <div class="switch active" id="statusSwitch" onclick="toggleStatusSwitch()"></div>
+          <span class="status-label active" id="statusLabel">合作中</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="supplierRemark" placeholder="可输入合作情况、合同信息等备注"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="btn-group">
+    <button class="btn btn-default" onclick="location.href='supplier.html'">取消</button>
+    <button class="btn btn-default">保存草稿</button>
+    <button class="btn btn-primary" onclick="submitSupplier()">提交</button>
+  </div>
+
+</div>
+
+<script>
+  // ===== 页面模式判断（添加 / 编辑）=====
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('id');
+
+  if (editId) {
+    document.getElementById('pageAction').textContent = '编辑供应商';
+    document.getElementById('pageTitle').textContent = '编辑供应商';
+    // 模拟加载已有数据（实际应从localStorage或后端加载）
+    loadSupplierData(parseInt(editId));
+  }
+
+  // ===== 供应类别 Tag 多选 =====
+  let selectedCategories = [];
+
+  function toggleTag(el, group) {
+    el.classList.toggle('selected');
+    const val = el.textContent.trim();
+
+    if (el.classList.contains('selected')) {
+      if (!selectedCategories.includes(val)) selectedCategories.push(val);
+    } else {
+      selectedCategories = selectedCategories.filter(c => c !== val);
+    }
+  }
+
+  // ===== 合作状态开关 =====
+  let isActive = true;
+
+  function toggleStatusSwitch() {
+    isActive = !isActive;
+    const sw = document.getElementById('statusSwitch');
+    const label = document.getElementById('statusLabel');
+    if (isActive) {
+      sw.classList.add('active');
+      label.textContent = '合作中';
+      label.classList.add('active');
+    } else {
+      sw.classList.remove('active');
+      label.textContent = '已停用';
+      label.classList.remove('active');
+    }
+  }
+
+  // ===== 联系人卡片管理 =====
+  let contactCount = 0;
+
+  function addContactCard(data) {
+    contactCount++;
+    const id = data ? data._id : contactCount;
+    const container = document.getElementById('contactsContainer');
+
+    const card = document.createElement('div');
+    card.className = 'contact-card';
+    card.id = 'contact-' + id;
+
+    // 联系电话输入框HTML（支持多个）
+    let phonesHtml = '';
+    if (data && data.phones && data.phones.length > 0) {
+      data.phones.forEach((phone, idx) => {
+        phonesHtml += `
+          <div class="phone-row">
+            <input class="phone-input" placeholder="电话号码（手机/固话）" value="${phone}" />
+            <span class="phone-remove" onclick="removePhoneRow(this)">✕</span>
+          </div>`;
+      });
+    } else {
+      phonesHtml = `
+        <div class="phone-row">
+          <input class="phone-input" placeholder="电话号码（手机/固话）" />
+          <span class="phone-remove" onclick="removePhoneRow(this)">✕</span>
+        </div>`;
+    }
+
+    card.innerHTML = `
+      <span class="remove-contact" onclick="removeContactCard('contact-${id}')" title="删除此联系人">✕</span>
+      <div class="contact-title">联系人 ${contactCount}</div>
+      <div class="form-item" style="margin-bottom:12px;">
+        <label class="form-label" style="font-size:13px;">联系人姓名</label>
+        <input class="form-input" value="${data ? data.name : ''}" placeholder="请输入联系人姓名" style="height:32px;font-size:13px;" />
+      </div>
+      <div class="form-item" style="margin-bottom:8px;">
+        <label class="form-label" style="font-size:13px;">联系电话 <span style="font-weight:400;color:var(--color-text-secondary);">（可添加多个）</span></label>
+        <div class="phones-container">${phonesHtml}</div>
+        <div class="add-phone-btn" onclick="addPhoneRow(this)">+ 添加电话</div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  }
+
+  function removeContactCard(id) {
+    const card = document.getElementById(id);
+    if (card) card.remove();
+    renumberContacts();
+  }
+
+  function renumberContacts() {
+    const cards = document.querySelectorAll('.contact-card');
+    cards.forEach((card, idx) => {
+      card.querySelector('.contact-title').textContent = '联系人 ' + (idx + 1);
+    });
+    contactCount = cards.length;
+  }
+
+  // ===== 电话行管理 =====
+  function addPhoneRow(btn) {
+    const container = btn.previousElementSibling;
+    const row = document.createElement('div');
+    row.className = 'phone-row';
+    row.innerHTML = `
+      <input class="phone-input" placeholder="电话号码（手机/固话）" />
+      <span class="phone-remove" onclick="removePhoneRow(this)">✕</span>
+    `;
+    container.appendChild(row);
+  }
+
+  function removePhoneRow(btn) {
+    const row = btn.parentElement;
+    const container = row.parentElement;
+    // 至少保留一个电话输入框
+    if (container.querySelectorAll('.phone-row').length > 1) {
+      row.remove();
+    } else {
+      row.querySelector('.phone-input').value = '';
+    }
+  }
+
+  // ===== 提交 =====
+  function submitSupplier() {
+    const name = document.getElementById('supplierName').value.trim();
+    if (!name) {
+      alert('请输入供应商名称');
+      return;
+    }
+
+    if (selectedCategories.length === 0) {
+      alert('请至少选择一个供应类别');
+      return;
+    }
+
+    // 收集联系人数据
+    const contacts = [];
+    document.querySelectorAll('.contact-card').forEach(card => {
+      const nameInput = card.querySelector('input[placeholder*="联系人姓名"]');
+      const phoneInputs = card.querySelectorAll('.phone-input');
+      const phones = Array.from(phoneInputs)
+        .map(p => p.value.trim())
+        .filter(p => p);
+
+      if (nameInput && nameInput.value.trim()) {
+        contacts.push({
+          name: nameInput.value.trim(),
+          phones: phones
+        });
+      }
+    });
+
+    if (contacts.length === 0) {
+      alert('请至少添加一个联系人');
+      return;
+    }
+
+    // 构造供应商对象
+    const supplier = {
+      id: editId ? parseInt(editId) : Date.now(),
+      name: name,
+      email: document.getElementById('supplierEmail').value.trim(),
+      address: document.getElementById('supplierAddress').value.trim(),
+      categories: selectedCategories,
+      contacts: contacts,
+      status: isActive ? 'active' : 'inactive',
+      remark: document.getElementById('supplierRemark').value.trim(),
+      createTime: editId ? undefined : new Date().toISOString().split('T')[0]
+    };
+
+    // 实际应保存到 localStorage 或后端
+    console.log('提交供应商数据：', supplier);
+    alert((editId ? '修改' : '添加') + '成功！（数据已记录到控制台，实际应保存到存储）');
+    location.href = 'supplier.html';
+  }
+
+  // ===== 加载编辑数据 =====
+  function loadSupplierData(id) {
+    // 模拟数据（实际应从存储加载）
+    const mockData = {
+      1: {
+        name: '华为技术有限公司',
+        email: 'contact@huawei.com',
+        address: '广东省深圳市龙岗区华为总部',
+        categories: ['服务器', '网络设备', '安全设备'],
+        contacts: [
+          { name: '张明', phones: ['13800138001', '010-12345678'] }
+        ],
+        status: 'active',
+        remark: '核心供应商，长期合作'
+      },
+      2: {
+        name: '联想集团有限公司',
+        email: 'contact@lenovo.com',
+        address: '北京市海淀区西北旺东路10号',
+        categories: ['台式电脑', '笔记本电脑'],
+        contacts: [
+          { name: '李华', phones: ['13900139002'] },
+          { name: '王强（售后）', phones: ['400-990-8888', '010-58868888'] }
+        ],
+        status: 'active',
+        remark: ''
+      }
+    };
+
+    const data = mockData[id];
+    if (!data) return;
+
+    document.getElementById('supplierName').value = data.name;
+    document.getElementById('supplierEmail').value = data.email;
+    document.getElementById('supplierAddress').value = data.address;
+    document.getElementById('supplierRemark').value = data.remark;
+
+    // 选中供应类别
+    data.categories.forEach(cat => {
+      const tags = document.querySelectorAll('#categorySelector .tag-option');
+      tags.forEach(tag => {
+        if (tag.textContent.trim() === cat) {
+          tag.classList.add('selected');
+          if (!selectedCategories.includes(cat)) selectedCategories.push(cat);
+        }
+      });
+    });
+
+    // 合作状态
+    if (data.status !== 'active') {
+      toggleStatusSwitch();
+    }
+
+    // 联系人（先清空再添加）
+    document.getElementById('contactsContainer').innerHTML = '';
+    contactCount = 0;
+    data.contacts.forEach(c => {
+      addContactCard({ _id: contactCount + 1, name: c.name, phones: c.phones });
+    });
+  }
+
+  // ===== 页面初始化：默认添加一个联系人卡片 =====
+  addContactCard();
+</script>
+
+</body>
+</html>
